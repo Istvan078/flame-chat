@@ -1,0 +1,9 @@
+.main-img{
+    position: relative;
+    z-index: -1;
+}
+img {
+    position: fixed;
+    top:0;
+    opacity: 0.5;
+}

@@ -1,0 +1,18 @@
+<div class="container-0">
+    <h2 matTooltipPosition="left" matTooltip="Kérjük írja be az e-mail címét és használjon egy erős jelszót a sikeres regisztráláshoz.">Regisztráció Email címmel</h2>
+</div>
+<form (ngSubmit)="createUserWithEmAndPa()">
+    <mat-form-field>
+    <mat-label for="email">Email</mat-label>
+     <input matInput [(ngModel)]="email" type="email" name="email">
+    </mat-form-field>
+    <mat-form-field>
+        
+    <mat-label for="password">Jelszó</mat-label>
+    <input matInput  [(ngModel)]="password" type="password" name="password">
+</mat-form-field>
+    
+    <button color="accent" mat-raised-button type="submit">Regisztráció</button>
+</form>
+
+

@@ -1,0 +1,49 @@
+.container-0{
+    display: flex;
+    justify-content: center;
+    h2{
+        margin-top: 50px;
+        width:max-content;
+        padding: 10px;
+        border: 2px solid rgb(128, 128, 128);
+        background-color: rgba(128, 128, 128,0.5);
+    }
+    h2:hover{
+        color:white;
+        background-color: rgba(71, 70, 70,0.5);
+        cursor:help;
+    }
+}
+
+.google-container button{
+    height: 100px;
+}
+
+form {
+    display: grid;
+}
+
+.no-padding{
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.span-div {
+    width: fit-content;
+}
+
+.flexToMiddleContainer{
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 350px !important;
+
+    input{
+        width: 35%;
+    }
+    label{
+        left:44%;
+        width: 20%;
+        
+       
+    }
+}

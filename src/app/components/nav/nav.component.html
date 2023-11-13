@@ -1,0 +1,39 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-secondary">
+  <div class="container-fluid">
+    <a [routerLinkActiveOptions]="{exact:true}" routerLink="" routerLinkActive="active-link"  class="navbar-brand">
+      <span class="bi bi-house-fill"></span>
+      Kezdőlap</a
+    >
+    <ul class="navbar-nav h5">
+      <li *ngIf="isLoggedIn" class="nav-item">
+        <a class="nav-link" routerLinkActive="active-link" routerLink="/notes"
+          >Jegyzetek</a
+        >
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" routerLink="/signup" routerLinkActive="active-link">
+          Regisztráció
+        </a>
+      </li>
+      <li class="nav-item">
+        <a
+          class="nav-link"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+          routerLink="/login"
+          >Bejelentkezés</a
+        >
+      </li>
+      <li *ngIf="isLoggedIn" class="nav-item">
+        <a
+          class="nav-link sign-out"
+          
+          routerLink="/login"
+          
+          (click)="signOut()"
+          >Kijelentkezés
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
