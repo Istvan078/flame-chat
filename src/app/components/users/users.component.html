@@ -1,0 +1,29 @@
+<div class="row mt-3 mb-4 text-center"> 
+    <div *ngFor="let column of columns" class="col-12 col-md-6 col-lg-4 col-xl-3"><b>{{column}}</b></div>
+</div>
+
+<ng-container *ngIf="users">
+    <div *ngFor="let user of users" class="row text-center">
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">{{user.displayName}}</div>
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3"><img src="{{user.profilePicture}}" alt="Profilkép"></div>
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">{{user.email}}</div>
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+    
+            <div class="form-check form-switch">
+                <input [(ngModel)]="user.claims.superAdmin" class="form-check-input" type="checkbox" checked>
+                <label class="form-check-label" for="flexSwitchCheckChecked">Super Admin</label>
+            </div>
+            <div class="form-check form-switch">
+                <input [(ngModel)]="user.claims.admin" class="form-check-input" type="checkbox"  checked>
+                <label class="form-check-label" for="flexSwitchCheckChecked">Admin</label>
+            </div>
+            <div class="form-check form-switch">
+                <input [(ngModel)]="user.claims.basic" class="form-check-input" type="checkbox" checked>
+                <label class="form-check-label" for="flexSwitchCheckChecked">Alap jogosultság</label>
+            </div>
+            <div class="col">
+                <button (click)="save(user)" type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</ng-container>

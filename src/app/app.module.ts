@@ -30,6 +30,8 @@ import { FilterPipe } from './pipes/filter.pipe';
 import { ClassPipe } from './pipes/class.pipe';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LoginComponent } from './components/login/login.component';
+import { UsersComponent } from './components/users/users.component';
+import { WeatherComponent } from './components/weather/weather.component';
 
 
 @NgModule({
@@ -41,7 +43,9 @@ import { LoginComponent } from './components/login/login.component';
     SignupComponent,
     FilterPipe,
     ClassPipe,
-    LoginComponent
+    LoginComponent,
+    UsersComponent,
+    WeatherComponent
   ],
   imports: [
     BrowserModule,

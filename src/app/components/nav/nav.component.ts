@@ -9,6 +9,7 @@ import { AuthService } from 'src/app/services/auth.service';
 export class NavComponent implements OnInit{
   
   isLoggedIn: any;
+  isSuperAdmin: boolean = false;
   constructor(
     private authService: AuthService
     ){
@@ -26,9 +27,13 @@ export class NavComponent implements OnInit{
           },
           error: (err) => console.log(err)
       })
+      this.authService.isSuperAdmin.subscribe((booleanSA)=> {
+        this.isSuperAdmin = booleanSA
+      })
   }
 
   signOut() {
     this.authService.signOut();
+    this.isSuperAdmin = false;
   }
 }

@@ -1,10 +1,25 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-secondary">
   <div class="container-fluid">
+    <div class="row">
+    <div class="col-12 col-md-6 col-lg-6 col-xl-6 my-2">
     <a [routerLinkActiveOptions]="{exact:true}" routerLink="" routerLinkActive="active-link"  class="navbar-brand">
       <span class="bi bi-house-fill"></span>
       Kezdőlap</a
     >
+    </div>
+    <div class="col-12 col-md-6 col-lg-6 col-xl-6 my-2">
+    <a *ngIf="isSuperAdmin" routerLink="/users" class="navbar-brand" routerLinkActive="active-link">
+      <span>Felhasználók</span>
+    </a>
+    </div>
+  </div>
+
     <ul class="navbar-nav h5">
+      <li *ngIf="isLoggedIn" class="nav-item">
+        <a class="nav-link" routerLinkActive="active-link" routerLink="/weather"
+          >Időjárás</a
+        >
+      </li>
       <li *ngIf="isLoggedIn" class="nav-item">
         <a class="nav-link" routerLinkActive="active-link" routerLink="/notes"
           >Jegyzetek</a

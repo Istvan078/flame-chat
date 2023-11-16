@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { AngularFireDatabase, AngularFireList } from "@angular/fire/compat/database";
 import { Notes } from '../models/notes';
 import { Observable, map } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -10,9 +11,11 @@ import { Observable, map } from 'rxjs';
 export class BaseService {
 
   refNotes: AngularFireList<Notes>
+  apiUrl = "https://us-central1-project0781.cloudfunctions.net/api/"
 
   constructor(
-    private realTimeDatabase: AngularFireDatabase
+    private realTimeDatabase: AngularFireDatabase,
+    private http: HttpClient
   ) { 
     this.refNotes = realTimeDatabase.list('/notes');
   }
@@ -23,6 +26,10 @@ export class BaseService {
         (c) => ({key: c.payload.key, ...c.payload.val()})
       ))
     )}
+
+  getWeather(location: string) {
+   return this.http.get(this.apiUrl + `weather?address=${location}`)
+  }
 
   createNote(body: Partial<Notes>): void {
     // const nBody = {
