@@ -10,6 +10,7 @@ export class NavComponent implements OnInit{
   
   isLoggedIn: any;
   isSuperAdmin: boolean = false;
+  isNavDisappeared:boolean = false;
   constructor(
     private authService: AuthService
     ){
@@ -35,5 +36,12 @@ export class NavComponent implements OnInit{
   signOut() {
     this.authService.signOut();
     this.isSuperAdmin = false;
+  }
+
+  navDisappear() {
+    this.authService.navDisappear.next(true);
+    this.authService.navDisappear.subscribe((isTrue) =>
+    this.isNavDisappeared = isTrue
+    )
   }
 }

@@ -1,5 +1,5 @@
 <div class="row d-grid justify-content-center my-3">
-    <div *ngIf="!isOpen" class="search">
+    <div *ngIf="!isOpen" class="search text-center me-3 d-flex">
         <label for="search">Keresés</label>
         <input (keyup)="inputClass=false" (keypress)="inputClass=true"  [ngClass]="{'true': inputClass, 'inputBg': !inputClass, 'inputFocus': searchWord ==''}" [(ngModel)]="searchWord" type="text" name="searh">
         <span *ngIf="searchWord" class="text-success bi bi-search h5 ms-2"></span>
@@ -15,7 +15,7 @@
 </div>
 
 <div *ngIf="!isUpdating"  class="row d-flex justify-content-center my-3">
-<div *ngFor="let note of notes|filter:searchWord"  class="my-3 col-12 col-md-6 col-lg-4 col-xl-3">
+<div *ngFor="let note of notes|filter:searchWord"  class="my-3 col-12 col-md-6 col-lg-4 col-xl-3 me-3 d-flex justify-content-center">
 <div class="card">
     <!-- <div class="card-header">     
     </div> -->

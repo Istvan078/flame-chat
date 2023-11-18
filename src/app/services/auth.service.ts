@@ -1,8 +1,9 @@
 import { Injectable, OnInit } from '@angular/core';
 import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { FacebookAuthProvider, GoogleAuthProvider, RecaptchaVerifier, getAuth } from "@angular/fire/auth";
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { UserInterface } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +17,7 @@ export class AuthService implements OnInit {
   user: any = {}
 
   isSuperAdmin: BehaviorSubject<boolean> = new BehaviorSubject(false)
-
+  navDisappear: BehaviorSubject<boolean> = new BehaviorSubject(false)
 
   httpHeaders: HttpHeaders = new HttpHeaders();
   authHeader: any;
@@ -61,14 +62,14 @@ export class AuthService implements OnInit {
     })
   }
 
-  getUsers() {
+  getUsers(): Observable<Partial<UserInterface>> {
     if (this.user.idToken) {
       let headers = new HttpHeaders().set("Authorization", this.user.idToken)
       return this.http.get(this.usersApiUrl + "users", {
         headers
       })
     }
-    return null
+    return of({});
   }
 
   isLoggedIn() {
