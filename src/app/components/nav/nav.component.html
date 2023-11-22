@@ -23,6 +23,11 @@
           >
         </li>
         <li *ngIf="isLoggedIn" class="nav-item">
+          <a class="nav-link" routerLinkActive="active-link" routerLink="/recipes"
+            >Receptek</a
+          >
+        </li>
+        <li *ngIf="isLoggedIn" class="nav-item">
           <a class="nav-link" routerLinkActive="active-link" routerLink="/notes"
             >Jegyzetek</a
           >

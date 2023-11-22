@@ -1,4 +1,5 @@
-import { Component} from '@angular/core';
+import { Component, ViewChild} from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 
@@ -10,9 +11,11 @@ import { AuthService } from 'src/app/services/auth.service';
 
 
 export class SignupComponent {
+  @ViewChild("f") signupForm!: NgForm; 
   email: string = "";
   password: string = "";
   isLoggedIn: any;
+  genders: string[] = ["Férfi", "Nő"]
   
 
   constructor(
@@ -20,9 +23,15 @@ export class SignupComponent {
     private router: Router
   ){}
 
+  emailSuggestion() {
+    this.signupForm.form.patchValue({
+      email: "Pelda078@gmail.com"
+    })
+  }
+
   createUserWithEmAndPa(){
     this.authService.createUserWithEmAndPa(this.email, this.password);
-    
+    this.signupForm.reset();
     this.router.navigate(['login']);
     this.isLoggedIn = "";
   }

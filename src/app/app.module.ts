@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
 import { HttpClientModule } from "@angular/common/http";
 
@@ -32,6 +32,10 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LoginComponent } from './components/login/login.component';
 import { UsersComponent } from './components/users/users.component';
 import { WeatherComponent } from './components/weather/weather.component';
+import { RecipesComponent } from './components/recipes/recipes.component';
+import { RecipeDetailComponent } from './components/recipes/recipe-detail/recipe-detail.component';
+import { RecipeEditComponent } from './components/recipes/recipe-edit/recipe-edit.component';
+import { RecipeListComponent } from './components/recipes/recipe-list/recipe-list.component';
 
 
 @NgModule({
@@ -45,13 +49,18 @@ import { WeatherComponent } from './components/weather/weather.component';
     ClassPipe,
     LoginComponent,
     UsersComponent,
-    WeatherComponent
+    WeatherComponent,
+    RecipesComponent,
+    RecipeDetailComponent,
+    RecipeEditComponent,
+    RecipeListComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     NgbModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpClientModule,
     AngularFireModule.initializeApp(Environments.firebaseConfig),
     AngularFireDatabaseModule,

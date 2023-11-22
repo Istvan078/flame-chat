@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
@@ -6,7 +6,7 @@ import { AuthService } from 'src/app/services/auth.service';
   templateUrl: './nav.component.html',
   styleUrls: ['./nav.component.scss']
 })
-export class NavComponent implements OnInit{
+export class NavComponent implements OnInit, OnDestroy{
   
   isLoggedIn: any;
   isSuperAdmin: boolean = false;
@@ -40,8 +40,13 @@ export class NavComponent implements OnInit{
 
   navDisappear() {
     this.authService.navDisappear.next(true);
-    this.authService.navDisappear.subscribe((isTrue) =>
+    this.authService.navDisappear.subscribe((isTrue: boolean) => {
     this.isNavDisappeared = isTrue
+  }
     )
+  }
+  ngOnDestroy(): void {
+    this.authService.navDisappear.unsubscribe();
+    console.log("sikeres leiratkozas")
   }
 }

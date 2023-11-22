@@ -1,0 +1,47 @@
+<form (ngSubmit)="onCreate()" [formGroup]="recipeForm" #f="ngForm">
+    <mat-form-field>
+        <mat-label>Kulcs</mat-label>
+        <input formControlName="key" matInput type="text">
+        
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Recept neve</mat-label>
+        <input formControlName="name" matInput type="text">
+        <span *ngIf="!recipeForm.get('name')?.valid && recipeForm.get('name')?.touched">Kerem adjon meg egy recept nevet!</span>
+    </mat-form-field>
+    
+    <mat-form-field>
+        <mat-label>Hozzávalók</mat-label>
+        <input formControlName="ingredients" matInput type="text">
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Elkészités</mat-label>
+        <input formControlName="howToMake" matInput type="text">
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Elkészitési idő</mat-label>
+        <input formControlName="timeToMake" matInput type="number">
+    </mat-form-field>
+    <mat-form-field>
+        <mat-label>Adag</mat-label>
+        <input formControlName="portion" matInput type="number">
+    </mat-form-field>
+        <select formControlName="difficulty"  id="difficulty">
+            <option value="Konnyu">Konnyu</option>
+            <option value="Kozepes">Kozepes</option>
+            <option value="Nehez">Nehez</option>
+        </select>
+        <mat-form-field *ngIf="!recipeForm.valid && recipeForm.touched" class="text-center border border-danger">
+            <mat-label></mat-label>
+            <span class="text-danger">Kerem adjon meg valos adatokat!</span>
+            <input matInput disabled>
+            
+        </mat-form-field>
+    <!-- <mat-form-field>
+        <mat-label>Fénykép Url</mat-label>
+        <input formControlName="photo" matInput type="text">
+    </mat-form-field> -->
+    <button [disabled]="!f.valid" type="submit">Recept hozzáadása</button>
+</form>
+
+<div>{{recipe}}</div>

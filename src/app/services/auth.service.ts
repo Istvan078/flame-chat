@@ -50,6 +50,7 @@ export class AuthService implements OnInit {
 
       })
     })
+    
   }
 
   createUserWithEmAndPa(email: string, password: string) {
@@ -81,7 +82,7 @@ export class AuthService implements OnInit {
   }
 
   ngOnInit(): void {
-
+    
   }
 
   setCustomClaims(uid: string, claims: any) {

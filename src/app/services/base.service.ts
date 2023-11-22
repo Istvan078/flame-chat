@@ -1,16 +1,18 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 
 import { AngularFireDatabase, AngularFireList } from "@angular/fire/compat/database";
 import { Notes } from '../models/notes';
 import { Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { Recipe } from '../models/recipe.model';
 
 @Injectable({
   providedIn: 'root'
 })
-export class BaseService {
+export class BaseService implements OnInit{
 
   refNotes: AngularFireList<Notes>
+  refRecipeList!: AngularFireList<Recipe>;
   apiUrl = "https://us-central1-project0781.cloudfunctions.net/api/"
 
   constructor(
@@ -18,6 +20,12 @@ export class BaseService {
     private http: HttpClient
   ) { 
     this.refNotes = realTimeDatabase.list('/notes');
+    this.refRecipeList = realTimeDatabase.list<Recipe>("/recipes")
+  }
+
+  ngOnInit(): void { 
+      
+    
   }
 
   getNotes() {
@@ -45,6 +53,35 @@ export class BaseService {
 
   updateNote(item:string, body: Pick<Notes, "title" | "body">): void  {
     this.refNotes.update(item, body)
+  }
+
+  getRecipe(key:string) {
+    return  this.refRecipeList.snapshotChanges().pipe(map((changes) => 
+    changes.map((c) => 
+      ({key: key, 
+        Recipe: c.payload.val()})
+    )
+  ))
+  }
+
+  getRecipes(): Observable<any> {
+  return  this.refRecipeList.snapshotChanges().pipe(map((changes) => 
+      changes.map((c) => 
+        ({key: c.payload.key, ...c.payload.val()})
+      )
+    ))
+  }
+
+  addRecipe(body: Recipe) {
+    this.refRecipeList.push(body)
+  }
+
+  updateRecipe(key: string, body:Recipe) {
+    this.refRecipeList.update(key, body)
+  }
+
+  deleteRecipe(key:string) {
+    this.refRecipeList.remove(key)
   }
 
 }

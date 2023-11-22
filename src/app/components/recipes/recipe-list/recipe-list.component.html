@@ -1,0 +1,6 @@
+<h2>Receptek</h2>
+<div *ngFor="let recipe of recipes">
+    <ul>
+        <li (click)="recipeDetail(recipe.key)">{{recipe.name}}</li>
+    </ul>
+</div>
