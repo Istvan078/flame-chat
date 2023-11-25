@@ -11,6 +11,7 @@ export class NavComponent implements OnInit, OnDestroy{
   isLoggedIn: any;
   isSuperAdmin: boolean = false;
   isNavDisappeared:boolean = false;
+  isMenuClicked: boolean = false;
   constructor(
     private authService: AuthService
     ){
@@ -20,7 +21,6 @@ export class NavComponent implements OnInit, OnDestroy{
       this.authService.isLoggedIn().subscribe({
       
           next: (user) => {
-            console.log(user)
             if(user?.emailVerified==true || user?.providerData[0]?.providerId=="facebook.com" || user?.providerData[0]?.providerId == "phone")
             this.isLoggedIn=user
             else{user?.sendEmailVerification()

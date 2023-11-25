@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
-import { HttpClientModule } from "@angular/common/http";
+import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
 
 import { AngularFireModule } from "@angular/fire/compat";
 import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
@@ -10,7 +10,8 @@ import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
 import { AngularFireAuthModule } from "@angular/fire/compat/auth";
 import { Environments } from './environments';
 
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModule, NgbTooltipConfig, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+
 
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
@@ -19,6 +20,8 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatInputModule } from "@angular/material/input";
 import { MatTooltipModule } from "@angular/material/tooltip";
+import { MatSelectModule } from "@angular/material/select";
+import {MatTableModule } from "@angular/material/table";
 
 
 import { AppComponent } from './app.component';
@@ -36,6 +39,10 @@ import { RecipesComponent } from './components/recipes/recipes.component';
 import { RecipeDetailComponent } from './components/recipes/recipe-detail/recipe-detail.component';
 import { RecipeEditComponent } from './components/recipes/recipe-edit/recipe-edit.component';
 import { RecipeListComponent } from './components/recipes/recipe-list/recipe-list.component';
+import { ShortenPipe } from './pipes/shorten.pipe';
+import { SortPipe } from './pipes/sort.pipe';
+import { AuthInterceptorService } from './services/auth-interceptor.service';
+import { LoggingInterceptorService } from './services/logging-interceptor.service';
 
 
 @NgModule({
@@ -47,6 +54,8 @@ import { RecipeListComponent } from './components/recipes/recipe-list/recipe-lis
     SignupComponent,
     FilterPipe,
     ClassPipe,
+    SortPipe,
+    ShortenPipe,
     LoginComponent,
     UsersComponent,
     WeatherComponent,
@@ -74,10 +83,22 @@ import { RecipeListComponent } from './components/recipes/recipe-list/recipe-lis
     MatIconModule,
     MatCheckboxModule,
     MatInputModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatSelectModule,
+    MatTableModule,
+
+    NgbTooltipModule,
     
   ],
-  providers: [],
+  providers: [
+    {provide: HTTP_INTERCEPTORS,
+     useClass: AuthInterceptorService, 
+     multi: true},
+     {provide: HTTP_INTERCEPTORS,
+      useClass: LoggingInterceptorService, 
+      multi: true},
+      NgbTooltipConfig
+    ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

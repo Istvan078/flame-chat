@@ -6,12 +6,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class FilterPipe implements PipeTransform {
 
-  transform(array:any[], searchWord: any): any {
-    if (!searchWord) return array
-    searchWord = searchWord.toLowerCase();
-    return array.filter(
-      (arrayItem:any) => arrayItem.body.toLowerCase().includes(searchWord)
-      )
+  transform(value:any, searchWord: any): any {
+
+     if (!searchWord) return value
+     searchWord = searchWord.toLowerCase();
+    return value.filter(
+       (arrayItem:any) => arrayItem.body.toLowerCase().includes(searchWord)
+       )
   }
 
 }

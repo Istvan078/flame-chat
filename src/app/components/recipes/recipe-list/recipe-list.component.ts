@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { AngularFireDatabase, AngularFireList } from '@angular/fire/compat/database';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { Recipe } from 'src/app/models/recipe.model';
@@ -21,14 +20,14 @@ export class RecipeListComponent implements OnInit{
   ngOnInit(): void {
     this.baseService.getRecipes().subscribe(
       (recipes: Recipe[]) => {
-        console.log(recipes)
         this.recipes = recipes
       }
     )
   }
 
-  recipeDetail(key:string) {
-    this.router.navigate([key], {relativeTo: this.route})
-  }
+  // recipeDetail(key:string) {
+  //   this.router.navigate([`../detail`], {relativeTo: this.route, queryParams: {key: key}, queryParamsHandling: 'preserve'})
+
+  // }
 
 }

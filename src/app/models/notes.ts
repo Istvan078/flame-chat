@@ -2,5 +2,7 @@ export interface Notes {
     key?: any;
     title?: string;
     body?: string;
-    timeStamp?: Date;
+    timeStamp?: string;
+    counter?:number;
+    id?: string
 }

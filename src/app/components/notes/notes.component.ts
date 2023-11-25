@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 
 import { Notes } from 'src/app/models/notes';
+import { AuthService } from 'src/app/services/auth.service';
 
 import { BaseService } from 'src/app/services/base.service';
 
@@ -9,42 +11,44 @@ import { BaseService } from 'src/app/services/base.service';
   templateUrl: './notes.component.html',
   styleUrls: ['./notes.component.scss'],
 })
-export class NotesComponent implements OnInit {
+export class NotesComponent implements OnInit, OnDestroy {
   isOpen = false;
+  isSuperAdmin: boolean = false;
+  subscription: Subscription = new Subscription;
   isUpdating = false;
+  isLoading: boolean | undefined;
   inputClass: boolean =false;
   notes: Notes[] = [];
   title: string = '';
   body: string = '';
-  time: string= '';
+  timeStamp: Date = new Date();
   key: any;
   buttonText: string ='Jegyzet létrehozása';
   searchWord:any = "";
+  errorm = null;
+  clearError = false;
 
-  constructor(private baseService: BaseService) {
-    console.log(this.key);
+  constructor(private baseService: BaseService,
+    private authService: AuthService) {
   }
 
   ngOnInit(): void {
+    this.isLoading = true;
     this.baseService.getNotes().subscribe({
       next: (notes) => {
+        this.isLoading = false
         this.notes = notes;
+    this.subscription =    this.authService.isSuperAdmin.subscribe(
+          (value) => this.isSuperAdmin = value
+        )
+        console.log(this.subscription)
       },
       error: (err) => {
-        console.log(err);
+        this.errorm = err.message;
       },
     });
 
-
-    // setInterval(()=>this.date(),1000)
   }
-  // date(){
-  // const date = new Date().toDateString();
-  // const hours = new Date().getHours().toString();
-  // const minutes = new Date().getMinutes().toString();
-  // const seconds = new Date().getSeconds().toString();
-  // const time = date + " - " + hours + ":" + minutes + ":" + seconds;
-  // this.time = time;}
 
   createUpdateControl() {
     if (this.key == undefined) {
@@ -60,6 +64,8 @@ export class NotesComponent implements OnInit {
     const body = {
       title: this.title,
       body: this.body,
+      timeStamp: this.timeStamp.getTime().toString(),
+      counter: 0
     };
     this.baseService.createNote(body);
     this.title = '';
@@ -71,10 +77,18 @@ export class NotesComponent implements OnInit {
     this.baseService.deleteNote(note);
   }
 
+  deleteAllNotes() {
+    this.baseService.deleteAllNotes().subscribe((response) => {
+      this.notes = []
+    })
+  }
+
   updateNote() {
     const body = {
       title: this.title,
       body: this.body,
+      timeStamp: this.timeStamp.getTime().toString(),
+      counter: 1
     };
     this.baseService.updateNote(this.key, body);
     this.isUpdating = false;
@@ -89,5 +103,15 @@ export class NotesComponent implements OnInit {
     this.isOpen = true;
     this.buttonText = "Módosítás"
     
+  }
+
+  onHandleError() {
+    this.errorm = null;
+    this.clearError = true;
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe()
+    console.log(this.subscription)
   }
 }

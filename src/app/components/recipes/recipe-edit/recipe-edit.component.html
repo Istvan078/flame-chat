@@ -1,36 +1,38 @@
-<form (ngSubmit)="onCreate()" [formGroup]="recipeForm" #f="ngForm">
-    <mat-form-field>
-        <mat-label>Kulcs</mat-label>
-        <input formControlName="key" matInput type="text">
-        
-    </mat-form-field>
+<form class="mt-3" (ngSubmit)="onSubmit()" [formGroup]="recipeForm" #f="ngForm">
     <mat-form-field>
         <mat-label>Recept neve</mat-label>
+        <mat-icon matSuffix>menu_book</mat-icon>
         <input formControlName="name" matInput type="text">
         <span *ngIf="!recipeForm.get('name')?.valid && recipeForm.get('name')?.touched">Kerem adjon meg egy recept nevet!</span>
     </mat-form-field>
     
     <mat-form-field>
         <mat-label>Hozzávalók</mat-label>
-        <input formControlName="ingredients" matInput type="text">
+        <textarea formControlName="ingredients" matInput rows="5"></textarea>
     </mat-form-field>
     <mat-form-field>
         <mat-label>Elkészités</mat-label>
-        <input formControlName="howToMake" matInput type="text">
+        <textarea formControlName="howToMake" matInput rows="5"></textarea>
     </mat-form-field>
     <mat-form-field>
         <mat-label>Elkészitési idő</mat-label>
+        <mat-icon matSuffix>schedule</mat-icon>
         <input formControlName="timeToMake" matInput type="number">
     </mat-form-field>
     <mat-form-field>
         <mat-label>Adag</mat-label>
+        <mat-icon matSuffix>restaurant</mat-icon>
         <input formControlName="portion" matInput type="number">
     </mat-form-field>
-        <select formControlName="difficulty"  id="difficulty">
-            <option value="Konnyu">Konnyu</option>
-            <option value="Kozepes">Kozepes</option>
-            <option value="Nehez">Nehez</option>
-        </select>
+        <mat-form-field class="select-container">
+            <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
+            <mat-label>Nehezseg</mat-label>
+            <mat-select formControlName="difficulty"  id="difficulty">
+                <mat-option ngClass="green" value="konnyu">Konnyu</mat-option>
+                <mat-option ngClass="yellow" value="kozepes">Kozepes</mat-option>
+                <mat-option ngClass="red" value="nehez">Nehez</mat-option>
+            </mat-select>
+        </mat-form-field>
         <mat-form-field *ngIf="!recipeForm.valid && recipeForm.touched" class="text-center border border-danger">
             <mat-label></mat-label>
             <span class="text-danger">Kerem adjon meg valos adatokat!</span>
@@ -41,7 +43,5 @@
         <mat-label>Fénykép Url</mat-label>
         <input formControlName="photo" matInput type="text">
     </mat-form-field> -->
-    <button [disabled]="!f.valid" type="submit">Recept hozzáadása</button>
+    <button mat-button [disabled]="!f.valid" type="submit">{{submitButtonValue}}</button>
 </form>
-
-<div>{{recipe}}</div>

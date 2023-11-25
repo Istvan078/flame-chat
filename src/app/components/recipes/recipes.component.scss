@@ -1,2 +1,14 @@
+.container {
+    display: flex;
+    justify-content: center;
+    gap:10px
+}
 
+.active {
+    background-color: rgba(126, 3, 126, 0.7);
+    border: 2px solid purple;
+}
 
+.border-success {
+    border-color: rgba(13, 106, 13, 0.5) !important;
+}

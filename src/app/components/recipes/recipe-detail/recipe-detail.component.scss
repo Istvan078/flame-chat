@@ -1,0 +1,15 @@
+.recipe-making-container {
+    display: flex;
+}
+
+.card-content {
+    padding-top: 16px;
+}
+
+.deleteButton {
+    background-color:red !important;
+}
+.deleteButton:hover{
+    background-color: rgb(238, 51, 51) !important;
+    border: 2px solid rgb(142, 19, 19);
+}
