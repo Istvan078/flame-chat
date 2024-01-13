@@ -1,8 +1,51 @@
-<ngb-toast class="tooltipTarget d-grid justify-content-center text-center" [autohide]="false" header="Fozz valami istenit, bongessz a listabol">
-    <button positionTarget=".tooltipTarget" ngbTooltip="Csakis a legfinomabb etelek egy helyen!" routerLink="recipes" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>restaurant</mat-icon></span><h3 class="d-inline">Receptek</h3><span class="icons"><mat-icon>menu_book</mat-icon></span></button> 
-</ngb-toast>
+<ng-container *ngIf="userLoggedIn">
+  <div class="row">
+  
+    <div class="col-12 col-md-6 col-lg-3 mb-2">
+      <ngb-toast class="tooltipTarget1 d-grid justify-content-center text-center" [autohide]="false" header="Fozz valami istenit, bongessz a listabol">
+          <button class="greenButton" positionTarget=".tooltipTarget1" ngbTooltip="Csakis a legfinomabb etelek egy helyen!" routerLink="recipes" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>restaurant</mat-icon></span><h3 class="d-inline">Receptek</h3><span class="icons"><mat-icon>menu_book</mat-icon></span></button>
+      </ngb-toast>
+    </div>
+  
+    <div class="col-12 col-md-6 col-lg-3 mb-2">
+      <ngb-toast class="tooltipTarget2 d-grid justify-content-center text-center" [autohide]="false" header="Chatelj az ismerőseiddel">
+        <button class="blueButton" positionTarget=".tooltipTarget2" ngbTooltip="Egy chat-app, ahol felhőtlen a beszélgetés!" routerLink="chat" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>chat</mat-icon></span><h3 class="d-inline">Chat</h3><span class="icons"><mat-icon>groups</mat-icon></span></button>
+      </ngb-toast>
+    </div>
+  
+    <div class="col-12 col-md-6 col-lg-3 mb-2">
+      <ngb-toast class="tooltipTarget3 d-grid justify-content-center text-center" [autohide]="false" header="Tekintsd meg a jelenlegi időjárást">
+        <button class="orangeButton" positionTarget=".tooltipTarget3" ngbTooltip="Időjárásjelentés" routerLink="weather" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>sunny</mat-icon></span><h3 class="d-inline">Időjárás</h3><span class="icons"><mat-icon></mat-icon></span></button>
+      </ngb-toast>
+    </div>
+  
+    <div class="col-12 col-md-6 col-lg-3 mb-2">
+      <ngb-toast class="tooltipTarget4 d-grid justify-content-center text-center" [autohide]="false" header="Jegyzetek írása">
+        <button class="yellowButton" positionTarget=".tooltipTarget4" ngbTooltip="Írd meg a saját jegyzeteid" routerLink="notes" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>notes</mat-icon></span><h3 class="d-inline">Jegyzetek</h3><span class="icons"><mat-icon></mat-icon></span></button>
+      </ngb-toast>
+    </div>
+  
+  </div>
+</ng-container>
 
-<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+<ng-container *ngIf="!userLoggedIn">
+  <div class="row">
+  
+    <div class="col-12 col-md-6 col-lg-3 mb-2">
+      <ngb-toast class="tooltipTarget5 d-grid justify-content-center text-center" [autohide]="false" header="Regisztráció">
+        <button class="greenButton" positionTarget=".tooltipTarget5" ngbTooltip="Regisztrálj e-mail címmel, vagy lépj be egy gombnyomásra Google-fiókkal" routerLink="signup" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>notes</mat-icon></span><h3 class="d-inline">Regisztráció</h3><span class="icons"><mat-icon></mat-icon></span></button>
+      </ngb-toast>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3 mb-2">
+      <ngb-toast class="tooltipTarget6 d-grid justify-content-center text-center" [autohide]="false" header="Bejelentkezés">
+        <button class="blueButton" positionTarget=".tooltipTarget6" ngbTooltip="Lépj be e-mail címeddel, vagy Google-fiókoddal, vagy telefonszámoddal egyszerűen  " routerLink="login" mat-raised-button color="accent" type="button"><span class="icons"><mat-icon>notes</mat-icon></span><h3 class="d-inline">Bejelentkezés</h3><span class="icons"><mat-icon></mat-icon></span></button>
+      </ngb-toast>
+    </div>
+  
+  </div>
+</ng-container>
+
+<!-- <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
     <div class="toast-header">
       <img src="..." class="rounded me-2" alt="...">
       <strong class="me-auto">Bootstrap</strong>
@@ -12,4 +55,5 @@
     <div class="toast-body">
       Hello, world! This is a toast message.
     </div>
-  </div>
+</div> -->
+

@@ -11,6 +11,8 @@ import { RecipesComponent } from './components/recipes/recipes.component';
 import { RecipeEditComponent } from './components/recipes/recipe-edit/recipe-edit.component';
 import { RecipeDetailComponent } from './components/recipes/recipe-detail/recipe-detail.component';
 import { RecipeListComponent } from './components/recipes/recipe-list/recipe-list.component';
+import { ChatComponent } from './components/chat/chat.component';
+import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 const routes: Routes = [
   {path: "", component: HomeComponent},
@@ -19,7 +21,8 @@ const routes: Routes = [
   {path: "login", component: LoginComponent},
   {path: "users", component: UsersComponent},
   {path: "weather", component: WeatherComponent},
-  
+    {path: "chat", component: ChatComponent},
+    {path: "profile/:uid", component: UserProfileComponent},
   {path: "recipes", component: RecipesComponent, children: [
   //  {path: "list", component: RecipeListComponent},
     {path: "create", component: RecipeEditComponent},

@@ -1,9 +1,9 @@
 import { Injectable, OnInit } from '@angular/core';
 import { AngularFireAuth } from "@angular/fire/compat/auth";
-import { FacebookAuthProvider, GoogleAuthProvider, RecaptchaVerifier, getAuth } from "@angular/fire/auth";
+import { FacebookAuthProvider, GoogleAuthProvider, RecaptchaVerifier, User, getAuth } from "@angular/fire/auth";
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { UserInterface } from '../models/user.model';
+import { UserClass, UserInterface } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +22,9 @@ export class AuthService implements OnInit {
   httpHeaders: HttpHeaders = new HttpHeaders();
   authHeader: any;
 
+  usersSubject!: BehaviorSubject<UserClass[]>;
+  userLoggedInSubject!: BehaviorSubject<{}> 
+
 
   constructor(
     private aFireAuth: AngularFireAuth,
@@ -31,6 +34,7 @@ export class AuthService implements OnInit {
     this.isLoggedIn().subscribe((user) => {
       if(user)
       this.user = user
+      this.userLoggedInSubject = new BehaviorSubject(this.user)
       user?.getIdToken().then((idToken) => {
         this.user.idToken = idToken
         this.authHeader = this.httpHeaders.set("Authorization", this.user.idToken)
@@ -39,6 +43,11 @@ export class AuthService implements OnInit {
             this.user.claims = claims
             console.log("A felhasználó már rendelkezik jogosultságokkal.")
             this.isSuperAdmin.next(this.user.claims.superAdmin)
+            
+            this.getUsers().subscribe(
+              (users: UserClass[]) => {this.usersSubject= new BehaviorSubject(users)
+              console.log(users)}
+            )
           }
           else {
             this.setCustomClaims(this.user.uid, this.defaultClaims)
@@ -51,10 +60,16 @@ export class AuthService implements OnInit {
       })
     })
     
+
+    
   }
 
   createUserWithEmAndPa(email: string, password: string) {
     this.aFireAuth.createUserWithEmailAndPassword(email, password)
+  }
+
+  getUsersSubject() {
+    return this.usersSubject
   }
 
   getClaims() {
@@ -63,14 +78,14 @@ export class AuthService implements OnInit {
     })
   }
 
-  getUsers(): Observable<Partial<UserInterface>> {
+  getUsers(): Observable<UserClass[]> {
     if (this.user.idToken) {
       let headers = new HttpHeaders().set("Authorization", this.user.idToken)
-      return this.http.get(this.usersApiUrl + "users", {
+      return this.http.get<UserClass[]>(this.usersApiUrl + "users", {
         headers
       })
     }
-    return of({});
+    return of([{}]);
   }
 
   isLoggedIn() {
@@ -82,7 +97,7 @@ export class AuthService implements OnInit {
   }
 
   ngOnInit(): void {
-    
+      
   }
 
   setCustomClaims(uid: string, claims: any) {

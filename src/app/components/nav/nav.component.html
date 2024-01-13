@@ -18,7 +18,7 @@
     <!-- </div> -->
   
       <ul [ngClass]="{'mt-3':isMenuClicked}" class="navbar-nav h5">
-        <li class="nav-item text-center">
+        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item text-center">
           <a [routerLinkActiveOptions]="{exact:true}" routerLink="" routerLinkActive="active-link"  class="navbar-brand nav-link">
             <span class="bi bi-house-fill"></span>
             Kezdőlap</a
@@ -29,27 +29,32 @@
             <span>Felhasználók</span>
           </a>
         </li>
-        <li *ngIf="isLoggedIn" class="nav-item">
+        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
           <a class="nav-link" routerLinkActive="active-link" routerLink="weather"
             >Időjárás</a
           >
         </li>
-        <li *ngIf="isLoggedIn" class="nav-item">
+        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
+          <a class="nav-link" routerLinkActive="active-link" routerLink="chat"
+            >Chat</a
+          >
+        </li>
+        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
           <a class="nav-link" routerLinkActive="active-link" [routerLink]="['recipes']"
             >Receptek</a
           >
         </li>
-        <li *ngIf="isLoggedIn" class="nav-item">
+        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
           <a class="nav-link" routerLinkActive="active-link" routerLink="notes"
             >Jegyzetek</a
           >
         </li>
-        <li class="nav-item">
+        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item">
           <a class="nav-link" routerLink="signup" routerLinkActive="active-link">
             Regisztráció
           </a>
         </li>
-        <li class="nav-item">
+        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item">
           <a
             class="nav-link"
             routerLinkActive="active-link"
@@ -58,11 +63,11 @@
             >Bejelentkezés</a
           >
         </li>
-        <li *ngIf="isLoggedIn" class="nav-item">
+        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
           <a
             class="nav-link sign-out"
   
-            routerLink="/login"
+            routerLink=""
   
             (click)="signOut()"
             >Kijelentkezés

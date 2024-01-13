@@ -25,14 +25,20 @@ export class SignupComponent {
 
   emailSuggestion() {
     this.signupForm.form.patchValue({
-      email: "Pelda078@gmail.com"
+      email: "pelda078@gmail.com"
     })
   }
 
   createUserWithEmAndPa(){
     this.authService.createUserWithEmAndPa(this.email, this.password);
+    this.authService.loginWithEmAndPa(this.email, this.password);
     this.signupForm.reset();
-    this.router.navigate(['login']);
+    this.authService.isLoggedIn().subscribe(
+      (user) => {
+      this.router.navigate(['profile/'+ user?.uid]);
+      }
+    )
+    
     this.isLoggedIn = "";
   }
 

@@ -1,6 +1,8 @@
-import { ViewEncapsulation } from '@angular/core';
+import { OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Component } from '@angular/core';
 import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
+import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -8,11 +10,26 @@ import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
   styleUrls: ['./home.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
-export class HomeComponent {
-  constructor(private ngbTConfig: NgbTooltipConfig){
+export class HomeComponent implements OnInit{
+  userLoggedIn: {} = {}
+  
+
+  constructor(
+    private ngbTConfig: NgbTooltipConfig,
+    private auth: AuthService
+    ){
     ngbTConfig.placement = "bottom"
     ngbTConfig.tooltipClass = "tooltippp"
     ngbTConfig.animation = true
     ngbTConfig.closeDelay = 2000
+
   }
+
+  ngOnInit(): void {
+    this.auth.isLoggedIn().subscribe(
+      (user: any) => this.userLoggedIn = user
+    )
+  }
+
+  
 }

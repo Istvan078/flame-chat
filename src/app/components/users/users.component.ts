@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { UserInterface } from 'src/app/models/user.model';
+import { UserClass, UserInterface } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
@@ -30,7 +30,7 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.authService.getUsers().subscribe((users: Partial<UserInterface>) => {
+      this.authService.getUsers().subscribe((users: UserClass[]) => {
         this.users = users;
       });
     }, 1000);

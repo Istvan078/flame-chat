@@ -15,6 +15,22 @@
     }
 }
 
+.container-1{
+    h2{
+        margin-top: 10px !important;
+        height: fit-content;
+        background-color: rgba(10, 126, 10, 0.7);
+        border-radius: 10px;
+    }
+}
+
+.container-2{
+    height: fit-content;
+    button {
+        height: fit-content;
+    }
+}
+
 
 form {
     display: grid;

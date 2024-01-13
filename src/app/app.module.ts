@@ -6,6 +6,7 @@ import { HTTP_INTERCEPTORS, HttpClientModule } from "@angular/common/http";
 
 import { AngularFireModule } from "@angular/fire/compat";
 import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
+import { AngularFireStorageModule } from '@angular/fire/compat/storage';
 import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
 import { AngularFireAuthModule } from "@angular/fire/compat/auth";
 import { Environments } from './environments';
@@ -41,8 +42,11 @@ import { RecipeEditComponent } from './components/recipes/recipe-edit/recipe-edi
 import { RecipeListComponent } from './components/recipes/recipe-list/recipe-list.component';
 import { ShortenPipe } from './pipes/shorten.pipe';
 import { SortPipe } from './pipes/sort.pipe';
-import { AuthInterceptorService } from './services/auth-interceptor.service';
-import { LoggingInterceptorService } from './services/logging-interceptor.service';
+ import { AuthInterceptorService } from './services/auth-interceptor.service';
+ import { LoggingInterceptorService } from './services/logging-interceptor.service';
+import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
+import { ChatComponent } from './components/chat/chat.component';
+import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 
 @NgModule({
@@ -62,7 +66,10 @@ import { LoggingInterceptorService } from './services/logging-interceptor.servic
     RecipesComponent,
     RecipeDetailComponent,
     RecipeEditComponent,
-    RecipeListComponent
+    RecipeListComponent,
+    LoadingSpinnerComponent,
+    ChatComponent,
+    UserProfileComponent
   ],
   imports: [
     BrowserModule,
@@ -75,6 +82,7 @@ import { LoggingInterceptorService } from './services/logging-interceptor.servic
     AngularFireDatabaseModule,
     AngularFireAuthModule,
     AngularFirestoreModule,
+    AngularFireStorageModule,
     BrowserAnimationsModule,
     
     MatFormFieldModule,
