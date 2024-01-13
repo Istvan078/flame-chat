@@ -1,6 +1,8 @@
+import { Claims } from "./user.model";
+
 export class Chat {
     
- [indexS:string]: string
+ [indexS:string]: string | undefined | Claims
     constructor(
         
         public id: string = "",

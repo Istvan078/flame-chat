@@ -1,55 +1,106 @@
 <h1 class="text-center">Flame Chat</h1>
 
 <div class="d-grid justify-content-center">
-    <mat-card class="card mb-5">
-        <mat-card-header>
-            <mat-card-title>
-                <mat-form-field class="mat">
-                    <mat-label>Üzenet írása</mat-label>
-                    <textarea [(ngModel)]="message.message" matInput rows="5"></textarea>
-                </mat-form-field>
-            </mat-card-title>
-        </mat-card-header>
-    
-        <mat-card-content class="text-center">
-            <button class="me-2 mt-2" color="accent" (click)="addMessage()"  mat-raised-button>Üzenet küldése</button>
-            <button class="mt-2 deleteButton" [disabled]="!isSAdmin" (click)="deleteMessages()"  mat-raised-button>Üzenetek törlése</button>
-        </mat-card-content>
-    </mat-card>
+  <mat-card class="card mb-5">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-form-field class="mat">
+          <mat-label>Üzenet írása</mat-label>
+          <textarea [(ngModel)]="message.message" matInput rows="5"></textarea>
+        </mat-form-field>
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content class="text-center">
+      <button
+        class="me-2 mt-2"
+        color="accent"
+        (click)="addMessage()"
+        mat-raised-button
+      >
+        Üzenet küldése
+      </button>
+      <button
+        class="mt-2 deleteButton"
+        [disabled]="!isSAdmin"
+        (click)="deleteMessages()"
+        mat-raised-button
+      >
+        Üzenetek törlése
+      </button>
+    </mat-card-content>
+  </mat-card>
 </div>
 
-<div [ngClass]="_user.uid === user['userId'] ? 'justify-content-start': 'justify-content-end'" class="d-grid mb-2 mainDiv" *ngFor="let _user of users">
-    <mat-card [ngClass]="_user.uid === user['userId'] ? 'left messagesCard': 'right'" *ngFor="let message of messages"  class="card" >
-        <ng-container *ngIf="message.uid === _user['uid']">
-            <mat-card-header>
-                
-                    <mat-card-title > 
-                        {{message.displayName}} <span class="ms-2 bi bi-trash3-fill h3 text-danger rounded" *ngIf="user.userId === message.uid" (click)="deleteMessage(message)"></span>
-    
-                    </mat-card-title>
-                    
-            
-            </mat-card-header>
-            <div class="recipe-making-container">
-                <mat-card-content>
-                    <b>{{message.message}}</b>
-                    <img [src]="userProfiles[5].profilePicture" alt="">
-                </mat-card-content>
-                <mat-card-content class="card-content">
-                    <mat-card-subtitle> </mat-card-subtitle>
-                </mat-card-content>
-            </div>
+<div
+  [ngClass]="
+    _user.uid === user['userId']
+      ? 'justify-content-start'
+      : 'justify-content-end'
+  "
+  class="d-grid mb-2 mainDiv"
+  *ngFor="let _user of users"
+>
+  <mat-card
+    [ngClass]="_user.uid === user['userId'] ? 'left messagesCard' : 'right'"
+    *ngFor="let message of messages"
+    class="card"
+  >
+    <ng-container *ngIf="message.uid === _user['uid']">
+      <mat-card-header>
+        <mat-card-title-group>
+            <mat-card-title>
+                <!-- <div class="d-flex justify-content-start align-items-center"> -->
+                    {{ message.displayName }}
+                    <img mat-card-sm-image class="ms-2" style="border-radius: 10px;"  [src]="message['profilePicture']" alt="Profilkép" />
+                <!-- </div> -->
+              
+        
 
-        <mat-card-footer>
-            <mat-card-content>
-                <mat-card-subtitle [ngClass]="_user.uid === user['userId'] ? 'grey': 'right'">{{message.email}}</mat-card-subtitle>
-                <mat-card-subtitle [ngClass]="_user.uid === user['userId'] ? 'grey': 'right'">{{message.date}}</mat-card-subtitle>
-            </mat-card-content>
-        </mat-card-footer>
-        <!-- <mat-card-actions class="justify-content-end">
+        
+              
+          <!-- <div class="d-flex justify-content-end align-items-center"> -->
+              <button class="updateButton ms-2 mt-2" *ngIf="user.userId === message.uid" (click)="updateMessage(message)" type="button" mat-button color="accent">Módosítás</button>
+              <span
+              class="ms-2 mt-2 bi bi-trash3-fill h3 text-danger rounded"
+              *ngIf="user.userId === message.uid"
+              (click)="deleteMessage(message)"
+            ></span>
+            </mat-card-title>
+          <!-- </div> -->
+        </mat-card-title-group>
+          
+        
+      </mat-card-header>
+      
+      <div class="recipe-making-container">
+        <mat-card-content>
+          <b>{{ message.message }}</b>
+          
+        </mat-card-content>
+        <mat-card-content class="card-content">
+          <mat-card-subtitle> </mat-card-subtitle>
+        </mat-card-content>
+      </div>
+
+      <mat-card-footer>
+        <mat-card-content>
+            
+            <hr>
+          <mat-card-subtitle
+            [ngClass]="_user.uid === user['userId'] ? 'grey' : 'right'"
+            >{{ message.email }}</mat-card-subtitle
+          >
+          <mat-card-subtitle
+            [ngClass]="_user.uid === user['userId'] ? 'grey' : 'right'"
+            >{{ message.date }}</mat-card-subtitle
+          >
+        </mat-card-content>
+      </mat-card-footer>
+      <!-- <mat-card-actions class="justify-content-end">
                 <button class="me-2"  routerLink="/recipes/edit" [queryParams]="{key: recipe.key}" mat-raised-button color="accent" type="button">Modositas</button>
                 <button class="deleteButton"  (click)="deleteRecipe()" mat-raised-button type="button">Torles</button>
             </mat-card-actions> -->
-        </ng-container>
-        </mat-card>
+    </ng-container>
+  </mat-card>
 </div>

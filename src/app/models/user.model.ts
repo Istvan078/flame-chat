@@ -1,3 +1,5 @@
+import { Chat } from "./chat.model";
+
 export interface UserInterface {
     uid?: string;
     email?: string;
@@ -10,17 +12,24 @@ export interface UserInterface {
     profilePicture?: string;
 }
 
-export class UserClass {
-    [key: string] : string | undefined | object | Date
+export type Claims = {
+    superAdmin: boolean,
+    admin: boolean,
+    basic: boolean
+}
+
+export class UserClass extends Chat{
+    [key: string] : string | undefined  | Claims
     constructor(
-       private uid?: string,
-       public email?: string,
-       public displayName?: string,
-       private claims?: {
-            superAdmin: boolean,
-            admin: boolean,
-            basic: boolean
-        },
+        id?:string,
+       uid?: string,
+       email?: string,
+       displayName?: string,
+       message?:string,
+        date?: string,
+       private claims?: Claims,
         public  profilePicture?: string,
-    ){}
+    ){
+        super(id, uid, displayName, email, message, date)
+    }
 }

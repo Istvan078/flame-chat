@@ -18,7 +18,7 @@
 
     <div *ngFor="let gender of genders">
         <label>
-            <input ngModel [value]="gender"  type="radio" name="genders" id="genders" required>
+            <input [(ngModel)]="this.genderr" ngModel [value]="gender"  type="radio" name="gender" id="gender" required>
             {{gender}}
         </label>
     </div>

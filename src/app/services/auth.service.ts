@@ -85,7 +85,7 @@ export class AuthService implements OnInit {
         headers
       })
     }
-    return of([{}]);
+    return of ([]);
   }
 
   isLoggedIn() {
@@ -93,7 +93,7 @@ export class AuthService implements OnInit {
   }
 
   loginWithEmAndPa(email: string, password: string) {
-    this.aFireAuth.signInWithEmailAndPassword(email, password)
+   this.aFireAuth.signInWithEmailAndPassword(email, password)
   }
 
   ngOnInit(): void {

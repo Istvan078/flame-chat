@@ -33,7 +33,45 @@ export class LoginComponent{
 
   loginWithEmAndPa() {
     this.authService.loginWithEmAndPa(this.email, this.password);
-    this.router.navigate([""]);
+    this.authService.isLoggedIn().subscribe(
+      (user: any) => {
+
+        this.base.getUserProfiles().subscribe(
+          (userProfiles:any) => {
+            this.userProfiles = userProfiles
+           
+            let userProfile = this.userProfiles.filter(
+              (userProfile:any) => userProfile.uid === user.uid
+              
+            )
+            console.log(userProfile)
+    
+            this.base.userProfileSubject.next(userProfile)
+            
+            if(userProfile.length === 0) {
+              userProfile.push(user)
+              for(let i=0; i<1; i++) {
+               this.base.addUserData({
+                uid:userProfile[0].uid,
+                email: user.email,
+                
+              })
+               console.log("ciklus lefutott")
+              } 
+             } else {console.log("van már ilyen user")}
+             if(userProfile.length !=0) {
+               console.log("siker", userProfile.length)
+             }
+            if(userProfile[0].birthDate === undefined || userProfile[0].birthDate === ""){
+              this.router.navigate(["profile/" + user.uid])
+            } else {this.router.navigate(["profile/" + user.uid])}
+          }
+        )
+        
+      }
+    )
+    
+    
   }
 
   loginWithGoogle(): void {
@@ -51,22 +89,19 @@ export class LoginComponent{
                     
                   )
                   console.log(userProfile)
-
-                  this.base.userProfileSubject.next(userProfile)
                   
                   if(userProfile.length === 0) {
                     userProfile.push(user)
                     for(let i=0; i<1; i++) {
-                     this.base.addUserData({uid:userProfile[0].uid})
-                     console.log("ciklus lefutott")
+                     this.base.addUserData({uid:userProfile[0].uid,
+                    email: user.email
+                    })
+                     console.log("felhasználó hozzáadva")
                     } 
                    } else {console.log("van már ilyen user")}
-                   if(userProfile.length !=0) {
-                     console.log("siker", userProfile.length)
-                   }
                   if(userProfile[0].birthDate === undefined || userProfile[0].birthDate === ""){
                     this.router.navigate(["profile/" + user.uid])
-                  } else {this.router.navigate(["profile/" + user.uid])}
+                  } else {this.router.navigate([""])}
                 }
               )
             

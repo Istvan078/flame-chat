@@ -94,7 +94,7 @@ export class BaseService implements OnInit{
     this.refChats.update(key, body)
   }
 
-  deleteMessage(body: Chat){
+  deleteMessage(body: any){
    return this.refChats.remove(body['key'])
   }
 
