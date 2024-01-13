@@ -1,37 +1,45 @@
-{{users|json}}
-<form class="d-grid" *ngFor="let user of users" (ngSubmit)="saveProfile()" #f="ngForm">
-    <mat-form-field>
-        <mat-label for="email">Email</mat-label>
-        <input matInput [(ngModel)]="user.email" type="email" name="email" email required #emaill="ngModel">
-    </mat-form-field>
 
-    <mat-form-field>
+{{userProfile|json}}
 
-        <mat-label for="displayName">Felhasználónév</mat-label>
-        <input matInput [(ngModel)]="user.displayName" type="text" name="displayName" required>
-    </mat-form-field>
+    <form *ngFor="let uprof of userProfile" class="d-grid" (ngSubmit)="saveProfile()" #f="ngForm">
+        <mat-form-field>
+            <mat-label for="email">Email</mat-label>
+            <input matInput [(ngModel)]="uprof.email" type="email" name="email" email required #emaill="ngModel">
+        </mat-form-field>
+    
+        <mat-form-field>
+    
+            <mat-label for="displayName">Felhasználónév</mat-label>
+            <input matInput [(ngModel)]="uprof.displayName" type="text" name="displayName" required>
+        </mat-form-field>
+    
+        <mat-form-field>
+            <mat-label for="birthDate">Születési idő</mat-label>
+            <input  matInput [(ngModel)]="uprof['birthDate']" type="text" name="birthDate"  required >
+        </mat-form-field>
+    
+         
+            <!-- <mat-form-field *ngIf="!uprof['birthDate']">
+                <mat-label for="birthDate">Születési idő</mat-label>
+                <input  matInput [(ngModel)]="user['birthDate']" type="date" name="birthDate"  required >
+            </mat-form-field>
+        -->
+    
+        <div class="input-group">
+            <h4 class="me-2"><label for="profilePicture">Profilkép:</label></h4>
+            <input (change)="selectFile($event)" class="form-control" [(ngModel)]="profilePhoto" type="file" name="profilePicture"  required >
+        </div>
 
-    <mat-form-field *ngIf="userProfile[0]?.birthDate">
-        <mat-label for="birthDate">Születési idő</mat-label>
-        <input  matInput [(ngModel)]="userProfile[0].birthDate" type="date" name="birthDate"  required >
-    </mat-form-field>
-
-    <mat-form-field>
-        <mat-label for="birthDate">Születési idő</mat-label>
-        <input  matInput [(ngModel)]="user['birthDate']" type="date" name="birthDate"  required >
-    </mat-form-field>
-
-    <div class="input-group">
-        <h4 class="me-2"><label for="profilePicture">Profilkép:</label></h4>
-        <input (change)="selectFile($event)" class="form-control" [(ngModel)]="profilePhoto" type="file" name="profilePicture"  required >
-    </div>
-
-    <div *ngFor="let gender of genders">
-        <label>
-            <input [(ngModel)]="user['gender']" ngModel [value]="gender"  type="radio" name="gender" id="gender" required>
-            {{gender}}
-        </label>
-    </div>
-
-    <button [disabled]="!f.valid" color="accent" mat-raised-button type="submit">Adatok mentése</button>
-</form>
+        <div>
+            <img [src]="uprof.profilePicture" [alt]="uprof.profilePicture">
+        </div>
+    
+        <div *ngFor="let gender of genders">
+            <label>
+                <input [(ngModel)]="uprof['gender']" ngModel [value]="gender"  type="radio" name="gender" id="gender" required>
+                {{gender}}
+            </label>
+        </div>
+    
+        <button [disabled]="!f.valid" color="accent" mat-raised-button type="submit">Adatok mentése</button>
+    </form>

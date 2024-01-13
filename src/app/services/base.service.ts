@@ -2,7 +2,7 @@ import { Injectable, OnInit } from '@angular/core';
 
 import { AngularFireDatabase, AngularFireList } from "@angular/fire/compat/database";
 import { Notes } from '../models/notes';
-import { Observable, Subject, catchError, finalize, map, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, catchError, finalize, map, throwError } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Recipe } from '../models/recipe.model';
 import { AuthService } from './auth.service';
@@ -30,7 +30,7 @@ export class BaseService implements OnInit{
   refChats: AngularFireList<Chat>;
   refUsers: AngularFireList<UserClass>;
   apiUrl = "https://us-central1-project0781.cloudfunctions.net/api/"
-  userProfileSubject: Subject<any> = new Subject()
+  userProfileSubject: Subject<any> = new Subject() 
 
 
   constructor(
@@ -49,11 +49,8 @@ export class BaseService implements OnInit{
 
   }
 
-  getUserProfSubject() {
-    return this.userProfileSubject
-  }
 
-  getUserProfiles() {
+  getUserProfiles(): Observable<any> {
     return  this.refUsers.snapshotChanges().pipe(
       map(
         (changes => changes.map(

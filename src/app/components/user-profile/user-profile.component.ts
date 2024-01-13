@@ -10,18 +10,33 @@ import { BaseService } from 'src/app/services/base.service';
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss']
 })
-export class UserProfileComponent implements AfterViewInit{
+export class UserProfileComponent implements AfterViewInit, OnInit{
    @ViewChild("f") form!: NgForm
   users: UserClass[] = []
    genders: string[] = ["Férfi", "Nő"]
    profilePhotoUrl!: string 
    profilePhoto!: File
-   userProfile: any[] = []
+   userProfile: UserClass[] = []
+   userProfileOn: boolean = false
   constructor(private router: ActivatedRoute,
     private auth: AuthService,
     private base: BaseService
     ) {
- 
+
+      
+  }
+
+  ngOnInit(): void {
+
+    this.base.userProfileSubject.subscribe(
+      (userProf: UserClass[]) => {
+        this.userProfile = userProf
+        this.userProfileOn = true
+        console.log(this.userProfile)
+        
+
+      }
+    )
   }
 
 
@@ -30,6 +45,7 @@ export class UserProfileComponent implements AfterViewInit{
     setTimeout(() => {
       this.router.params.subscribe(
         (param: Params) => {
+  
           console.log(param["uid"])
           this.auth.getUsers().subscribe(
             (users:UserClass[]) => {
@@ -42,15 +58,22 @@ export class UserProfileComponent implements AfterViewInit{
             }
           )
 
+          this.base.getUserProfiles().subscribe(
+            (userProfiles: UserClass[]) => {
+            
+            const userProfil = userProfiles.filter(
+              (userProfile) => userProfile['uid'] === param["uid"]
+              
+              )
+              this.userProfile = userProfil
+            }
+          )
         }
       )
+
+
     }, 5000);
-    this.base.getUserProfSubject().subscribe(
-      (userProf) => {
-        this.userProfile = userProf
-        console.log(this.userProfile)
-      }
-    )
+
   }
 
   selectFile(event: any) {

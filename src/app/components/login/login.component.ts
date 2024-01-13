@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { PhoneAuthProvider } from '@angular/fire/auth';
 import { Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
@@ -51,7 +52,7 @@ export class LoginComponent{
                   )
                   console.log(userProfile)
 
-                  this.base.getUserProfSubject().next(userProfile)
+                  this.base.userProfileSubject.next(userProfile)
                   
                   if(userProfile.length === 0) {
                     userProfile.push(user)
