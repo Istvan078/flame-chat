@@ -1,19 +1,28 @@
 
 
 .card {
-    width: 50vw;
+    
+    height: fit-content;
+    
+    
 }
-.mat {
+.messageInput {
     width: 40vw;
+
+}
+.messageCard{
+width: 50vw;
 }
 
 .left{
     background-color: rgb(23, 23, 143, 0.5);
-    color: white
+    color: white;
+    width: 95vw;
 }
 
 .right{
     margin-bottom: 5px;
+    width: 100%;
 }
 
 .grey {
@@ -21,7 +30,12 @@
 }
 
 .mainDiv{
+    width: 100vw;
+    height: fit-content;
+}
 
+.mainDivUser{
+    width: 80vw;
 }
 
 .messagesCard {

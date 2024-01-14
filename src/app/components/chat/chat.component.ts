@@ -19,18 +19,17 @@ import { BaseService } from 'src/app/services/base.service';
   styleUrls: ['./chat.component.scss'],
 })
 export class ChatComponent implements OnInit, OnDestroy {
-  @ViewChild("spanAnchor") toCreated!: ElementRef;
+  @ViewChild('spanAnchor') toCreated!: ElementRef;
   users: Chat[] = [];
   isSAdmin: boolean = false;
   message: Chat = new Chat();
   messages: Chat[] = [];
   editMessage: boolean = false;
-  updateMessageKey: string = "";
+  updateMessageKey: string = '';
   userObject!: UserClass;
   userProfiles: UserClass[] = [];
   userProfile: UserClass[] = [];
-  count: number = 0
-
+  count: number = 0;
 
   user: {
     messageId: string;
@@ -48,12 +47,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   isSuperAdminSubscription!: Subscription;
   usersSubscription!: Subscription;
 
-  constructor(private auth: AuthService, private base: BaseService,
+  constructor(
+    private auth: AuthService,
+    private base: BaseService,
     private viewPortScroller: ViewportScroller,
-    private router: Router,
-    ) {
-
-    }
+    private router: Router
+  ) {}
 
   ngOnInit() {
     setTimeout(() => {
@@ -71,8 +70,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             }
             message.id = message['key'];
             message.id = message.uid;
-            this.count = Math.max(message.count) 
-           
+            this.count = Math.max(message.count);
+
             this.messages = messages;
             this.base.updateMessage(message['key'], message);
           }
@@ -86,7 +85,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.userProfile = userProfiles.filter(
               (userProfile: any) => userProfile.uid === user.uid
             );
-              
+
             this.user.userId = this.userProfile[0].uid;
             this.user.displayName = this.userProfile[0].displayName!;
             this.user.email = this.userProfile[0].email!;
@@ -118,29 +117,27 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.message.uid = this.user.userId;
     }
     let date = new Date();
-    let dateString = date.toLocaleDateString() + "  " + date.toLocaleTimeString()
+    let dateString =
+      date.toLocaleDateString() + '  ' + date.toLocaleTimeString();
     this.message.date = dateString;
     this.message.displayName = this.userProfile[0].displayName;
     this.message.email = this.userProfile[0].email;
-    console.log(this.count)
-     this.message.count = this.count + 1
-     this.count++
+    console.log(this.count);
+    this.message.count = this.count + 1;
+    this.count++;
     this.message['profilePicture'] = this.userProfile[0].profilePicture;
 
     this.base.addMessage(this.message);
-    this.base
-      .getMessages()
-      .subscribe((messages: any[]) => {
-        this.messages = messages
-      });
+    this.base.getMessages().subscribe((messages: any[]) => {
+      this.messages = messages;
+    });
 
-      // let dynamicAnchorId = this.toCreated.nativeElement.id
-      // this.router.navigate([], {fragment: dynamicAnchorId})
-    
+    // let dynamicAnchorId = this.toCreated.nativeElement.id
+    // this.router.navigate([], {fragment: dynamicAnchorId})
   }
 
   clearInput() {
-    this.message.message = ""
+    this.message.message = '';
   }
 
   deleteMessage(message: Chat) {
@@ -158,10 +155,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   navigateToUpdateMessage(message: Chat) {
-    this.updateMessageKey = message['key'] as string
-    this.editMessage = true
-    this.message.message = message.message
-    this.viewPortScroller.scrollToPosition([0, 0])
+    this.updateMessageKey = message['key'] as string;
+    this.editMessage = true;
+    this.message.message = message.message;
+    this.viewPortScroller.scrollToPosition([0, 0]);
   }
 
   updateMessage() {
@@ -169,7 +166,8 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.message.uid = this.user.userId;
     }
     let date = new Date();
-    let dateString = date.toLocaleDateString() + "  " + date.toLocaleTimeString()
+    let dateString =
+      date.toLocaleDateString() + '  ' + date.toLocaleTimeString();
     this.message.date = dateString;
     this.message.displayName = this.userProfile[0].displayName;
     this.message.email = this.userProfile[0].email;
@@ -179,8 +177,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.base
       .getMessages()
       .subscribe((messages: any[]) => (this.messages = messages));
-    this.viewPortScroller.scrollToAnchor(this.updateMessageKey)
-    this.editMessage = false
+    this.viewPortScroller.scrollToAnchor(this.updateMessageKey);
+    this.editMessage = false;
   }
 
   ngOnDestroy(): void {
