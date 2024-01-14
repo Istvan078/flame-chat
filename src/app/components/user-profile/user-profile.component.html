@@ -1,9 +1,7 @@
-{{ userProfile | json }}
-
 <div class="row">
   <div class="col">
     <form
-        class="d-grid"
+      class="d-grid"
       *ngFor="let uprof of userProfile"
       (ngSubmit)="saveProfile()"
       #f="ngForm"
@@ -83,11 +81,39 @@
         >
           {{ "Profilkép Feltöltése" }}
         </button>
+        <!-- <mat-progress-bar mode="determinate" [value]="percent"></mat-progress-bar> -->
       </div>
 
-      <div class="profilePicContainer">
+      <div
+        *ngIf="percent > 0"
+        class="progress mt-2 progressC"
+        style="height: 50px; width: 100%"
+      >
+        <div
+          [style]="{ width: percent + '%' }"
+          class="progress-bar progressC"
+          role="progressbar"
+          [attr.aria-valuenow]="percent"
+          [attr.aria-valuemin]="percent"
+          aria-valuemax="100"
+        >
+          <h4 class="pt-2">{{ percent }}%</h4>
+        </div>
+      </div>
+
+      <!-- <div *ngIf="percent>0" class="row justify-content-center mt-2">
+        <mat-progress-spinner [value]="percent" mode="determinate"></mat-progress-spinner>
+      </div> -->
+
+      <div *ngIf="percent === 0; else newPic" class="profilePicContainer">
         <img [src]="uprof.profilePicture" [alt]="uprof.profilePicture" />
       </div>
+
+      <ng-template #newPic>
+        <div class="profilePicContainer">
+          <img [src]="profilePhotoUrl" alt="Profilkep" />
+        </div>
+      </ng-template>
 
       <button
         [disabled]="!f.valid"

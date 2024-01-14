@@ -43,6 +43,7 @@ export class BaseService implements OnInit{
     this.refRecipeList = realTimeDatabase.list<Recipe>("/recipes")
     this.refChats = realTimeDatabase.list("/chats")
     this.refUsers = realTimeDatabase.list("/users")
+
   }
 
   ngOnInit(): void { 

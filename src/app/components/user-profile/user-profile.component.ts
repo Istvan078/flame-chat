@@ -25,6 +25,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   profilePhoto!: File;
   userProfile: UserClass[] = [];
   profilePicSub!: Subscription;
+  percent: number = 0
 
   ngOnDestroy(): void {
     this.profilePicSub.unsubscribe();
@@ -97,16 +98,23 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
         this.base.updateUserData(formValues, userProfileKey as string);
       });
-        this.route.navigate([""])
+        setTimeout(() => {
+          this.route.navigate([""])
+        }, 1000);
+         
     });
   }
 
   addProfilePic() {
-    this.base.addProfilePicture(this.profilePhoto);
+    this.base.addProfilePicture(this.profilePhoto).subscribe(
+      (percent) => this.percent = percent!
+    );
   }
 
   changeProfilePic() {
     this.userProfile[0].profilePicture = '';
-    this.base.addProfilePicture(this.profilePhoto);
+    this.base.addProfilePicture(this.profilePhoto).subscribe(
+      (percent) => this.percent = percent!
+    );
   }
 }

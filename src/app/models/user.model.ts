@@ -1,4 +1,4 @@
-import { Chat } from "./chat.model";
+
 
 export interface UserInterface {
     uid?: string;
@@ -12,24 +12,22 @@ export interface UserInterface {
     profilePicture?: string;
 }
 
-export type Claims = {
-    superAdmin: boolean,
-    admin: boolean,
-    basic: boolean
-}
 
-export class UserClass extends Chat{
-    [key: string] : string | undefined  | Claims
+export class UserClass{
+    [key: string] : string | object
     constructor(
-        id?:string,
-       uid?: string,
-       email?: string,
-       displayName?: string,
-       message?:string,
-        date?: string,
-       private claims?: Claims,
-        public  profilePicture?: string,
+      public uid: string = '',
+      public email: string = '',
+      public displayName: string = '',
+    //   public message?:string,
+    //   public  date?: string,
+       private claims: {    
+       superAdmin: boolean,
+       admin: boolean,
+       basic: boolean,
+    },
+        public  profilePicture: string = '',
     ){
-        super(id, uid, displayName, email, message, date)
+    
     }
 }

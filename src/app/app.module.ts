@@ -23,6 +23,8 @@ import { MatInputModule } from "@angular/material/input";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatSelectModule } from "@angular/material/select";
 import {MatTableModule } from "@angular/material/table";
+import {MatProgressBarModule } from "@angular/material/progress-bar";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 
 import { AppComponent } from './app.component';
@@ -42,7 +44,7 @@ import { RecipeEditComponent } from './components/recipes/recipe-edit/recipe-edi
 import { RecipeListComponent } from './components/recipes/recipe-list/recipe-list.component';
 import { ShortenPipe } from './pipes/shorten.pipe';
 import { SortPipe } from './pipes/sort.pipe';
- import { AuthInterceptorService } from './services/auth-interceptor.service';
+//  import { AuthInterceptorService } from './services/auth-interceptor.service';
  import { LoggingInterceptorService } from './services/logging-interceptor.service';
 import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
 import { ChatComponent } from './components/chat/chat.component';
@@ -94,14 +96,16 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
     MatTooltipModule,
     MatSelectModule,
     MatTableModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
 
     NgbTooltipModule,
     
   ],
   providers: [
-    {provide: HTTP_INTERCEPTORS,
-     useClass: AuthInterceptorService, 
-     multi: true},
+    // {provide: HTTP_INTERCEPTORS,
+    //  useClass: AuthInterceptorService, 
+    //  multi: true},
      {provide: HTTP_INTERCEPTORS,
       useClass: LoggingInterceptorService, 
       multi: true},

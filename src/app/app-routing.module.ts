@@ -22,6 +22,7 @@ const routes: Routes = [
   {path: "users", component: UsersComponent},
   {path: "weather", component: WeatherComponent},
     {path: "chat", component: ChatComponent},
+    {path: "chat/:uid", component: ChatComponent},
     {path: "profile/:uid", component: UserProfileComponent},
   {path: "recipes", component: RecipesComponent, children: [
   //  {path: "list", component: RecipeListComponent},

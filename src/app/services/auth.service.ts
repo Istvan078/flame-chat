@@ -46,7 +46,7 @@ export class AuthService implements OnInit {
             
             this.getUsers().subscribe(
               (users: UserClass[]) => {this.usersSubject= new BehaviorSubject(users)
-              console.log(users)}
+              }
             )
           }
           else {
