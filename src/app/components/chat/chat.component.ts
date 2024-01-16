@@ -6,8 +6,10 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { AngularFireDatabase, AngularFireList } from '@angular/fire/compat/database';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { Subscription, map } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -21,6 +23,7 @@ import { BaseService } from 'src/app/services/base.service';
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('spanAnchor') toCreated!: ElementRef;
   users: Chat[] = [];
+  signAsFriend: UserClass = new UserClass();
   isSAdmin: boolean = false;
   message: Chat = new Chat();
   messages: Chat[] = [];
@@ -30,6 +33,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   userProfiles: UserClass[] = [];
   userProfile: UserClass[] = [];
   count: number = 0;
+  searchWord: string = ""
+  refFriends!: AngularFireList<UserClass>;
 
   user: {
     messageId: string;
@@ -48,11 +53,18 @@ export class ChatComponent implements OnInit, OnDestroy {
   usersSubscription!: Subscription;
 
   constructor(
+    private realTimeDatabase: AngularFireDatabase,
     private auth: AuthService,
     private base: BaseService,
     private viewPortScroller: ViewportScroller,
     private router: Router
-  ) {}
+  ) {
+
+  }
+
+  addFriends(data: any) {
+    this.refFriends.push(data)
+  }
 
   ngOnInit() {
     setTimeout(() => {
@@ -85,14 +97,30 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.userProfile = userProfiles.filter(
               (userProfile: any) => userProfile.uid === user.uid
             );
-
+              
             this.user.userId = this.userProfile[0].uid;
+            this.userProfile[0]['key'] = this.userProfile[0]['key'];
+            this.refFriends = this.realTimeDatabase.list(`/users/${this.userProfile[0]['key']}/friends`);
+            
             this.user.displayName = this.userProfile[0].displayName!;
             this.user.email = this.userProfile[0].email!;
+            
+            for(let friend in this.userProfile[0].friends) {
+              this.userProfile[0]["friendss"] = friend
+              for(let s in friend) {}
+              console.log(this.userProfile[0]["friendss"])
+            }
           });
         }
       );
 
+    //   this.refFriends.snapshotChanges().pipe(
+    //     map((changes) => changes.map(
+    //       (c) => ({key:c.payload.key, ...c.payload.val()})
+    //     ))
+    //  ).subscribe(
+    //    (friends) => console.log(friends)
+    //   )
       // this.usersSubscription = this.auth
       //   .getUsersSubject()
       //   .subscribe((users: any) => {
@@ -179,6 +207,25 @@ export class ChatComponent implements OnInit, OnDestroy {
       .subscribe((messages: any[]) => (this.messages = messages));
     this.viewPortScroller.scrollToAnchor(this.updateMessageKey);
     this.editMessage = false;
+  }
+
+  signAsAFriend(user: UserClass) {
+    
+    let friends = {
+      uid: user.uid,
+      displayName: user.displayName,
+      
+      email: user.email
+    }
+    //  this.userProfile[0].friends = []
+    // this.userProfile[0].friends.push(friends)
+
+     this.addFriends(friends)
+    
+    // this.userProfile[0]['key']
+    //  this.signAsFriend.friends = 
+    //  this.base.updateUserData(this.userProfile[0].friends, this.userProfile[0]["key"] as string)
+    
   }
 
   ngOnDestroy(): void {

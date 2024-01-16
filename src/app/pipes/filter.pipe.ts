@@ -10,8 +10,16 @@ export class FilterPipe implements PipeTransform {
 
      if (!searchWord) return value
      searchWord = searchWord.toLowerCase();
+     
     return value.filter(
-       (arrayItem:any) => arrayItem.body.toLowerCase().includes(searchWord)
+      
+       (arrayItem:any) => {
+        if(arrayItem.body){
+       return arrayItem.body.toLowerCase().includes(searchWord)
+       } else{
+       return arrayItem.displayName.toLowerCase().includes(searchWord)
+       }
+      }
        )
   }
 

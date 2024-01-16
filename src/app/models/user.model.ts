@@ -14,20 +14,35 @@ export interface UserInterface {
 
 
 export class UserClass{
-    [key: string] : string | object
+    [key: string] : string | object | undefined
+
+    public friends: {
+        
+        key: {uid: string,
+        displayName: string,
+        email: string}
+    }
+
     constructor(
       public uid: string = '',
       public email: string = '',
       public displayName: string = '',
     //   public message?:string,
     //   public  date?: string,
-       private claims: {    
-       superAdmin: boolean,
-       admin: boolean,
-       basic: boolean,
+       private claims?: {    
+       superAdmin: boolean ,
+       admin: boolean ,
+       basic: boolean ,
     },
         public  profilePicture: string = '',
     ){
-    
+        this.friends = 
+            
+          { key:  {
+                uid: "",
+                displayName: "",
+                email: "",
+            }}
+        
     }
 }

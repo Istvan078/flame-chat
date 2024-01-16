@@ -1,7 +1,7 @@
 <div class="row">
-  <div class="col">
+  <div class="col-12">
     <form
-      class="d-grid"
+      class="d-grid justify-content-center"
       *ngFor="let uprof of userProfile"
       (ngSubmit)="saveProfile()"
       #f="ngForm"
@@ -61,10 +61,12 @@
         </label>
       </div>
 
-      <div class="input-group mt-2">
-        <label id="profilePicture" class="form-label" for="profilePicture"
-          >Profilkép:</label
-        >
+      <div class=" mt-2">
+        <h2 class="text-center">
+          <label id="profilePicture" class="form-label" for="profilePicture"
+            >Profilkép kiválasztása:</label
+          >
+        </h2>
         <input
           id="profilePicture"
           (change)="selectFile($event)"
@@ -77,7 +79,7 @@
         <button
           (click)="uprof.profilePicture ? changeProfilePic() : addProfilePic()"
           type="button"
-          class="btn btn-primary"
+          class="btn btn-primary mt-1"
         >
           {{ "Profilkép Feltöltése" }}
         </button>
@@ -105,13 +107,17 @@
         <mat-progress-spinner [value]="percent" mode="determinate"></mat-progress-spinner>
       </div> -->
 
-      <div *ngIf="percent === 0; else newPic" class="profilePicContainer">
-        <img [src]="uprof.profilePicture" [alt]="uprof.profilePicture" />
+      <div class="d-grid justify-content-center">
+        <div *ngIf="percent === 0; else newPic" class="profilePicContainer">
+          <img [src]="uprof.profilePicture" [alt]="uprof.profilePicture" />
+        </div>
       </div>
 
       <ng-template #newPic>
-        <div class="profilePicContainer">
-          <img [src]="profilePhotoUrl" alt="Profilkep" />
+        <div class="d-grid justify-content-center">
+          <div class="profilePicContainer">
+            <img [src]="profilePhotoUrl" alt="Profilkep" />
+          </div>
         </div>
       </ng-template>
 

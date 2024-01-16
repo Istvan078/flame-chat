@@ -1,59 +1,193 @@
-
-
 .card {
-    
-    height: fit-content;
-    
-    
+  height: fit-content;
 }
 .messageInput {
-    width: 40vw;
-
+  width: 80vw;
 }
-.messageCard{
-width: 50vw;
-}
-
-.left{
-    background-color: rgb(23, 23, 143, 0.5);
-    color: white;
-    width: 95vw;
+.messageCard {
+  width: 80vw;
+  height: 30vh;
 }
 
-.right{
-    margin-bottom: 5px;
-    width: 100%;
+.searchContainer{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  div input{
+    background-color: rgba(125, 32, 212, 0.3);
+    overflow: auto;
+  }
+  div input:focus{
+    background-color: rgba(125, 32, 212, 0.5);;
+  }
+}
+
+.left {
+  background-color: rgb(23, 23, 143, 0.5);
+  color: white;
+  width: 50vw;
+}
+
+.right {
+  width: 100vw;
+}
+
+.buttonCont {
+  text-align: center;
+  width: 100%;
+  display: inline-flex;
+  justify-content: end;
+}
+
+.pad {
+  padding: 0;
+}
+
+.emailDateDiv {
+  text-align: left;
+  width: fit-content;
+  overflow: auto;
+  justify-content: start;
+  mat-card-subtitle {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+.mat-card-title-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: end;
+}
+
+.messageCardDiv {
+  position: fixed;
+  bottom: 0%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, 40%);
+  height: 45vh;
 }
 
 .grey {
-    color: rgb(32, 31, 31)
+  color: rgb(32, 31, 31);
 }
 
-.mainDiv{
-    width: 100vw;
-    height: fit-content;
+.mainDiv {
+  height: fit-content;
 }
 
-.mainDivUser{
+.mainDivUser {
+  margin-bottom: 10px;
+}
+
+.mainDivUsers {
+  margin-bottom: 10px;
+}
+
+@media screen and (max-width: 400px) {
+  .right {
+    width: fit-content;
+  }
+  .left {
+    width: fit-content;
+    justify-content: start;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageCardDiv {
+    height: 45vh;
+  }
+  .messageInput {
     width: 80vw;
+  }
+  .messageCard {
+    width: 100vw;
+    height: 30vh;
+  }
+}
+
+@media screen and (min-width: 400px) and (max-width: 800px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageCardDiv {
+    height: 40vh;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .messageCard {
+    width: 100vw;
+    height: 60vh;
+  }
+}
+
+@media screen and (min-width: 800px) and (max-width: 1250px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageCardDiv {
+    height: 40vh;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .messageCard {
+    width: 100vw;
+    height: 60vh;
+  }
+}
+
+@media screen and (min-width: 1250px) and (max-width: 1900px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageCardDiv {
+    height: 50vh;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .messageCard {
+    width: 100vw;
+    height: 60vh;
+  }
 }
 
 .messagesCard {
-    margin-bottom: 10px;
 }
 .deleteButton {
-    background-color:red !important;
-    color:whitesmoke !important;
+  background-color: red !important;
+  color: whitesmoke !important;
 }
 
 .matHeader {
-    width:max-content !important;
+  width: max-content !important;
 }
 
-.delCont{
-    margin-left: 100px;
-    padding-left: 20px;
+.delCont {
+  margin-left: 100px;
+  padding-left: 20px;
 }
 .updateButton {
-    background-color: rgba(6, 6, 92,0.7);
+  background-color: rgba(6, 6, 92, 0.7);
 }

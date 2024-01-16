@@ -31,6 +31,7 @@ export class BaseService implements OnInit{
   refUsers: AngularFireList<UserClass>;
   apiUrl = "https://us-central1-project0781.cloudfunctions.net/api/"
   userProfileSubject: Subject<any> = new Subject() 
+  refFriends: AngularFireList<UserClass>;
 
 
   constructor(
@@ -43,7 +44,7 @@ export class BaseService implements OnInit{
     this.refRecipeList = realTimeDatabase.list<Recipe>("/recipes")
     this.refChats = realTimeDatabase.list("/chats")
     this.refUsers = realTimeDatabase.list("/users")
-
+    this.refFriends = realTimeDatabase.list("/users/-NoE6U_RSIQOXy5nr9Rl/friends")
   }
 
   ngOnInit(): void { 
@@ -59,6 +60,10 @@ export class BaseService implements OnInit{
         ))
       )
     )
+  }
+
+  addFriends(data: any) {
+    this.refFriends.push(data)
   }
 
   addUserData(body: any) {
