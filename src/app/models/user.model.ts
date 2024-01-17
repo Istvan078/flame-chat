@@ -16,12 +16,15 @@ export interface UserInterface {
 export class UserClass{
     [key: string] : string | object | undefined
 
-    public friends: {
-        
-        key: {uid: string,
-        displayName: string,
-        email: string}
-    }
+    public friends:  {
+        [key: string | number] : string | object,
+        key: string,
+        0: { [key: string] : string | object | undefined
+            uid: string ,
+            displayName: string,
+            email: string,
+        }
+    }[]
 
     constructor(
       public uid: string = '',
@@ -37,12 +40,15 @@ export class UserClass{
         public  profilePicture: string = '',
     ){
         this.friends = 
-            
-          { key:  {
+            [
+           {
+            key: "",
+            0: {
                 uid: "",
                 displayName: "",
                 email: "",
-            }}
-        
+            }
+            }
+        ]
     }
 }
