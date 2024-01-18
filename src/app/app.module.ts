@@ -25,6 +25,10 @@ import { MatSelectModule } from "@angular/material/select";
 import {MatTableModule } from "@angular/material/table";
 import {MatProgressBarModule } from "@angular/material/progress-bar";
 import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import {MatExpansionModule} from '@angular/material/expansion';
+import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatNativeDateModule} from '@angular/material/core';
+import {MatDialogModule} from '@angular/material/dialog';
 
 
 import { AppComponent } from './app.component';
@@ -47,7 +51,7 @@ import { SortPipe } from './pipes/sort.pipe';
 //  import { AuthInterceptorService } from './services/auth-interceptor.service';
  import { LoggingInterceptorService } from './services/logging-interceptor.service';
 import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
-import { ChatComponent } from './components/chat/chat.component';
+import { ChatComponent, MessageModalComponent } from './components/chat/chat.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 
@@ -71,7 +75,9 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
     RecipeListComponent,
     LoadingSpinnerComponent,
     ChatComponent,
-    UserProfileComponent
+    UserProfileComponent,
+    MessageModalComponent
+  
   ],
   imports: [
     BrowserModule,
@@ -98,6 +104,10 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
     MatTableModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
+    MatExpansionModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatDialogModule,
 
     NgbTooltipModule,
     

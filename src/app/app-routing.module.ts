@@ -24,6 +24,7 @@ const routes: Routes = [
     {path: "chat", component: ChatComponent},
     {path: "chat/:uid", component: ChatComponent},
     {path: "profile/:uid", component: UserProfileComponent},
+    {path: "**", redirectTo: ""},
   {path: "recipes", component: RecipesComponent, children: [
   //  {path: "list", component: RecipeListComponent},
     {path: "create", component: RecipeEditComponent},

@@ -17,12 +17,13 @@ export class UserClass{
     [key: string] : string | object | undefined
 
     public friends:  {
-        [key: string | number] : string | object,
-        key: string,
+        [key: string | number] : string | object 
+        key: string ,
         0: { [key: string] : string | object | undefined
             uid: string ,
             displayName: string,
             email: string,
+            profilePhoto: string
         }
     }[]
 
@@ -47,6 +48,7 @@ export class UserClass{
                 uid: "",
                 displayName: "",
                 email: "",
+                profilePhoto: "",
             }
             }
         ]

@@ -2,6 +2,14 @@
   background-color: rgba(21, 179, 21, 0.7) !important;
 }
 
+mat-expansion-panel-header{
+  grid-template-columns: auto auto;
+  background-color: rgba(209, 230, 18, 0.4) !important;
+}
+mat-expansion-panel-header:hover{
+  background-color: rgba(209, 230, 18, 0.7) !important;
+}
+
 
 .icons {
   position: relative;
@@ -108,14 +116,14 @@
     width: 85%;
   }
   .messageCardDiv {
-    height: 45vh;
+    height: 55vh;
   }
   .messageInput {
     width: 80vw;
   }
   .messageCard {
     width: 100vw;
-    height: 30vh;
+    height: 35vh;
   }
 }
 
@@ -130,7 +138,7 @@
     width: 85%;
   }
   .messageCardDiv {
-    height: 40vh;
+    height: 55vh;
   }
   .messageInput {
     width: 80vw;
@@ -152,7 +160,7 @@
     width: 85%;
   }
   .messageCardDiv {
-    height: 40vh;
+    height: 45vh;
   }
   .messageInput {
     width: 80vw;
@@ -200,6 +208,14 @@
   margin-left: 100px;
   padding-left: 20px;
 }
-.updateButton {
-  background-color: rgba(6, 6, 92, 0.7);
+.updateButton, .blue{
+  background-color: rgba(33, 33, 182, 0.7) !important;
+}
+
+.sendMessageOpenButton{
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  
 }

@@ -1,7 +1,8 @@
-import { ViewportScroller } from '@angular/common';
+import { JsonPipe, ViewportScroller } from '@angular/common';
 import {
   Component,
   ElementRef,
+  Inject,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -18,6 +19,8 @@ import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
+import { MatAccordion } from '@angular/material/expansion';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
 
 type Friend = {
   uid: string;
@@ -32,6 +35,8 @@ type Friend = {
 })
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('spanAnchor') toCreated!: ElementRef;
+  @ViewChild(MatAccordion) accordion!: MatAccordion;
+
   users: Chat[] = [];
   signAsFriend: UserClass = new UserClass();
   isSAdmin: boolean = false;
@@ -49,14 +54,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   refFriends!: AngularFireList<UserClass>;
   eredmeny: any;
   isFriend: boolean = false;
+  messageButtonsOn: boolean = false;
+  messageButtonClicked: boolean = false;
 
-  userFriends: {
-    friendId?: string | undefined;
-    // userId?: string | undefined;
-    // notSigned?: boolean; 
-   }[] = [];
-  userProfilesUid: { uid: string }[] = [];
-  userFriendsSubject: Subject<any> = new Subject()
+  userNotFriends: any[] = [];
+  userFriends: any[] = [];
 
   signedFriend: Friend = {
     uid: '',
@@ -84,6 +86,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   usersSubscription!: Subscription;
 
   constructor(
+    public dialog: MatDialog,
     private ngbTooltipConfig: NgbTooltipConfig,
     private realTimeDatabase: AngularFireDatabase,
     private auth: AuthService,
@@ -95,8 +98,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     ngbTooltipConfig.closeDelay = 2000;
   }
 
-  addFriends(data: any) {
-    this.refFriends.push(data);
+  addFriends(data: UserClass[]) {
+   return this.refFriends.push(data as unknown as UserClass);
   }
 
   ngOnInit() {
@@ -151,85 +154,19 @@ export class ChatComponent implements OnInit, OnDestroy {
               .subscribe((val: any[]) => {
                 this.friendsOn = true;
                 this.userProfile[0].friends = val;
-                // this.userProfile[0].friends.forEach(
-                //   (elem) => {
-                //     if(elem[0].uid){
-                //       this.userFriendsSubject.next(true)
-                //     }
-                  
-                //   }
-                // )
 
-                                this.userProfiles.map(
-                  (value, ind) =>{ 
-                      this.userProfile[0].friends.map(
-                      (val, i) =>{ 
-                        if(value.uid === val[0].uid){
-                           
-                        var obj4: {
-                          friendId: string,
-                        } = {friendId: val[0].uid }
-                       this.userFriends.push(obj4)}})})
+                //  baratok tomb
+                let friends: any[] = this.userProfile[0].friends.map(
+                  (friend) => friend[0].uid
+                );
+                this.userFriends = friends;
 
-
-                // this.userProfiles.map(
-                //   (value, ind) =>{ 
-                //       this.userProfile[0].friends.map(
-                //       (val, i) =>{ 
-                //         if(value.uid === val[0].uid){
-                //            this.userFriends.length = ind
-                //         var obj4: {
-                //           friendId: string,
-                //         } = {friendId: val[0].uid + "drt"}
-                //        this.userFriends.push(obj4)
-
-                //       }  if(this.userFriends.length < this.userProfiles.length) {
-                //          this.userFriends.length = ind
-                //         let obj4: {
-                //           friendId: string,
-                //         } = {friendId: value.uid}
-                //        this.userFriends.push(obj4)
-                //       }
-                //     } 
-                //     )})
-                    
-                  
-                
-                console.log(this.userFriends)
-               
-                // this.userProfile[0].friends.forEach(
-                //   (value1,ind) => {
-                //   //  this.userFriends.push({friendId: value[0].uid, userId: undefined})
-                
-
-                // this.userProfiles.forEach(
-                //   (value2, i) => {
-                //     if(value1[0].uid == value2.uid){
-                //     var obj3: {
-                //       friendId: string,
-                //       userId: string
-                //     } = {friendId: value1[0].uid,
-                //     userId: value2.uid}
-                //    this.userFriends.push(obj3)
-                //   } else{
-
-                //   }
-                    
-                //   }
-                //   //  {this.userFriends.push({userId: value.uid, friendId: undefined}
-                //   ) })
-                  
-                  
-                  
-                  // console.log(this.userFriends)
-                
-                
-                
-
+                //  nem baratok tomb
+                let userProf: any[] = this.userProfiles
+                  .map((uP) => uP)
+                  .filter((item) => !friends.includes(item.uid));
+                this.userNotFriends = userProf;
               });
-              // this.userFriendsSubject.subscribe(
-              //   (boolean) => this.isFriend = boolean
-              // )
           });
         }
       );
@@ -330,10 +267,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         uid: user.uid,
         displayName: user.displayName,
         email: user.email,
+        profilePhoto: user.profilePicture
       };
-      let friendss = [];
-      friendss.push(friends);
-      this.addFriends(friendss);
+      let friendss: UserClass[] = [];
+      friendss.push(friends as unknown as UserClass);
+      this.addFriends(friendss as unknown as UserClass[]);
     } else {
       this.signAsAFriend(user);
     }
@@ -344,9 +282,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       uid: user.uid,
       displayName: user.displayName,
       email: user.email,
+      profilePhoto: user.profilePicture
     };
-    let friendss = [];
-    friendss.push(friends);
+    let friendss:UserClass[] = [];
+    friendss.push(friends as unknown as UserClass);
     let friend = this.userProfile[0].friends.filter(
       (friend) => friend[0].uid == user.uid
     );
@@ -359,12 +298,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     if (friend.length === 0) {
-      this.addFriends(friendss);
+      this.addFriends(friendss as unknown as UserClass[]);
     } else return;
     //  this.base.updateUserData(this.userProfile[0].friends, this.userProfile[0]["key"] as string)
   }
 
-  getMessageUser(user: UserClass) {
+   getMessageUser(user: UserClass) {
     let friend = this.userProfile[0].friends.filter(
       (friend) => friend[0].uid == user.uid
     );
@@ -382,6 +321,17 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.sendPrivateMessageOn = true;
   }
 
+  openDialog() {
+    const dialogRef = this.dialog.open(MessageModalComponent,{
+      data: this.getMessageUser,
+    }
+      );
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(`Dialog result: ${result}`);
+    });
+  }
+
   ngOnDestroy(): void {
     if (this.userLoggedInSubscription) {
       this.userLoggedInSubscription.unsubscribe();
@@ -393,4 +343,21 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.usersSubscription.unsubscribe();
     }
   }
+}
+
+
+@Component({
+  selector: 'app-message-modal',
+  template: `
+              
+`,
+  standalone: false,
+  styleUrls: ['./chat.component.scss']
+})
+export class MessageModalComponent{
+
+
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any,
+  ) {}
+
 }
