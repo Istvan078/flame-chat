@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   Inject,
+
   OnDestroy,
   OnInit,
   ViewChild,
@@ -12,7 +13,6 @@ import {
   AngularFireList,
 } from '@angular/fire/compat/database';
 import { Router } from '@angular/router';
-import { ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { Subject, Subscription, map } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { UserClass } from 'src/app/models/user.model';
@@ -20,12 +20,13 @@ import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 import { MatAccordion } from '@angular/material/expansion';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogContent, MatDialogTitle } from '@angular/material/dialog';
+import {
+  MAT_DIALOG_DATA,
+  MatDialog,
+} from '@angular/material/dialog';
 
 type Friend = {
-  uid: string;
-  displayName: string;
-  email: string;
+  friendId: string;
 };
 
 @Component({
@@ -40,7 +41,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   users: Chat[] = [];
   signAsFriend: UserClass = new UserClass();
   isSAdmin: boolean = false;
-  message: Chat = new Chat();
+  message: Chat = new Chat()
   messages: Chat[] = [];
   editMessage: boolean = false;
   friendsOn: boolean = false;
@@ -57,13 +58,24 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonsOn: boolean = false;
   messageButtonClicked: boolean = false;
 
+  // keysSubject: Subject<any> = new Subject()
+  teszt: any;
+
   userNotFriends: any[] = [];
   userFriends: any[] = [];
 
   signedFriend: Friend = {
-    uid: '',
-    email: '',
-    displayName: '',
+    friendId: '',
+  };
+
+  keys: {
+    userKey: string;
+    friendKey: string;
+    messageKey: string;
+  } = {
+    userKey: '',
+    friendKey: '',
+    messageKey: '',
   };
 
   selectedFriend: any[] = [];
@@ -98,24 +110,33 @@ export class ChatComponent implements OnInit, OnDestroy {
     ngbTooltipConfig.closeDelay = 2000;
   }
 
-  addFriends(data: UserClass[]) {
-   return this.refFriends.push(data as unknown as UserClass);
+  addFriends(data: UserClass) {
+    this.refFriends.push(data);
   }
+
+  removeFriend(data: {key: string}) {
+    this.refFriends.remove(data.key)
+  }
+
+  // addMessageToDatabase(body: Chat) {
+  //   this.refChats.push(body)
+  // }
 
   ngOnInit() {
     setTimeout(() => {
       // uzenetek lekerese
-      this.base.getMessages().subscribe((messages: any[]) => {
-        if (this.messages.length === 0) {
+      this.base.getMessages()!.subscribe((messages: any[]) => {
+        if (0 === 0) {  //this.messages.length
           for (let message of messages) {
             if (message.uid === this.user.userId) {
               this.user.messageId = message.uid;
             }
             message.id = message['key'];
             message.id = message.uid;
-            this.count = Math.max(message.count);
+            
 
             this.messages = messages;
+            console.log(this.messages)
             this.base.updateMessage(message['key'], message);
           }
         }
@@ -157,7 +178,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
                 //  baratok tomb
                 let friends: any[] = this.userProfile[0].friends.map(
-                  (friend) => friend[0].uid
+                  (f) => f.friendId
                 );
                 this.userFriends = friends;
 
@@ -167,6 +188,23 @@ export class ChatComponent implements OnInit, OnDestroy {
                   .filter((item) => !friends.includes(item.uid));
                 this.userNotFriends = userProf;
               });
+
+            this.realTimeDatabase
+              .list(`users/${this.userProfile[0]['key']}/friends/-Nov51cNwRd1Qys4K887/message/`)
+              .snapshotChanges()
+              .pipe(
+                map((changes) =>
+                  changes.map((c) => ({
+                    key: c.payload.key,
+                    ...c.payload.val()!,
+                  }))
+                )
+              )
+              .subscribe((val: any) => {
+                // this.friendsOn = true;
+                console.log(val);
+              });
+              console.log(this.userProfile[0])
           });
         }
       );
@@ -176,30 +214,143 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
+  getUserById(userKey: string) {
+    const documentRef = this.realTimeDatabase.database.ref(`users/${userKey}`);
+    documentRef.once('value').then((snapshot) => {
+      const documentData = snapshot.val();
+      console.log(documentData);
+    });
+  }
+
+  getFriendById(userKey: string, friendKey: string) {
+    const documentRef = this.realTimeDatabase.database.ref(
+      `users/${userKey}/friends/${friendKey}`
+    );
+    documentRef.once('value').then((snapshot) => {
+      const documentData = snapshot.val();
+      console.log(documentData);
+    });
+  }
+
+  getMessageById(userKey: string, friendKey: string, messageKey?: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const documentRef = this.realTimeDatabase.object(`users/${userKey}/friends/${friendKey}/message/${messageKey}`);
+  
+      documentRef.valueChanges().subscribe(
+        (adat: any) => {
+          if (adat) {
+            resolve(adat);
+          } else {
+            reject('Az üzenet nem található.');
+          }
+        },
+        (error) => {
+          reject(`Hiba a lekérdezés során: ${error}`);
+        }
+      );
+    }).then(
+      (res) => console.log(res)
+    )
+  }
+
+  addMessage2(userKey: string, friendKey: string) {
+    const keys = {
+      userKey,
+      friendKey,
+    };
+    this.keys.userKey = keys.userKey;
+    this.keys.friendKey = keys.friendKey;
+    const refDat = this.realTimeDatabase.list(
+      `/users/${this.userProfile[0].key}/friends/${this.keys.friendKey}/message`
+    );
+    const newKeyRef = refDat.push(this.message);
+    const newKey = newKeyRef.key
+    newKeyRef.update({key: newKey})
+    console.log(newKey)
+
+
+  }
+
   addMessage() {
-    if (!this.message.uid) {
-      this.message.uid = this.user.userId;
-    }
+    this.base.keysSubject.next({userKey: this.userProfile[0].key, friendKey: this.selectedFriend[0].key})
+      this.message.senderId = this.userProfile[0].uid;
+      this.message.receiverId = this.selectedFriend[0].friendId
     let date = new Date();
     let dateString =
       date.toLocaleDateString() + '  ' + date.toLocaleTimeString();
-    this.message.date = dateString;
-    this.message.displayName = this.userProfile[0].displayName;
-    this.message.email = this.userProfile[0].email;
-    console.log(this.count);
-    this.message.count = this.count + 1;
-    this.count++;
-    this.message['profilePicture'] = this.userProfile[0].profilePicture;
+    this.message.timeStamp = dateString;
 
     this.base.addMessage(this.message);
-    this.base.getMessages().subscribe((messages: any[]) => {
+    this.base.getMessages()!.subscribe((messages: any[]) => {
       let friendM = messages.filter(
-        (message) =>
-          message.uid === this.selectedFriend[0][0].uid ||
-          message.uid === this.userProfile[0].uid
+        (message: Chat) =>
+          message.receiverId === this.selectedFriend[0].friendId &&
+          message.senderId === this.userProfile[0].uid
       );
       this.friendMessages = friendM;
     });
+  }
+
+  getMessageUser(user: UserClass, message: any) {
+    // let m = this.userProfiles.filter(
+    //   (u) => {if(u.friends.length !==0){u.friends.filter(
+        
+    //     (f)=> {if(f.messages) {f.messages.filter(
+    //       (m) => m.senderId === f.friendId
+    //     )}}
+    //   )}}
+    // )
+    let friends: any
+    let tomb2: any[] = []
+    this.userProfiles.forEach(
+      (u) => {u
+      console.log(u.friends)
+        tomb2.push(u)
+    }
+    )
+     
+    // for(let ert of friends) {
+    //   tomb2.push(...ert)
+      
+    // }
+    console.log(tomb2)
+
+    let friend = this.userProfile[0].friends.filter(
+      (f) => f.friendId == user.uid
+    );
+    this.selectedFriend = friend;
+    let fMessage: any[] = [];
+    if (this.selectedFriend.length !== 0) {
+      fMessage = this.messages.filter(
+        (message) =>{
+          
+        
+          return message.senderId === this.userProfile[0].uid  ||
+          message.receiverId === this.selectedFriend[0].friendId 
+          //message.senderId === this.selectedFriend[0].friendId
+          
+        }
+      );
+      this.base.keysSubject.next({userKey: this.userProfile[0].key, friendKey: this.selectedFriend[0].key})
+      
+      console.log(message);
+      console.log(this.selectedFriend[0].friendId)
+      console.log(this.selectedFriend[0].messages)
+    }
+    
+    //  this.friendMessages = fMessage;
+    if(this.selectedFriend[0].messages){
+    let object = Object.entries(this.selectedFriend[0].messages)
+    let tomb:any[] = []
+    for(let ert of object) {
+      tomb.push(...ert)
+      
+    }
+    console.log(tomb)
+    this.friendMessages = tomb
+  }
+    console.log(this.friendMessages)
+    this.sendPrivateMessageOn = true;
   }
 
   clearInput() {
@@ -208,10 +359,10 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   deleteMessage(message: Chat) {
     this.base.deleteMessage(message).then((res) =>
-      this.base.getMessages().subscribe((messages: any[]) => {
+      this.base.getMessages()!.subscribe((messages: any[]) => {
         let friendM = messages.filter(
           (message) =>
-            message.uid === this.selectedFriend[0][0].uid ||
+            message.uid === this.selectedFriend[0].uid ||
             message.uid === this.userProfile[0].uid
         );
         this.friendMessages = friendM;
@@ -231,23 +382,19 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   updateMessage() {
-    if (!this.message.uid) {
-      this.message.uid = this.user.userId;
-    }
+
+      this.message.senderId = this.userProfile[0].uid;
+      this.message.receiverId = this.selectedFriend[0].uid
     let date = new Date();
     let dateString =
       date.toLocaleDateString() + '  ' + date.toLocaleTimeString();
-    this.message.date = dateString;
-    this.message.displayName = this.userProfile[0].displayName;
-    this.message.email = this.userProfile[0].email;
-    this.message['profilePicture'] = this.userProfile[0].profilePicture;
-    this.message.displayName = this.userProfile[0].displayName;
+    this.message.timeStamp = dateString;
     this.base.updateMessage(this.updateMessageKey, this.message);
-    this.base.getMessages().subscribe((messages: any[]) => {
+    this.base.getMessages()!.subscribe((messages: any[]) => {
       let friendM = messages.filter(
-        (message) =>
-          message.uid === this.selectedFriend[0][0].uid ||
-          message.uid === this.userProfile[0].uid
+        (message: Chat) =>
+          message.receiverId === this.selectedFriend[0].uid ||
+          message.senderId === this.userProfile[0].uid
       );
 
       this.friendMessages = friendM;
@@ -258,20 +405,20 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   backToUsers() {
     this.sendPrivateMessageOn = false;
-    this.friendMessages = [];
+     this.friendMessages = [];
   }
 
   signAsFirstFriend(user: UserClass) {
     if (this.userProfile[0].friends.length === 0) {
       let friends = {
-        uid: user.uid,
+        friendId: user.uid,
         displayName: user.displayName,
         email: user.email,
-        profilePhoto: user.profilePicture
+        profilePhoto: user.profilePicture,
       };
       let friendss: UserClass[] = [];
       friendss.push(friends as unknown as UserClass);
-      this.addFriends(friendss as unknown as UserClass[]);
+      this.addFriends(friends as unknown as UserClass);
     } else {
       this.signAsAFriend(user);
     }
@@ -279,55 +426,51 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   signAsAFriend(user: UserClass) {
     let friends = {
-      uid: user.uid,
+      friendId: user.uid,
       displayName: user.displayName,
       email: user.email,
-      profilePhoto: user.profilePicture
+      profilePhoto: user.profilePicture,
     };
-    let friendss:UserClass[] = [];
+    let friendss: UserClass[] = [];
     friendss.push(friends as unknown as UserClass);
     let friend = this.userProfile[0].friends.filter(
-      (friend) => friend[0].uid == user.uid
+      (f) => f.friendId == user.uid
     );
     for (let key in friend[0]) {
       this.signedFriend = {
-        uid: friend[0][0].uid,
-        email: friend[0][0].email,
-        displayName: friend[0][0].displayName,
+        friendId: friend[0].friendId,
       };
     }
 
     if (friend.length === 0) {
-      this.addFriends(friendss as unknown as UserClass[]);
+      this.addFriends(friends as unknown as UserClass);
     } else return;
     //  this.base.updateUserData(this.userProfile[0].friends, this.userProfile[0]["key"] as string)
   }
 
-   getMessageUser(user: UserClass) {
-    let friend = this.userProfile[0].friends.filter(
-      (friend) => friend[0].uid == user.uid
-    );
-    this.selectedFriend = friend;
-    let fMessage: any[] = [];
-    if (this.selectedFriend.length !== 0) {
-      fMessage = this.messages.filter(
-        (message) =>
-          message.uid === this.selectedFriend[0][0].uid ||
-          message.uid === this.userProfile[0].uid
-      );
-      console.log(fMessage);
+
+
+  getMessageByKey() {
+    let messageKey: any[] = []
+    for(let message of this.messages){
+      messageKey.push(message['key'])
     }
-    this.friendMessages = fMessage;
-    this.sendPrivateMessageOn = true;
+   const refChats = this.realTimeDatabase.database.ref(`chats/${messageKey[0]}}`)
+   refChats.once("value").then(
+    (adat:any) => {this.friendMessages.push(adat.val()) 
+      console.log(this.friendMessages)
+      this.sendPrivateMessageOn = true;
+    }
+   )
+   console.log(messageKey)
   }
 
   openDialog() {
-    const dialogRef = this.dialog.open(MessageModalComponent,{
+    const dialogRef = this.dialog.open(MessageModalComponent, {
       data: this.getMessageUser,
-    }
-      );
+    });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       console.log(`Dialog result: ${result}`);
     });
   }
@@ -345,19 +488,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 }
 
-
 @Component({
   selector: 'app-message-modal',
-  template: `
-              
-`,
+  template: ``,
   standalone: false,
-  styleUrls: ['./chat.component.scss']
+  styleUrls: ['./chat.component.scss'],
 })
-export class MessageModalComponent{
-
-
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any,
-  ) {}
-
+export class MessageModalComponent {
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
 }

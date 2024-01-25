@@ -3,7 +3,7 @@ import { AngularFireAuth } from "@angular/fire/compat/auth";
 import { FacebookAuthProvider, GoogleAuthProvider, RecaptchaVerifier, User, getAuth } from "@angular/fire/auth";
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { UserClass, UserInterface } from '../models/user.model';
+import { UserClass } from '../models/user.model';
 
 @Injectable({
   providedIn: 'root'
