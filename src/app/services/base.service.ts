@@ -36,12 +36,18 @@ interface Note {
 export class BaseService implements OnInit {
   user: any;
   profilePicUrlSubject: Subject<string> = new Subject();
+  picturesSubject: Subject<string[]> = new Subject();
   refNotes: AngularFireList<Notes>;
   refRecipeList!: AngularFireList<Recipe>;
   refChats!: AngularFireList<Chat>;
   refUsers: AngularFireList<UserClass>;
+  refUser!: AngularFireList<UserClass>;
+  refFriends!: AngularFireList<any>
   apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
   userProfileSubject: Subject<any> = new Subject();
+
+  basePath: any = '/pictures';
+  dbRef: AngularFireList<any>;
 
   keysSubject: Subject<object> = new Subject();
   keysObject: { userKey: string; friendKey: string } = {
@@ -63,17 +69,13 @@ export class BaseService implements OnInit {
         userKey: keysObject.userKey,
         friendKey: keysObject.friendKey,
       };
-      this.refChats = realTimeDatabase.list(
-        `/users/${this.keysObject['userKey']}/friends/${this.keysObject['friendKey']}/messages`
-      );
-      this.userMessageRef = this.refChats;
     });
 
-    this.refChats = realTimeDatabase.list(`/users//friends/messages`);
-
+    this.refChats = realTimeDatabase.list(`/chats`);
     this.refNotes = realTimeDatabase.list('/notes');
     this.refRecipeList = realTimeDatabase.list<Recipe>('/recipes');
     this.refUsers = realTimeDatabase.list('/users');
+    this.dbRef = realTimeDatabase.list(this.basePath);
   }
 
   ngOnInit(): void {}
@@ -88,8 +90,70 @@ export class BaseService implements OnInit {
       );
   }
 
+  addFriends(id: string, data: UserClass) {
+   return this.refFriends.update(id, data);
+  }
+
+  removeFriend(id: string) {
+   return this.refFriends.remove(id)
+  }
+
+  getFriends(userKey: string) {
+    this.refFriends = this.realTimeDatabase.list(
+      `/users/${userKey}/friends`
+    );
+
+    return this.refFriends
+    .snapshotChanges()
+    .pipe(
+      map((changes) =>
+        changes.map((c) => ({
+          key: c.payload.key,
+          ...c.payload.val(),
+        }))
+      )
+    )
+  }
+
   addUserData(body: any) {
     this.refUsers.push(body);
+  }
+
+  addUserPictures(userKey: any, body: any) {
+    this.refUser = this.realTimeDatabase.list(`users/`);
+    this.refUser.update(userKey, body);
+  }
+
+  // tanarral
+  addFileData(user: any, fname: any, fsUrl: any) {
+    const data = { name: fname, url: fsUrl };
+    this.dbRef = this.realTimeDatabase.list(
+      `users/${user.key}/${this.basePath}`
+    );
+    this.dbRef.push(data);
+  }
+
+  getData(user: any) {
+    this.dbRef = this.realTimeDatabase.list(
+      `users/${user['key']}${this.basePath}`
+    );
+    return this.dbRef;
+  }
+
+  deleteUserPicture(user: any, file: any) {
+    
+    this.refUser = this.realTimeDatabase
+    .list(`users/${user['key']}/pictures`)
+    this.refUser.remove(file.key).then(
+      ()=> {
+        const picturePath = `${this.basePath}/${user.displayName}/${file.name}`;
+        const storegeRef = this.fireStorage.ref(picturePath);
+        storegeRef.delete().subscribe(
+          () => console.log("Kép sikeres törlése")
+        );
+      }
+    )
+
   }
 
   updateUserData(body: any, key: string) {
@@ -113,11 +177,36 @@ export class BaseService implements OnInit {
     return upload.percentageChanges();
   }
 
+  addPictures(user: any, file: any) {
+    // const storageBaseRef = this.fireStorage.ref(`${this.basePath}/${user.displayName}`)
+    // storageBaseRef.child(file.name).getDownloadURL().subscribe()
+    const fullPath = `${this.basePath}/${user.displayName}/${file.name}`;
+    const storageRef = this.fireStorage.ref(fullPath);
+    const upload = this.fireStorage.upload(fullPath, file);
+    upload
+      .snapshotChanges()
+      .pipe(
+        finalize(() => {
+          return storageRef.getDownloadURL().subscribe((url: any) => {
+            // if(!user.pictures) user.pictures = []
+            // let imgObj = {
+            //   imageUrl: url,
+            //   fileName: file.name
+            // }
+            // user.pictures.push(imgObj)
+            this.addFileData(user, file.name, url);
+          });
+        })
+      )
+      .subscribe();
+    return upload.percentageChanges();
+  }
+
   addMessage(body: Chat) {
     this.refChats.push(body);
   }
 
-  updateMessage(key: any, body: Chat) {
+  updateMessage(key: any, body: Partial<Chat>) {
     this.refChats.update(key, body);
   }
 
@@ -139,13 +228,6 @@ export class BaseService implements OnInit {
       );
   }
 
-  getMessageById(messageKey: string) {
-    this.realTimeDatabase.database
-      .ref(this.userMessageRef + '/' + messageKey)
-      .once('value')
-      .then((value) => console.log(value));
-  }
-
   getNotes() {
     return this.refNotes.snapshotChanges().pipe(
       map((changes) =>
@@ -162,10 +244,6 @@ export class BaseService implements OnInit {
   }
 
   createNote(body: Partial<Notes>): void {
-    // const nBody = {
-    // title : body.title,
-    // body : body.body}
-
     this.refNotes.push(body);
   }
 
@@ -214,19 +292,4 @@ export class BaseService implements OnInit {
   deleteRecipe(key: string) {
     this.refRecipeList.remove(key);
   }
-
-  // fetchNotes() {
-  //   this.http.get<{[key:string]: Note}>("https://project0781-default-rtdb.europe-west1.firebasedatabase.app/notes.json")
-  //   .pipe(map((responseData) => {
-  //     const notesArray: Note[] = [];
-
-  //     for(const key in responseData) {
-  //       if(responseData.hasOwnProperty(key)){
-  //       notesArray.push({...responseData[key], id:key})
-  //     }}
-  //     return notesArray
-  //   })).subscribe((responseData) => {
-  //     console.log(responseData)
-  //   })
-  // }
 }

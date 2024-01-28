@@ -7,10 +7,11 @@ import {
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, map } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
+
 
 @Component({
   selector: 'app-user-profile',
@@ -25,10 +26,18 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   profilePhoto!: File;
   userProfile: UserClass[] = [];
   profilePicSub!: Subscription;
-  percent: number = 0
+  picturesSubscription!: Subscription;
+  percent: number = 0;
+  pictures!: FileList;
+  picturesUrl: any[] = [];
+  userProf: UserClass = new UserClass();
+  userPictures: any[] = []
+
+  picturesCarousel: any = document.getElementById("picturesCarousel")
 
   ngOnDestroy(): void {
     this.profilePicSub.unsubscribe();
+    this.picturesSubscription.unsubscribe();
   }
 
   constructor(
@@ -40,81 +49,107 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
-      (url: any) => {
-        console.log(url);
+      (url: string) => {
         this.profilePhotoUrl = url;
-        // console.log(this.newProduct.imagesUrl)
       }
     );
+    this.picturesSubscription = this.base.picturesSubject.subscribe((url) => {
+      this.picturesUrl.push(url);
+    });
+
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.router.params.subscribe((param: Params) => {
-        console.log(param['uid']);
         this.auth.getUsers().subscribe((users: UserClass[]) => {
           const user: any[] = users.filter(
             (user: any) => user.uid === param['uid']
           );
           this.users = user;
-          console.log(user);
         });
 
         this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
           const userProfil = userProfiles.filter(
             (userProfile) => userProfile['uid'] === param['uid']
           );
-          this.userProfile = userProfil;
+          this.userProf = Object.assign(this.userProf, ...userProfil);
+
+          this.base.getData(this.userProf).snapshotChanges().pipe(
+            map((changes) => changes.map((c) => ({key:c.payload.key, ...c.payload.val()})))
+          ).subscribe((pictures) => this.userPictures = pictures)
+      
         });
+      
+
       });
-    }, 5000);
+    }, 2000);
   }
 
   selectFile(event: any) {
     this.profilePhoto = event.target.files[0];
   }
 
+  selectFiles(event: any) {
+    this.pictures = event.target.files;
+  }
+
   saveProfile() {
-    this.auth.isLoggedIn().subscribe((user) => {
-      console.log(user);
+    this.auth.isLoggedIn().subscribe((user: any) => {
       this.base.getUserProfiles().subscribe((userProfiles) => {
         let userProfile = userProfiles.filter(
-          (userProfile: any) => userProfile.uid === user?.uid
+          (userProfile: any) => userProfile.uid === user.uid
         );
-        let userProfileKey = userProfile[0].key;
-        console.log(userProfile);
-        let formValues = this.form.value;
-        formValues.uid = user?.uid;
-
+        this.userProf.uid = user.uid;
         if (
-          this.userProfile[0].profilePicture == '' ||
-          this.userProfile[0].profilePicture == undefined
+          this.userProf.profilePicture == '' ||
+          this.userProf.profilePicture == undefined
         ) {
-          formValues.profilePicture = this.profilePhotoUrl;
+          this.userProf.profilePicture = this.profilePhotoUrl;
         } else {
-          formValues.profilePicture = userProfile[0].profilePicture;
+          this.userProf.profilePicture = userProfile[0].profilePicture;
         }
-        // this.base.addUserData(formValues);
 
-        this.base.updateUserData(formValues, userProfileKey as string);
+        this.base.updateUserData(this.userProf, userProfile[0].key);
       });
-        setTimeout(() => {
-          this.route.navigate([""])
-        }, 1000);
-         
+      setTimeout(() => {
+        this.route.navigate(['']);
+      }, 1000);
     });
   }
 
+  addPictures() {
+    Array.from(this.pictures).forEach((file) => {
+      this.base
+        .addPictures(this.userProf, file)
+        .subscribe((percent) => {this.percent = percent!
+        });
+    });
+  }
+
+  toArray() {
+   let tomb =  [...this.userProf.pictures]
+   console.log(tomb)
+  }
+
   addProfilePic() {
-    this.base.addProfilePicture(this.profilePhoto).subscribe(
-      (percent) => this.percent = percent!
-    );
+    this.base
+      .addProfilePicture(this.profilePhoto)
+      .subscribe((percent) => (this.percent = percent!));
   }
 
   changeProfilePic() {
-    this.userProfile[0].profilePicture = '';
-    this.base.addProfilePicture(this.profilePhoto).subscribe(
-      (percent) => this.percent = percent!
-    );
+    this.userProf.profilePicture = '';
+    this.base
+      .addProfilePicture(this.profilePhoto)
+      .subscribe((percent) => (this.percent = percent!));
+  }
+
+  deleteUserPicture(file:any, i: number) {
+    this.base.deleteUserPicture(this.userProf, file)
+  }
+
+  deletePicture(pic: any) {
+    this.base.deleteUserPicture(this.userProf, pic)
   }
 }

@@ -17,7 +17,7 @@ export class FilterPipe implements PipeTransform {
         if(arrayItem.body){
        return arrayItem.body.toLowerCase().includes(searchWord)
        } else{
-       return arrayItem.message.toLowerCase().includes(searchWord)
+       return arrayItem.message.message.toLowerCase().includes(searchWord)
        }
       }
        )

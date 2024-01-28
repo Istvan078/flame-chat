@@ -1,4 +1,4 @@
-import { Chat } from "./chat.model";
+
 
 
 export class UserClass {
@@ -6,7 +6,6 @@ export class UserClass {
   public friends: { [indexS: string | number] : string | undefined | object | number 
     key?:string;
     friendId: string;
-    messages: Chat[]
   }[];
 
   constructor(
@@ -16,22 +15,13 @@ export class UserClass {
     public uid: string = '',
     public email?: string,
     public displayName: string = '',
-    //   public message?:string,
-    //   public  date?: string,
-    private claims?: {
-      superAdmin: boolean;
-      admin: boolean;
-      basic: boolean;
-    },
+    public pictures: {name:string, url: string}[] = [],
     public profilePicture: string = ''
   ) {
     this.friends = [
       {
         friendId: '',
-        messages: [{senderId: "",
-      receiverId:'',
-    message:'',
-  timeStamp:''}]
+
       },
     ];
   }

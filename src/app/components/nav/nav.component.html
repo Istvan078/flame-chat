@@ -49,12 +49,12 @@
             >Jegyzetek</a
           >
         </li>
-        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item">
+        <li *ngIf="!isLoggedIn" (click)="isMenuClicked = !isMenuClicked" class="nav-item">
           <a class="nav-link" routerLink="signup" routerLinkActive="active-link">
             Regisztráció
           </a>
         </li>
-        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item">
+        <li *ngIf="!isLoggedIn" (click)="isMenuClicked = !isMenuClicked" class="nav-item">
           <a
             class="nav-link"
             routerLinkActive="active-link"

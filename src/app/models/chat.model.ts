@@ -1,9 +1,33 @@
 export class Chat {
-  [indexS: string | number]: string | number
+
+  public participants: [
+    string,
+    string
+  ]
+
+  public message: {
+    senderId: string
+    message: string
+    timeStamp: string
+    displayName: string
+    profilePhoto: string
+    email: string
+  }
+
+  [indexS: string | number]: string | number | object
   constructor(
-   public senderId: string = '',
-   public receiverId: string = '',
-    public message: string = '',
-    public timeStamp: string = ''
-  ) {}
+  ) {
+    this.participants = [
+      "user_id_1", "user_id_2"
+    ]
+
+    this.message = {
+      senderId: "user_id_1",
+      message: "",
+      timeStamp: "2024.01.27",
+      displayName: "",
+      profilePhoto: "",
+      email: ""
+    }
+  }
 }

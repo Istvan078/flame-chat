@@ -26,7 +26,6 @@ import { WeatherComponent } from './components/weather/weather.component';
 //  import { AuthInterceptorService } from './services/auth-interceptor.service';
  import { LoggingInterceptorService } from './services/logging-interceptor.service';
 import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
-import { MessageModalComponent } from './components/chat/chat.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 import { SharedModule } from './components/shared/shared.module';
@@ -44,8 +43,7 @@ import { SharedModule } from './components/shared/shared.module';
     UsersComponent,
     WeatherComponent,
     LoadingSpinnerComponent,
-    UserProfileComponent,
-    MessageModalComponent
+  
   
   ],
   imports: [

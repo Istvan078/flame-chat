@@ -1,0 +1,48 @@
+<form class="mt-3 d-grid" (ngSubmit)="onSubmit()" [formGroup]="publishForm">
+  <mat-form-field >
+    <mat-label>Név</mat-label>
+    <mat-icon matSuffix>person</mat-icon>
+    <input class="text-center" formControlName="name" matInput type="text" />
+    <span *ngIf="publishForm.get('name')?.touched"
+      >Nem változtathatja meg a nevet!</span
+    >
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Üzenet szövege</mat-label>
+    <textarea formControlName="message" matInput rows="5"></textarea>
+  </mat-form-field>
+
+  <div class="text-center" formArrayName="pictures">
+    <button
+      (click)="addPictures()"
+      color="accent"
+      mat-raised-button
+      type="button"
+    >
+      Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
+    </button>
+    <ng-container>
+        <div *ngFor="let pictureControl of forFormArray(); let i = index;" class="input-group mb-2">
+            <input (change)="selectedFiles($event)" *ngIf="i<1" type="file" multiple class="form-control" [formControlName]="i">
+        </div>
+    </ng-container>
+  </div>
+  <mat-form-field class="select-container">
+    <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
+    <mat-label >Látható mások számára is</mat-label>
+    <mat-select formControlName="sharing" id="sharing">
+      <mat-option ngClass="green" value="yes">Igen</mat-option>
+      <mat-option ngClass="yellow" value="no">Csak nekem</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button (click)="uploadFiles()" class="mb-3 blueButton" mat-raised-button type="button">Fájlok feltöltése</button>
+  <button class="shareButton" color="accent" mat-raised-button type="submit">Megosztás</button>
+</form>
+
+
+<div *ngFor="let pic of sharedPictures" class="row mt-3">
+    <div class="col-12 d-flex justify-content-center">
+        <img class="rounded" [src]="pic.url" [alt]="pic.name" width="75%" height="100%">
+    </div>
+</div>

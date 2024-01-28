@@ -1,6 +1,6 @@
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
-import { FormsModule } from "@angular/forms";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
 import { MatCheckboxModule } from "@angular/material/checkbox";
@@ -30,6 +30,7 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
     imports: [
         NgbModule,
         FormsModule,
+        ReactiveFormsModule,
         CommonModule,
         MatFormFieldModule,
         MatCardModule,
@@ -49,6 +50,7 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
     exports: [
         NgbModule,
         FormsModule,
+        ReactiveFormsModule,
         FilterPipe,
         ShortenPipe,
         SortPipe,

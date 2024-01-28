@@ -1,5 +1,4 @@
 .profilePicContainer{
-
     margin-bottom: 15px;
     margin-top: 15px;
     text-align: center;
@@ -14,4 +13,25 @@
 
 .progressC {
     background-color: rgba(32, 32, 129, 0.6) !important;
+}
+
+.deletePicture {
+    z-index: 2;
+    color: rgb(230, 173, 61);
+    cursor:pointer;
+    font-size: 50px;
+    width: 50px;
+    height: 50px;
+    top:10px;
+    right: 10px;
+    position: absolute;
+}
+
+.deletePicture:hover {
+    color: red;
+    border-radius: 10px;
+}
+
+.greenButton {
+    background-color: rgba(5, 131, 5, 1) !important;
 }

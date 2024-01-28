@@ -127,6 +127,29 @@ mat-expansion-panel-header:hover{
   }
 }
 
+@media screen and (max-height: 614px) {
+  .right {
+    width: fit-content;
+  }
+  .left {
+    width: fit-content;
+    justify-content: start;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageCardDiv {
+    height: 70vh;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .messageCard {
+    width: 100vw;
+    height: 45vh;
+  }
+}
+
 @media screen and (min-width: 400px) and (max-width: 800px) {
   .right {
     width: 50vw;
@@ -160,7 +183,7 @@ mat-expansion-panel-header:hover{
     width: 85%;
   }
   .messageCardDiv {
-    height: 45vh;
+    height: 35vh;
   }
   .messageInput {
     width: 80vw;
@@ -182,14 +205,38 @@ mat-expansion-panel-header:hover{
     width: 85%;
   }
   .messageCardDiv {
-    height: 50vh;
+    height: 40vh;
   }
   .messageInput {
     width: 80vw;
+    height: 15vh;
   }
   .messageCard {
     width: 100vw;
     height: 60vh;
+  }
+}
+
+@media screen and (min-width: 1900px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageCardDiv {
+    height: 30vh;
+  }
+  .messageInput {
+    width: 80vw;
+    height: 12vh;
+  }
+  .messageCard {
+    width: 100vw;
+    height: 30vh;
   }
 }
 
@@ -213,7 +260,9 @@ mat-expansion-panel-header:hover{
 }
 
 .sendMessageOpenButton{
-  top: 50%;
+  margin-bottom: 0 !important;
+  position: fixed;
+  bottom: 0;
   left: 50%;
   z-index: 2;
   transform: translate(-50%, -50%);

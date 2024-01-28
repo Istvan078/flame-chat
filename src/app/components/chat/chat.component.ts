@@ -1,9 +1,7 @@
-import { JsonPipe, ViewportScroller } from '@angular/common';
+import { ViewportScroller } from '@angular/common';
 import {
   Component,
   ElementRef,
-  Inject,
-
   OnDestroy,
   OnInit,
   ViewChild,
@@ -13,17 +11,12 @@ import {
   AngularFireList,
 } from '@angular/fire/compat/database';
 import { Router } from '@angular/router';
-import { Subject, Subscription, map } from 'rxjs';
+import { Subscription, map } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
-import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
 import { MatAccordion } from '@angular/material/expansion';
-import {
-  MAT_DIALOG_DATA,
-  MatDialog,
-} from '@angular/material/dialog';
 
 type Friend = {
   friendId: string;
@@ -41,7 +34,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   users: Chat[] = [];
   signAsFriend: UserClass = new UserClass();
   isSAdmin: boolean = false;
-  message: Chat = new Chat()
+  message: Chat = new Chat();
+  updateUserMessage: Chat = new Chat();
   messages: Chat[] = [];
   editMessage: boolean = false;
   friendsOn: boolean = false;
@@ -58,8 +52,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonsOn: boolean = false;
   messageButtonClicked: boolean = false;
 
-  // keysSubject: Subject<any> = new Subject()
-  teszt: any;
+  allChatsArray: any;
+  userMessages: boolean = false;
 
   userNotFriends: any[] = [];
   userFriends: any[] = [];
@@ -68,80 +62,22 @@ export class ChatComponent implements OnInit, OnDestroy {
     friendId: '',
   };
 
-  keys: {
-    userKey: string;
-    friendKey: string;
-    messageKey: string;
-  } = {
-    userKey: '',
-    friendKey: '',
-    messageKey: '',
-  };
-
   selectedFriend: any[] = [];
-  friendMessages: any[] = [];
-
-  user: {
-    messageId: string;
-    userId: string;
-    displayName: string;
-    email: string;
-  } = {
-    messageId: '',
-    userId: '',
-    displayName: '',
-    email: '',
-  };
 
   userLoggedInSubscription!: Subscription;
   isSuperAdminSubscription!: Subscription;
   usersSubscription!: Subscription;
 
   constructor(
-    public dialog: MatDialog,
-    private ngbTooltipConfig: NgbTooltipConfig,
     private realTimeDatabase: AngularFireDatabase,
     private auth: AuthService,
     private base: BaseService,
     private viewPortScroller: ViewportScroller,
     private router: Router
-  ) {
-    ngbTooltipConfig.animation = true;
-    ngbTooltipConfig.closeDelay = 2000;
-  }
-
-  addFriends(data: UserClass) {
-    this.refFriends.push(data);
-  }
-
-  removeFriend(data: {key: string}) {
-    this.refFriends.remove(data.key)
-  }
-
-  // addMessageToDatabase(body: Chat) {
-  //   this.refChats.push(body)
-  // }
+  ) {}
 
   ngOnInit() {
     setTimeout(() => {
-      // uzenetek lekerese
-      this.base.getMessages()!.subscribe((messages: any[]) => {
-        if (0 === 0) {  //this.messages.length
-          for (let message of messages) {
-            if (message.uid === this.user.userId) {
-              this.user.messageId = message.uid;
-            }
-            message.id = message['key'];
-            message.id = message.uid;
-            
-
-            this.messages = messages;
-            console.log(this.messages)
-            this.base.updateMessage(message['key'], message);
-          }
-        }
-      });
-
       this.userLoggedInSubscription = this.auth.userLoggedInSubject.subscribe(
         (user: any) => {
           // felhasznaloi adatok lekerese
@@ -151,60 +87,39 @@ export class ChatComponent implements OnInit, OnDestroy {
               (userProfile: any) => userProfile.uid === user.uid
             );
 
-            this.user.userId = this.userProfile[0].uid;
             this.userProfile[0]['key'] = this.userProfile[0]['key'];
 
-            this.user.displayName = this.userProfile[0].displayName!;
-            this.user.email = this.userProfile[0].email!;
-
-            this.refFriends = this.realTimeDatabase.list(
-              `/users/${this.userProfile[0]['key']}/friends`
-            );
-
             // baratok listajanak lekerese
-            this.refFriends
-              .snapshotChanges()
-              .pipe(
-                map((changes) =>
-                  changes.map((c) => ({
-                    key: c.payload.key,
-                    ...c.payload.val(),
-                  }))
-                )
-              )
+            this.base
+              .getFriends(this.userProfile[0].key as string)
               .subscribe((val: any[]) => {
                 this.friendsOn = true;
                 this.userProfile[0].friends = val;
 
                 //  baratok tomb
-                let friends: any[] = this.userProfile[0].friends.map(
-                  (f) => f.friendId
-                );
+                let friendsUids: any[] = [];
+                let friends: any;
+                friends = this.userProfile[0].friends.map((f) => {
+                  friendsUids.push(f.friendId);
+                  return (friends = {
+                    friendKey: f['key'],
+                    friendId: f.friendId,
+                  });
+                });
                 this.userFriends = friends;
 
                 //  nem baratok tomb
                 let userProf: any[] = this.userProfiles
                   .map((uP) => uP)
-                  .filter((item) => !friends.includes(item.uid));
+                  .filter((item) => !friendsUids.includes(item.uid));
                 this.userNotFriends = userProf;
               });
 
-            this.realTimeDatabase
-              .list(`users/${this.userProfile[0]['key']}/friends/-Nov51cNwRd1Qys4K887/message/`)
-              .snapshotChanges()
-              .pipe(
-                map((changes) =>
-                  changes.map((c) => ({
-                    key: c.payload.key,
-                    ...c.payload.val()!,
-                  }))
-                )
-              )
-              .subscribe((val: any) => {
-                // this.friendsOn = true;
-                console.log(val);
-              });
-              console.log(this.userProfile[0])
+            // chatek lekérése
+            this.getMessages().subscribe((val) => {
+              console.log(val);
+              this.allChatsArray = val;
+            });
           });
         }
       );
@@ -214,160 +129,66 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
-  getUserById(userKey: string) {
-    const documentRef = this.realTimeDatabase.database.ref(`users/${userKey}`);
-    documentRef.once('value').then((snapshot) => {
-      const documentData = snapshot.val();
-      console.log(documentData);
-    });
+  randomIdGenerator() {
+    const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let chatId = 'chat_id_';
+    let friendId = 'friend_id_';
+    for (let i = 0; i <= 7; i++) {
+      if (this.message.message.message) {
+        chatId += idString.charAt(Math.round(Math.random() * 30));
+      } else {
+        friendId += idString.charAt(Math.round(Math.random() * 30));
+      }
+    }
+    if (this.message.message.message) return chatId;
+    else return friendId;
   }
 
-  getFriendById(userKey: string, friendKey: string) {
-    const documentRef = this.realTimeDatabase.database.ref(
-      `users/${userKey}/friends/${friendKey}`
-    );
-    documentRef.once('value').then((snapshot) => {
-      const documentData = snapshot.val();
-      console.log(documentData);
-    });
-  }
-
-  getMessageById(userKey: string, friendKey: string, messageKey?: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const documentRef = this.realTimeDatabase.object(`users/${userKey}/friends/${friendKey}/message/${messageKey}`);
-  
-      documentRef.valueChanges().subscribe(
-        (adat: any) => {
-          if (adat) {
-            resolve(adat);
-          } else {
-            reject('Az üzenet nem található.');
-          }
-        },
-        (error) => {
-          reject(`Hiba a lekérdezés során: ${error}`);
-        }
-      );
-    }).then(
-      (res) => console.log(res)
-    )
-  }
-
-  addMessage2(userKey: string, friendKey: string) {
-    const keys = {
-      userKey,
-      friendKey,
-    };
-    this.keys.userKey = keys.userKey;
-    this.keys.friendKey = keys.friendKey;
-    const refDat = this.realTimeDatabase.list(
-      `/users/${this.userProfile[0].key}/friends/${this.keys.friendKey}/message`
-    );
-    const newKeyRef = refDat.push(this.message);
-    const newKey = newKeyRef.key
-    newKeyRef.update({key: newKey})
-    console.log(newKey)
-
-
+  toUserProfile() {
+    this.router.navigate([`profile/${this.userProfile[0].uid}`]);
   }
 
   addMessage() {
-    this.base.keysSubject.next({userKey: this.userProfile[0].key, friendKey: this.selectedFriend[0].key})
-      this.message.senderId = this.userProfile[0].uid;
-      this.message.receiverId = this.selectedFriend[0].friendId
     let date = new Date();
     let dateString =
       date.toLocaleDateString() + '  ' + date.toLocaleTimeString();
-    this.message.timeStamp = dateString;
 
-    this.base.addMessage(this.message);
-    this.base.getMessages()!.subscribe((messages: any[]) => {
-      let friendM = messages.filter(
-        (message: Chat) =>
-          message.receiverId === this.selectedFriend[0].friendId &&
-          message.senderId === this.userProfile[0].uid
-      );
-      this.friendMessages = friendM;
-    });
+    this.message.message.senderId = this.userProfile[0].uid;
+    this.message.message.timeStamp = dateString;
+    this.message.participants[0] = this.userProfile[0].uid;
+    this.message.participants[1] = this.selectedFriend[0].friendId;
+    this.message.message.displayName = this.userProfile[0].displayName;
+    this.message.message.email = this.userProfile[0].email as string;
+    this.message.message.profilePhoto = this.userProfile[0].profilePicture;
+
+    this.base.updateMessage(this.randomIdGenerator(), this.message);
   }
 
-  getMessageUser(user: UserClass, message: any) {
-    // let m = this.userProfiles.filter(
-    //   (u) => {if(u.friends.length !==0){u.friends.filter(
-        
-    //     (f)=> {if(f.messages) {f.messages.filter(
-    //       (m) => m.senderId === f.friendId
-    //     )}}
-    //   )}}
-    // )
-    let friends: any
-    let tomb2: any[] = []
-    this.userProfiles.forEach(
-      (u) => {u
-      console.log(u.friends)
-        tomb2.push(u)
-    }
-    )
-     
-    // for(let ert of friends) {
-    //   tomb2.push(...ert)
-      
-    // }
-    console.log(tomb2)
-
+  getMessageUser(user: UserClass) {
     let friend = this.userProfile[0].friends.filter(
       (f) => f.friendId == user.uid
     );
     this.selectedFriend = friend;
-    let fMessage: any[] = [];
-    if (this.selectedFriend.length !== 0) {
-      fMessage = this.messages.filter(
-        (message) =>{
-          
-        
-          return message.senderId === this.userProfile[0].uid  ||
-          message.receiverId === this.selectedFriend[0].friendId 
-          //message.senderId === this.selectedFriend[0].friendId
-          
-        }
-      );
-      this.base.keysSubject.next({userKey: this.userProfile[0].key, friendKey: this.selectedFriend[0].key})
-      
-      console.log(message);
-      console.log(this.selectedFriend[0].friendId)
-      console.log(this.selectedFriend[0].messages)
-    }
-    
-    //  this.friendMessages = fMessage;
-    if(this.selectedFriend[0].messages){
-    let object = Object.entries(this.selectedFriend[0].messages)
-    let tomb:any[] = []
-    for(let ert of object) {
-      tomb.push(...ert)
-      
-    }
-    console.log(tomb)
-    this.friendMessages = tomb
-  }
-    console.log(this.friendMessages)
     this.sendPrivateMessageOn = true;
+    this.userMessages = true;
   }
 
   clearInput() {
-    this.message.message = '';
+    this.message.message.message = '';
   }
 
   deleteMessage(message: Chat) {
-    this.base.deleteMessage(message).then((res) =>
-      this.base.getMessages()!.subscribe((messages: any[]) => {
-        let friendM = messages.filter(
-          (message) =>
-            message.uid === this.selectedFriend[0].uid ||
-            message.uid === this.userProfile[0].uid
-        );
-        this.friendMessages = friendM;
-      })
-    );
+    this.base.deleteMessage(message);
+  }
+
+  getMessages() {
+    return this.base.refChats
+      .snapshotChanges()
+      .pipe(
+        map((changes) =>
+          changes.map((c) => ({ key: c.payload.key, ...c.payload.val() }))
+        )
+      );
   }
 
   deleteMessages() {
@@ -375,50 +196,39 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   navigateToUpdateMessage(message: Chat) {
+    this.updateUserMessage = message;
+    console.log(this.updateUserMessage);
     this.updateMessageKey = message['key'] as string;
+    console.log(this.updateMessageKey);
     this.editMessage = true;
-    this.message.message = message.message;
+    this.message.message.message = message.message.message;
     this.viewPortScroller.scrollToPosition([0, 0]);
   }
 
   updateMessage() {
-
-      this.message.senderId = this.userProfile[0].uid;
-      this.message.receiverId = this.selectedFriend[0].uid
     let date = new Date();
     let dateString =
       date.toLocaleDateString() + '  ' + date.toLocaleTimeString();
-    this.message.timeStamp = dateString;
-    this.base.updateMessage(this.updateMessageKey, this.message);
-    this.base.getMessages()!.subscribe((messages: any[]) => {
-      let friendM = messages.filter(
-        (message: Chat) =>
-          message.receiverId === this.selectedFriend[0].uid ||
-          message.senderId === this.userProfile[0].uid
-      );
-
-      this.friendMessages = friendM;
-    });
+    this.updateUserMessage.message.timeStamp = dateString;
+    this.updateUserMessage.message.message = this.message.message.message;
+    this.base.updateMessage(this.updateMessageKey, this.updateUserMessage);
     this.viewPortScroller.scrollToAnchor(this.updateMessageKey);
     this.editMessage = false;
   }
 
   backToUsers() {
     this.sendPrivateMessageOn = false;
-     this.friendMessages = [];
+    this.userMessages = false;
   }
 
   signAsFirstFriend(user: UserClass) {
     if (this.userProfile[0].friends.length === 0) {
       let friends = {
         friendId: user.uid,
-        displayName: user.displayName,
-        email: user.email,
-        profilePhoto: user.profilePicture,
       };
-      let friendss: UserClass[] = [];
-      friendss.push(friends as unknown as UserClass);
-      this.addFriends(friends as unknown as UserClass);
+      this.base
+        .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
+        .then(() => this.router.navigate(['chat']));
     } else {
       this.signAsAFriend(user);
     }
@@ -427,12 +237,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   signAsAFriend(user: UserClass) {
     let friends = {
       friendId: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      profilePhoto: user.profilePicture,
     };
-    let friendss: UserClass[] = [];
-    friendss.push(friends as unknown as UserClass);
     let friend = this.userProfile[0].friends.filter(
       (f) => f.friendId == user.uid
     );
@@ -443,36 +248,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
 
     if (friend.length === 0) {
-      this.addFriends(friends as unknown as UserClass);
+      this.base
+        .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
+        .then(() => this.router.navigate(['chat']));
     } else return;
-    //  this.base.updateUserData(this.userProfile[0].friends, this.userProfile[0]["key"] as string)
   }
 
-
-
-  getMessageByKey() {
-    let messageKey: any[] = []
-    for(let message of this.messages){
-      messageKey.push(message['key'])
-    }
-   const refChats = this.realTimeDatabase.database.ref(`chats/${messageKey[0]}}`)
-   refChats.once("value").then(
-    (adat:any) => {this.friendMessages.push(adat.val()) 
-      console.log(this.friendMessages)
-      this.sendPrivateMessageOn = true;
-    }
-   )
-   console.log(messageKey)
-  }
-
-  openDialog() {
-    const dialogRef = this.dialog.open(MessageModalComponent, {
-      data: this.getMessageUser,
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      console.log(`Dialog result: ${result}`);
-    });
+  removeFriend(id: string) {
+    this.base.removeFriend(id).then(() => this.router.navigate(['chat']));
   }
 
   ngOnDestroy(): void {
@@ -486,14 +269,4 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.usersSubscription.unsubscribe();
     }
   }
-}
-
-@Component({
-  selector: 'app-message-modal',
-  template: ``,
-  standalone: false,
-  styleUrls: ['./chat.component.scss'],
-})
-export class MessageModalComponent {
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {}
 }
