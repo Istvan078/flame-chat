@@ -8,7 +8,7 @@
     </mat-form-field>
     <div class="text-center mt-0 container-2">
         <span *ngIf="!emaill.valid && emaill.touched">Kerlek adj meg egy ervenyes e-mail cimet</span>
-        <button class="mb-3" mat-raised-button (click)="emailSuggestion()" type="button">Mutass egy peldat a megfelelo formatumu email cimre!</button>
+        <!-- <button class="mb-3" mat-raised-button (click)="emailSuggestion()" type="button">Mutass egy peldat a megfelelo formatumu email cimre!</button> -->
     </div>
     <mat-form-field>
         
@@ -26,8 +26,8 @@
     <button [disabled]="!f.valid" color="accent" mat-raised-button type="submit">Regisztráció</button>
 </form>
 
-<div class="container-0 container-1">
-    <h2 routerLink="/login" matTooltipPosition="left" matTooltip="Gyorsabb belépés regisztráció nélkül">Vagy lépj be Google fiókkal, vagy telefonszámmal</h2>
+<div  class="container-0 container-1 mt-3">
+    <button mat-flat-button color="warn" routerLink="/login" matTooltipPosition="left" matTooltip="Gyorsabb belépés regisztráció nélkül">Regisztráció Google fiókkal, vagy telefonszámmal</button>
 </div>
 
 

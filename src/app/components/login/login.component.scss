@@ -15,9 +15,17 @@
     }
 }
 
-.google-container button{
-    height: 100px;
+.google-container-main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; 
+    button{
+        height: 100px;
+    }
 }
+
+
 
 form {
     display: grid;
@@ -39,11 +47,5 @@ form {
 
     input{
         width: 35%;
-    }
-    label{
-        left:30%;
-        width: 40%;
-        
-       
     }
 }

@@ -18,12 +18,12 @@
 
   <button color="accent" mat-raised-button type="submit">Bejelentkezés</button>
 
-  <h4 class="text-center mt-2 fs-5">
-    Vagy bejelentkezés egyszerűen
+  <h4 class="text-center mt-3 fs-5">
+    {{'Regisztráció egyszerűen -->'}}
     <a
       (click)="facebookOrGoogle = true; booleanFunction()"
       type="button"
-      class="btn btn-warning ms-2"
+      class="btn btn-warning ms-2 me-2"
       ><i class="bi bi-google h4"></i
     ></a>
     <!-- <a
@@ -39,7 +39,7 @@
 </form>
 
 
-<ng-container *ngIf="emailOrGoogle && !isPhone">   
+<div class="google-container-main" *ngIf="emailOrGoogle && !isPhone">   
         <div
           *ngIf="emailOrGoogle"
           class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
@@ -72,7 +72,7 @@
     <i class="bi bi-facebook"></i> Bejelentkezés
   </button>
 </div> -->
-</ng-container>
+</div>
 
 <ng-container *ngIf="emailOrGoogle && !reCapthcaOff">
      
@@ -109,7 +109,7 @@
     </ng-container>
 
     <ng-container *ngIf="verificationId">
-        <div class="form-floating col-12 text-center flexToMiddleContainer">
+        <div class="col-12 text-center flexToMiddleContainer">
           <input
             class="form-control"
             [(ngModel)]="verificationCode"
@@ -118,7 +118,6 @@
             type="text"
             placeholder="Megerősítő kód"
           />
-          <label for="verify-code">Megerősítő kód</label>
         </div>
           <div class="col-12 text-center">
           <button

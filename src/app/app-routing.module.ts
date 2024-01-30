@@ -10,21 +10,33 @@ import { WeatherComponent } from './components/weather/weather.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 const routes: Routes = [
-  {path: "", component: HomeComponent},
-  {path: "notes", component: NotesComponent},
-  {path: "signup", component: SignupComponent},
-  {path: "login", component: LoginComponent},
-  {path: "users", component: UsersComponent},
-  {path: "weather", component: WeatherComponent},
-    {path: "profile/:uid", component: UserProfileComponent},
-    {path: "recipes", loadChildren: () => import("./components/recipes/recipes.module").then((m) => m.RecipesModule)},
-    {path: "chat", loadChildren: () => import("./components/chat/chat.module").then((m) => m.ChatModule)}
+  { path: '', component: HomeComponent },
+  { path: 'notes', component: NotesComponent },
+  { path: 'signup', component: SignupComponent },
+  { path: 'login', component: LoginComponent },
+  { path: 'users', component: UsersComponent },
+  { path: 'weather', component: WeatherComponent },
+  { path: 'profile/:uid', component: UserProfileComponent },
+  {
+    path: 'recipes',
+    loadChildren: () =>
+      import('./components/recipes/recipes.module').then(
+        (m) => m.RecipesModule
+      ),
+  },
+  {
+    path: 'chat',
+    loadChildren: () =>
+      import('./components/chat/chat.module').then((m) => m.ChatModule),
+  },
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, {
-    preloadingStrategy: PreloadAllModules
-  })],
-  exports: [RouterModule]
+  imports: [
+    RouterModule.forRoot(routes, {
+      preloadingStrategy: PreloadAllModules,
+    }),
+  ],
+  exports: [RouterModule],
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

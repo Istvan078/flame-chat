@@ -57,6 +57,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   allChatsArray: any[] = [];
   userMessages: boolean = false;
   haventSeenMessagesArr: any[] =[]
+  messFromSelFriendArr: any[] = []
+  newMessagesArr: any[] = []
 
   userNotFriends: any[] = [];
   userFriends: any[] = [];
@@ -123,9 +125,19 @@ export class ChatComponent implements OnInit, OnDestroy {
               console.log(val);
               this.allChatsArray = val;
               this.haventSeenMessagesArr = this.allChatsArray.filter((item) => item.message.seen === false && this.userProfile[0].uid === item.participants[1])
-              console.log(this.haventSeenMessagesArr)
+              let [tomb] =  this.haventSeenMessagesArr.map((item) => {
+               return this.userProfile[0].friends.filter((friend) => friend.friendId === item.message.senderId)
+                     })
+              this.newMessagesArr = tomb
+              if(!this.newMessagesArr) {
+                this.newMessagesArr = [1]
+                console.log(this.newMessagesArr) 
+              }
+              
+              // this.messFromSelFriendArr = this.allChatsArray.filter((item) => item.message.seen === false && this.userProfile[0].uid === item.participants[1])
+              // console.log(this.messFromSelFriendArr)
             });
-
+            
           });
         }
       );
@@ -134,6 +146,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       (value) => (this.isSAdmin = value)
     );
   }
+
+  // newMessages(user: any) {
+  //   console.log(user)
+  // }
 
   randomIdGenerator() {
     const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';

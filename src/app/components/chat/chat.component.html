@@ -46,17 +46,20 @@
       </mat-expansion-panel>
       <mat-expansion-panel>
         <mat-expansion-panel-header 
-          class="d-grid justify-content-center">
+          class="d-grid justify-content-center" [ngClass]="haventSeenMessagesArr.length>0 ? 'newMessage' : ''">
+          
           <mat-panel-title class="pt-2">
             Üzenetek <mat-icon matBadgeSize="small" matBadge="{{haventSeenMessagesArr.length}}" matBadgeColor="primary" class="ms-2">chat</mat-icon></mat-panel-title>
             
         </mat-expansion-panel-header>
-        <div class="row ">
-          <div class=" col-12 col-md-4 col-lg-3 col-xl-2 " *ngFor="let user of userProfiles">
+        <div class="row">
+          <div  class=" col-12 col-md-4 col-lg-3 col-xl-2 " *ngFor="let user of userProfiles; let i = index">
+            <ng-container *ngFor="let mess of newMessagesArr" >
+              <div class="mt-2 text-center fw-b text-danger" *ngIf="user.uid === mess.friendId"><h3>Új üzenet érkezett</h3></div>
+
             <ng-container *ngFor="let friend of userFriends">
               <ng-container *ngIf="friend.friendId === user.uid">
-
-                <div class=" card mt-2 text-white bg-warning text-center">
+                <div class=" card mt-2 text-white text-center" [ngClass]="mess.friendId === user.uid ? 'bg-primary' : 'bg-warning'">
                   <h5 class="card-header">
                     <h2>{{ user.displayName }}</h2>
                   </h5>
@@ -74,6 +77,7 @@
                   </div>
                 </div>
 
+              </ng-container>
               </ng-container>
             </ng-container>
           </div>
