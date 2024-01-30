@@ -31,7 +31,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   pictures!: FileList;
   picturesUrl: any[] = [];
   userProf: UserClass = new UserClass();
-  userPictures: any[] = []
+  userPictures: any[] = [];
 
   picturesCarousel: any = document.getElementById("picturesCarousel")
 

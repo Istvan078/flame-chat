@@ -12,15 +12,15 @@
     <mat-accordion>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header class="d-grid justify-content-center">
-          <mat-panel-title>
-            Ismerősök <mat-icon class="ms-2">groups</mat-icon></mat-panel-title>
+          <mat-panel-title class="pt-2">
+            Ismerősök <mat-icon matBadgeSize="small" matBadge="{{userFriends.length}}" matBadgeColor="primary" class="ms-2">groups</mat-icon></mat-panel-title>
         </mat-expansion-panel-header>
 
         <div class="row">
-          <div class="col" *ngFor="let user of userProfiles">
+          <div class="col-12 col-md-4 col-lg-3 col-xl-2" *ngFor="let user of userProfiles">
             <ng-container *ngFor="let friend of userFriends">
               <ng-container *ngIf="friend.friendId === user.uid">
-                <mat-card class="mb-3">
+                <mat-card class="mb-2 mt-3 d-grid justify-content-center matCardBg">
                   <mat-card-header class="d-grid justify-content-center">
                     <mat-card-title>
                       {{ user.displayName }}
@@ -45,17 +45,18 @@
         </div>
       </mat-expansion-panel>
       <mat-expansion-panel>
-        <mat-expansion-panel-header
+        <mat-expansion-panel-header 
           class="d-grid justify-content-center">
-          <mat-panel-title>
-            Üzenetek <mat-icon class="ms-2">chat</mat-icon></mat-panel-title>
+          <mat-panel-title class="pt-2">
+            Üzenetek <mat-icon matBadgeSize="small" matBadge="{{haventSeenMessagesArr.length}}" matBadgeColor="primary" class="ms-2">chat</mat-icon></mat-panel-title>
+            
         </mat-expansion-panel-header>
-        <div class="row">
-          <div class="col" *ngFor="let user of userProfiles">
+        <div class="row ">
+          <div class=" col-12 col-md-4 col-lg-3 col-xl-2 " *ngFor="let user of userProfiles">
             <ng-container *ngFor="let friend of userFriends">
               <ng-container *ngIf="friend.friendId === user.uid">
 
-                <div class="card text-center mt-2 text-white bg-warning">
+                <div class=" card mt-2 text-white bg-warning text-center">
                   <h5 class="card-header">
                     <h2>{{ user.displayName }}</h2>
                   </h5>

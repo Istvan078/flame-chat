@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
+import { MatBadgeModule } from "@angular/material/badge";
 import { MatCardModule } from "@angular/material/card";
 import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatNativeDateModule } from "@angular/material/core";
@@ -45,7 +46,8 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
         MatDatepickerModule,
         MatNativeDateModule,
         MatExpansionModule,
-        MatDialogModule
+        MatDialogModule,
+        MatBadgeModule
     ],
     exports: [
         NgbModule,
@@ -68,7 +70,8 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
         MatDatepickerModule,
         MatNativeDateModule,
         MatExpansionModule,
-        MatDialogModule
+        MatDialogModule,
+        MatBadgeModule
     ]
 })
 

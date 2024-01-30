@@ -12,6 +12,7 @@ export class Chat {
     displayName: string
     profilePhoto: string
     email: string
+    seen: boolean
   }
 
   [indexS: string | number]: string | number | object
@@ -27,7 +28,8 @@ export class Chat {
       timeStamp: "2024.01.27",
       displayName: "",
       profilePhoto: "",
-      email: ""
+      email: "",
+      seen: false
     }
   }
 }

@@ -2,8 +2,10 @@ import { ViewportScroller } from '@angular/common';
 import {
   Component,
   ElementRef,
+  EventEmitter,
   OnDestroy,
   OnInit,
+  Output,
   ViewChild,
 } from '@angular/core';
 import {
@@ -52,8 +54,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonsOn: boolean = false;
   messageButtonClicked: boolean = false;
 
-  allChatsArray: any;
+  allChatsArray: any[] = [];
   userMessages: boolean = false;
+  haventSeenMessagesArr: any[] =[]
 
   userNotFriends: any[] = [];
   userFriends: any[] = [];
@@ -119,7 +122,10 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.getMessages().subscribe((val) => {
               console.log(val);
               this.allChatsArray = val;
+              this.haventSeenMessagesArr = this.allChatsArray.filter((item) => item.message.seen === false && this.userProfile[0].uid === item.participants[1])
+              console.log(this.haventSeenMessagesArr)
             });
+
           });
         }
       );
@@ -171,6 +177,21 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedFriend = friend;
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
+    let messFromSelFriendArr = this.allChatsArray.filter((item) => this.selectedFriend[0].friendId === item.message.senderId && this.userProfile[0].uid === item.participants[1])
+    messFromSelFriendArr.forEach(
+      (mess) => {
+        if(mess.message.seen === false) {
+          mess.message.seen = true
+          this.base.updateMessage(mess.key, mess)
+        }
+      }
+    )
+    
+    //  a find objektet is visszaad!
+    // console.log(object)
+    //  filter vagy find message ez alapján
+
+  
   }
 
   clearInput() {

@@ -1,3 +1,7 @@
+.matCardBg {
+  background-color: rgba(21, 154, 255, 0.1);
+}
+
 .green {
   background-color: rgba(21, 179, 21, 0.7) !important;
 }
@@ -56,7 +60,7 @@ mat-expansion-panel-header:hover{
   text-align: center;
   width: 100%;
   display: inline-flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 
 .pad {
@@ -76,7 +80,7 @@ mat-expansion-panel-header:hover{
 .mat-card-title-group {
   display: inline-flex;
   flex-wrap: wrap;
-  justify-content: end;
+  justify-content: flex-end;
 }
 
 .messageCardDiv {
@@ -240,8 +244,6 @@ mat-expansion-panel-header:hover{
   }
 }
 
-.messagesCard {
-}
 .deleteButton {
   background-color: red !important;
   color: whitesmoke !important;
