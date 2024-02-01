@@ -13,12 +13,13 @@ import {
   AngularFireList,
 } from '@angular/fire/compat/database';
 import { Router } from '@angular/router';
-import { Subscription, map } from 'rxjs';
+import { BehaviorSubject, Subscription, map } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { MatAccordion } from '@angular/material/expansion';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 type Friend = {
   friendId: string;
@@ -54,6 +55,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonsOn: boolean = false;
   messageButtonClicked: boolean = false;
 
+  decreasedUserProfSubject: BehaviorSubject<any> = new BehaviorSubject(null)
+  friendsUserProfArr: any[] = []
+  removedFriend: boolean = false;
+
   allChatsArray: any[] = [];
   userMessages: boolean = false;
   haventSeenMessagesArr: any[] =[]
@@ -78,7 +83,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private base: BaseService,
     private viewPortScroller: ViewportScroller,
-    private router: Router
+    private router: Router,
+    private _snackbar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -126,30 +132,35 @@ export class ChatComponent implements OnInit, OnDestroy {
               this.allChatsArray = val;
               this.haventSeenMessagesArr = this.allChatsArray.filter((item) => item.message.seen === false && this.userProfile[0].uid === item.participants[1])
               let [tomb] =  this.haventSeenMessagesArr.map((item) => {
-               return this.userProfile[0].friends.filter((friend) => friend.friendId === item.message.senderId)
+               return this.userProfile[0].friends!.filter((friend) => friend.friendId === item.message.senderId)
                      })
               this.newMessagesArr = tomb
               if(!this.newMessagesArr) {
                 this.newMessagesArr = [1]
                 console.log(this.newMessagesArr) 
               }
-              
-              // this.messFromSelFriendArr = this.allChatsArray.filter((item) => item.message.seen === false && this.userProfile[0].uid === item.participants[1])
-              // console.log(this.messFromSelFriendArr)
+              console.log(this.userProfiles)
+              this.decreasedUserProfSubject.subscribe(
+                (userProfs) => {
+                  if(userProfs) {
+                    this.userProfiles = userProfs
+                    
+                  }
+                   if(this.userProfiles.length == 0 || this.userProfiles.length == 1) {
+                    this.userProfiles = userProfs
+                   }
+                }
+               )
             });
             
           });
         }
       );
-    }, 2000);
+    }, 1000);
     this.isSuperAdminSubscription = this.auth.isSuperAdmin.subscribe(
       (value) => (this.isSAdmin = value)
     );
   }
-
-  // newMessages(user: any) {
-  //   console.log(user)
-  // }
 
   randomIdGenerator() {
     const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -187,7 +198,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   getMessageUser(user: UserClass) {
-    let friend = this.userProfile[0].friends.filter(
+    let friend = this.userProfile[0].friends!.filter(
       (f) => f.friendId == user.uid
     );
     this.selectedFriend = friend;
@@ -258,24 +269,47 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.userMessages = false;
   }
 
-  signAsFirstFriend(user: UserClass) {
-    if (this.userProfile[0].friends.length === 0) {
+  signAsFirstFriend(user: UserClass, i: number) {
+    this.removedFriend = false
+    if (this.userProfile[0].friends!.length === 0) {
       let friends = {
         friendId: user.uid,
       };
+      if(i>0) {
+        var signedFriend = this.userProfiles.slice(i-1,i)
+       
+      } else {signedFriend = this.userProfiles.slice(i,i+1)}
+         this.userProfiles = this.userProfiles.filter(
+           (user) => {if(user.uid){
+           return signedFriend[0].uid !== user.uid
+          }}
+         )
+     this.decreasedUserProfSubject.next(this.userProfiles)
       this.base
         .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
-        .then(() => this.router.navigate(['chat']));
+        // .then(() => this.router.navigate(['chat']));
     } else {
-      this.signAsAFriend(user);
+      this.signAsAFriend(user, i);
     }
   }
 
-  signAsAFriend(user: UserClass) {
+  signAsAFriend(user: UserClass, i: number) {
+    this.removedFriend = false
+    if(i>0) {
+    var signedFriend = this.userProfiles.slice(i-1,i)
+   
+  } else {signedFriend = this.userProfiles.slice(i,i+1)}
+     this.userProfiles = this.userProfiles.filter(
+       (user) => {if(user.uid){
+       return signedFriend[0].uid !== user.uid
+      }}
+     )
+     this.decreasedUserProfSubject.next(this.userProfiles)
+    console.log(this.userProfiles)
     let friends = {
       friendId: user.uid,
     };
-    let friend = this.userProfile[0].friends.filter(
+    let friend = this.userProfile[0].friends!.filter(
       (f) => f.friendId == user.uid
     );
     for (let key in friend[0]) {
@@ -287,13 +321,33 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (friend.length === 0) {
       this.base
         .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
-        .then(() => this.router.navigate(['chat']));
+        // .then(() => this.router.navigate(['chat']));
     } else return;
   }
 
-  removeFriend(id: string) {
-    this.base.removeFriend(id).then(() => this.router.navigate(['chat']));
+  removeFriend(id: string, i:number) {
+    this.base.removeFriend(id).then(() => 
+    {
+      if(i>0) {
+        var removedFriend = this.userProfiles.slice(i-1,i)
+      } else {removedFriend = this.userProfiles.slice(i,i+1)}
+         this.userProfiles = this.userProfiles.filter(
+           (user) => {if(user.uid){
+           return removedFriend[0].uid !== user.uid
+          }}
+         )
+         this.decreasedUserProfSubject.next(this.userProfiles)
+         this.removedFriend = true
+    // this.router.navigate(['chat'])
+    }
+    )
+  
   }
+
+  // openSnackBar(message: string) {
+  //   this._snackbar.open(message, "Ismerősnek jelölve");
+  // }
+
 
   ngOnDestroy(): void {
     if (this.userLoggedInSubscription) {

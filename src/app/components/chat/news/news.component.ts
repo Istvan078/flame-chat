@@ -37,7 +37,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.auth.getUserSubject().then((user: UserClass) => {
+    this.auth.getUser().then((user: UserClass) => {
       this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
         let userProfile = userProfiles.filter((uP) => uP.uid === user.uid);
         Object.assign(this.userProfile, ...userProfile);

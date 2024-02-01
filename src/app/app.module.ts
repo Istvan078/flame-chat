@@ -11,7 +11,7 @@ import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
 import { AngularFireAuthModule } from "@angular/fire/compat/auth";
 import { Environments } from './environments';
 
-import {  NgbTooltipConfig, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import {  NgbModalModule, NgbTooltipConfig, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
@@ -29,6 +29,7 @@ import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 
 import { SharedModule } from './components/shared/shared.module';
+import { ModalComponent } from './components/modals/modal/modal.component';
 
 
 @NgModule({
@@ -43,6 +44,7 @@ import { SharedModule } from './components/shared/shared.module';
     UsersComponent,
     WeatherComponent,
     LoadingSpinnerComponent,
+    ModalComponent
   
   
   ],
@@ -63,6 +65,7 @@ import { SharedModule } from './components/shared/shared.module';
     SharedModule,
 
     NgbTooltipModule,
+    NgbModalModule
     
   ],
   providers: [

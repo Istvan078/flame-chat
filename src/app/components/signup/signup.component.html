@@ -8,7 +8,6 @@
     </mat-form-field>
     <div class="text-center mt-0 container-2">
         <span *ngIf="!emaill.valid && emaill.touched">Kerlek adj meg egy ervenyes e-mail cimet</span>
-        <!-- <button class="mb-3" mat-raised-button (click)="emailSuggestion()" type="button">Mutass egy peldat a megfelelo formatumu email cimre!</button> -->
     </div>
     <mat-form-field>
         
@@ -31,3 +30,35 @@
 </div>
 
 
+
+<div id="registeredModal"  class="modal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <p>{{ 'Sikeres regisztráció'}}</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary green"
+            data-bs-dismiss="modal"
+          >
+            <span class="icons"
+              ><mat-icon>
+                {{ "done" }}
+              </mat-icon></span
+            >
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>

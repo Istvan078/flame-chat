@@ -6,7 +6,7 @@
     Bejelentkezés Email címmel
   </h2>
 </div>
-<form *ngIf="!emailOrGoogle" (ngSubmit)="loginWithEmAndPa()">
+<form #loginForm="ngForm" *ngIf="!emailOrGoogle" (ngSubmit)="loginWithEmAndPa()">
   <mat-form-field>
     <mat-label for="email">Email</mat-label>
     <input matInput [(ngModel)]="email" type="email" name="email" />

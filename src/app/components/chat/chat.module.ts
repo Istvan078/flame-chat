@@ -4,6 +4,7 @@ import { SharedModule } from '../shared/shared.module';
 import { RouterModule } from '@angular/router';
 import { UserProfileComponent } from '../user-profile/user-profile.component';
 import { NewsComponent } from './news/news.component';
+import { ModalComponent } from '../modals/modal/modal.component';
 
 @NgModule({
   declarations: [ChatComponent, UserProfileComponent, NewsComponent],

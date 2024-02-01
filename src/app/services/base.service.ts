@@ -116,7 +116,7 @@ export class BaseService implements OnInit {
   }
 
   addUserData(body: any) {
-    this.refUsers.push(body);
+  return this.refUsers.push(body);
   }
 
   addUserPictures(userKey: any, body: any) {

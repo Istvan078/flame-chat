@@ -9,6 +9,7 @@ import { MatNativeDateModule } from "@angular/material/core";
 import { MatDatepickerModule } from "@angular/material/datepicker";
 import { MatDialogModule } from "@angular/material/dialog";
 import { MatExpansionModule } from "@angular/material/expansion";
+import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
 import { MatInputModule } from "@angular/material/input";
@@ -16,7 +17,7 @@ import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { MatSelectModule } from "@angular/material/select";
 import { MatTableModule } from "@angular/material/table";
 import { MatTooltipModule } from "@angular/material/tooltip";
-import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
+import { NgbModalModule, NgbModule } from "@ng-bootstrap/ng-bootstrap";
 import { FilterPipe } from "src/app/pipes/filter.pipe";
 import { ShortenPipe } from "src/app/pipes/shorten.pipe";
 import { SortPipe } from "src/app/pipes/sort.pipe";
@@ -47,7 +48,9 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
         MatNativeDateModule,
         MatExpansionModule,
         MatDialogModule,
-        MatBadgeModule
+        MatBadgeModule,
+        MatSnackBarModule,
+        NgbModalModule
     ],
     exports: [
         NgbModule,
@@ -71,7 +74,9 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
         MatNativeDateModule,
         MatExpansionModule,
         MatDialogModule,
-        MatBadgeModule
+        MatBadgeModule,
+        MatSnackBarModule,
+        NgbModalModule
     ]
 })
 

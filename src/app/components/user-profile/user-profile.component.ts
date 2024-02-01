@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   Component,
+  ElementRef,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -11,6 +12,8 @@ import { Subscription, map } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
+import { ModalComponent } from '../modals/modal/modal.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 
 @Component({
@@ -32,6 +35,9 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   picturesUrl: any[] = [];
   userProf: UserClass = new UserClass();
   userPictures: any[] = [];
+  userBirthDate: string = "";
+
+  registeredSuccessfully: boolean = false
 
   picturesCarousel: any = document.getElementById("picturesCarousel")
 
@@ -44,8 +50,9 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     private router: ActivatedRoute,
     private auth: AuthService,
     private base: BaseService,
-    private route: Router
-  ) {}
+    private route: Router,
+    private modalService: NgbModal
+  ) {  }
 
   ngOnInit(): void {
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
@@ -67,6 +74,8 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
             (user: any) => user.uid === param['uid']
           );
           this.users = user;
+          
+          
         });
 
         this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
@@ -74,13 +83,17 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
             (userProfile) => userProfile['uid'] === param['uid']
           );
           this.userProf = Object.assign(this.userProf, ...userProfil);
+          if(!this.userProf.birthDate) {this.registeredSuccessfully = true}
+          if(this.userProf){
+          this.userBirthDate = this.userProf.birthDate
+        }
 
           this.base.getData(this.userProf).snapshotChanges().pipe(
             map((changes) => changes.map((c) => ({key:c.payload.key, ...c.payload.val()})))
           ).subscribe((pictures) => this.userPictures = pictures)
       
         });
-      
+        console.log(this.form.form)
 
       });
     }, 2000);

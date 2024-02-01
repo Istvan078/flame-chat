@@ -68,16 +68,16 @@
           [(ngModel)]="profilePhoto"
           type="file"
           name="profilePicture"
-          [required]="userProf.profilePicture"
+          [required]="!userProf.profilePicture"
         />
-        <button
+        <button [disabled]="!profilePhoto"
           (click)="
             userProf.profilePicture ? changeProfilePic() : addProfilePic()
           "
           type="button"
           class="btn btn-primary mt-1"
         >
-          {{ "Profilkép Feltöltése" }}
+          Profilkép Feltöltése
         </button>
       </div>
 
@@ -118,7 +118,7 @@
         </div>
       </ng-template>
 
-      <div class="mb-2">
+      <div *ngIf="userBirthDate" class="mb-2">
         <h2 class="text-center">
           <label id="profilePicture" class="form-label" for="profilePicture"
             >Képek feltöltése</label
@@ -132,6 +132,7 @@
           multiple
         />
         <button
+        [disabled]="!pictures"
           (click)="addPictures()"
           type="button"
           class="btn btn-primary mt-1"
@@ -197,10 +198,10 @@
 
 
 
-      <button class="mt-2" color="accent" mat-raised-button type="submit">
+      <button [disabled]="!f.valid" class="mt-2" color="accent" mat-raised-button type="submit">
         Adatok mentése
       </button>
-      <button routerLink="/chat" class="greenButton mt-1" mat-raised-button type="button">
+      <button [disabled]="!userBirthDate" routerLink="/chat" class="greenButton mt-1" mat-raised-button type="button">
         Vissza
       </button>
     </form>

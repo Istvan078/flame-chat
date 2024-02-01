@@ -31,8 +31,9 @@ export class AuthService implements OnInit {
 
   constructor(private aFireAuth: AngularFireAuth, private http: HttpClient) {
     this.isLoggedIn().subscribe((user) => {
-      if (user) this.user = user;
-      this.userLoggedInSubject = new BehaviorSubject(this.user);
+      if (user) {
+        this.user = user;
+      }
       user?.getIdToken().then((idToken) => {
         this.user.idToken = idToken;
         this.authHeader = this.httpHeaders.set(
@@ -44,31 +45,36 @@ export class AuthService implements OnInit {
             this.user.claims = claims;
             console.log('A felhasználó már rendelkezik jogosultságokkal.');
             this.isSuperAdmin.next(this.user.claims.superAdmin);
-
+            this.userLoggedInSubject.next(this.user);
             this.getUsers().subscribe((users: UserClass[]) => {
               this.usersSubject = new BehaviorSubject(users);
             });
           } else {
             this.setCustomClaims(this.user.uid, this.defaultClaims);
             this.user.claims = this.defaultClaims;
+            this.userLoggedInSubject.next(this.user);
             console.log('Alap jogosultságok sikeresen beállítva.');
             this.isSuperAdmin.next(false);
           }
         });
       });
+      if (!user) {
+        this.user = null;
+        console.log('Ön kijelentkezett');
+        this.userLoggedInSubject.next(this.user);
+      }
     });
   }
 
   createUserWithEmAndPa(email: string, password: string) {
-    this.aFireAuth.createUserWithEmailAndPassword(email, password);
+    return this.aFireAuth.createUserWithEmailAndPassword(email, password);
   }
 
   getUsersSubject() {
     return this.usersSubject;
   }
 
-
-  getUserSubject(): Promise<any> {
+  getUser(): Promise<any> {
     return new Promise((resolve, reject) => {
       this.aFireAuth.user.subscribe(
         (user: any) => {
@@ -78,7 +84,7 @@ export class AuthService implements OnInit {
           reject(error);
         }
       );
-    })
+    });
   }
 
   getClaims() {

@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { PhoneAuthProvider } from '@angular/fire/auth';
+import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router'
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -21,6 +22,7 @@ export class LoginComponent {
   isPhone: boolean = false;
   reCapthcaOff: boolean = false;
   userProfiles: any[] = [];
+  @ViewChild('loginForm') loginForm!: NgForm;
 
   constructor(
     private authService: AuthService,
@@ -37,7 +39,6 @@ export class LoginComponent {
         let userProfile = this.userProfiles.filter(
           (userProfile: any) => userProfile.uid === user.uid
         );
-        console.log(userProfile);
 
         this.base.userProfileSubject.next(userProfile);
 
@@ -48,21 +49,15 @@ export class LoginComponent {
               uid: userProfile[0].uid,
               email: user.email,
             });
-            console.log('ciklus lefutott');
           }
-        } else {
-          console.log('van már ilyen user');
-        }
-        if (userProfile.length != 0) {
-          console.log('siker', userProfile.length);
-        }
+        } 
         if (
           userProfile[0].birthDate === undefined ||
           userProfile[0].birthDate === ''
         ) {
           this.router.navigate(['profile/' + user.uid]);
         } else {
-          this.router.navigate(['profile/' + user.uid]);
+          this.router.navigate(['']);
         }
       });
     });
@@ -71,13 +66,14 @@ export class LoginComponent {
   loginWithGoogle(): void {
     this.authService.signInWithGoogle().then(() => {
       this.authService.isLoggedIn().subscribe((user: any) => {
+        if(user){
         this.base.getUserProfiles().subscribe((userProfiles: any) => {
           this.userProfiles = userProfiles;
 
           let userProfile = this.userProfiles.filter(
             (userProfile: any) => userProfile.uid === user.uid
           );
-          console.log(userProfile);
+          
 
           if (userProfile.length === 0) {
             userProfile.push(user);
@@ -86,11 +82,9 @@ export class LoginComponent {
                 uid: userProfile[0].uid,
                 email: user.email,
               });
-              console.log('felhasználó hozzáadva');
+             
             }
-          } else {
-            console.log('van már ilyen user');
-          }
+          } 
           if (
             userProfile[0].birthDate === undefined ||
             userProfile[0].birthDate === ''
@@ -99,8 +93,9 @@ export class LoginComponent {
           } else {
             this.router.navigate(['']);
           }
+        
         });
-      });
+    }});
     });
   }
 
@@ -114,7 +109,6 @@ export class LoginComponent {
     this.emailOrGoogle = !this.emailOrGoogle;
   }
 
-  //new RecaptchaVerifier(getAuth(), 'reCaptchaContainer', {})
   startLoginWithPhoneNumber() {
     this.authService
       .signInWithPhoneNumber('+36' + this.phoneNumber)
@@ -163,5 +157,12 @@ export class LoginComponent {
         )
         
       });
+  }
+
+  fillSignInValues() {
+    this.loginForm.form.patchValue({
+      email: "pelda078@gmail.com",
+      password: "xy"
+    })
   }
 }
