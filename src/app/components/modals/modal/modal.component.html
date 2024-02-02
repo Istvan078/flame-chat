@@ -1,4 +1,34 @@
-<div class="modal" tabindex="-1">
+<div class="modal-header">
+  <h5 class="modal-title">
+    {{friendName}}
+  </h5>
+  <button
+    (click)="activeModal.dismiss('Cross-click')"
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="modal"
+    aria-label="Close"
+  ></button>
+</div>
+<div class="modal-body">
+  <p>{{name}}</p>
+</div>
+<div class="modal-footer">
+  <button
+    (click)="activeModal.close('Close click')"
+    type="button"
+    class="btn btn-secondary green"
+    data-bs-dismiss="modal"
+  >
+    <span class="icons"
+      ><mat-icon>
+        {{ "done" }}
+      </mat-icon></span
+    >
+  </button>
+</div>
+
+<!-- <div class="modal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
@@ -28,9 +58,9 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> -->
 
-  <!-- <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+<!-- <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">

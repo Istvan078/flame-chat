@@ -42,18 +42,14 @@ export class BaseService implements OnInit {
   refChats!: AngularFireList<Chat>;
   refUsers: AngularFireList<UserClass>;
   refUser!: AngularFireList<UserClass>;
-  refFriends!: AngularFireList<any>
+  refFriends!: AngularFireList<UserClass>
   apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
   userProfileSubject: Subject<any> = new Subject();
 
   basePath: any = '/pictures';
   dbRef: AngularFireList<any>;
 
-  keysSubject: Subject<object> = new Subject();
-  keysObject: { userKey: string; friendKey: string } = {
-    userKey: '',
-    friendKey: '',
-  };
+  userKeySubject: Subject<any> = new Subject();
   userMessageRef: any;
 
   constructor(
@@ -63,12 +59,11 @@ export class BaseService implements OnInit {
     private http: HttpClient,
     private authService: AuthService
   ) {
-    this.keysSubject.subscribe((keysObject: any) => {
-      console.log(keysObject);
-      this.keysObject = {
-        userKey: keysObject.userKey,
-        friendKey: keysObject.friendKey,
-      };
+    this.userKeySubject.subscribe((userKey:any) => {
+      console.log(userKey);
+      this.refFriends = this.realTimeDatabase.list(
+        `/users/${userKey}/friends`
+      );
     });
 
     this.refChats = realTimeDatabase.list(`/chats`);
@@ -95,13 +90,11 @@ export class BaseService implements OnInit {
   }
 
   removeFriend(id: string) {
-   return this.refFriends.remove(id)
+  return this.refFriends.remove(id)
   }
 
-  getFriends(userKey: string) {
-    this.refFriends = this.realTimeDatabase.list(
-      `/users/${userKey}/friends`
-    );
+  getFriends() {
+
 
     return this.refFriends
     .snapshotChanges()

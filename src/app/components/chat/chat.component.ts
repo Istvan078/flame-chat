@@ -3,9 +3,11 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
+  SimpleChanges,
   ViewChild,
 } from '@angular/core';
 import {
@@ -20,6 +22,8 @@ import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { MatAccordion } from '@angular/material/expansion';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ModalComponent } from '../modals/modal/modal.component';
 
 type Friend = {
   friendId: string;
@@ -30,9 +34,12 @@ type Friend = {
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
 })
-export class ChatComponent implements OnInit, OnDestroy {
+export class ChatComponent implements OnInit, OnDestroy, OnChanges {
   @ViewChild('spanAnchor') toCreated!: ElementRef;
   @ViewChild(MatAccordion) accordion!: MatAccordion;
+  @ViewChild('toastHeader') toastHeader!: ElementRef
+
+  toastVal: any
 
   users: Chat[] = [];
   signAsFriend: UserClass = new UserClass();
@@ -56,6 +63,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonClicked: boolean = false;
 
   decreasedUserProfSubject: BehaviorSubject<any> = new BehaviorSubject(null)
+  decreasedUserProf: any [] = []
   friendsUserProfArr: any[] = []
   removedFriend: boolean = false;
 
@@ -84,8 +92,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     private base: BaseService,
     private viewPortScroller: ViewportScroller,
     private router: Router,
-    private _snackbar: MatSnackBar
-  ) {}
+    private _snackbar: MatSnackBar,
+    private ngbModal: NgbModal
+  ) {
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log(changes)
+  }
 
   ngOnInit() {
     setTimeout(() => {
@@ -101,8 +115,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.userProfile[0]['key'] = this.userProfile[0]['key'];
 
             // baratok listajanak lekerese
-            this.base
-              .getFriends(this.userProfile[0].key as string)
+            this.base.userKeySubject.next( this.userProfile[0]['key'])
+              this.base.getFriends()
               .subscribe((val: any[]) => {
                 this.friendsOn = true;
                 this.userProfile[0].friends = val;
@@ -143,12 +157,12 @@ export class ChatComponent implements OnInit, OnDestroy {
               this.decreasedUserProfSubject.subscribe(
                 (userProfs) => {
                   if(userProfs) {
-                    this.userProfiles = userProfs
-                    
+                    this.decreasedUserProf = userProfs
+                    console.log(this.decreasedUserProf)
                   }
-                   if(this.userProfiles.length == 0 || this.userProfiles.length == 1) {
-                    this.userProfiles = userProfs
-                   }
+                  //  if(this.userProfiles.length == 0 || this.userProfiles.length == 1) {
+                  //   this.userProfiles = userProfs
+                  //  }
                 }
                )
             });
@@ -270,7 +284,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   signAsFirstFriend(user: UserClass, i: number) {
-    this.removedFriend = false
+    let counter = 0
     if (this.userProfile[0].friends!.length === 0) {
       let friends = {
         friendId: user.uid,
@@ -287,6 +301,18 @@ export class ChatComponent implements OnInit, OnDestroy {
      this.decreasedUserProfSubject.next(this.userProfiles)
       this.base
         .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
+        .then(
+          () => {
+            const modalRef = this.ngbModal.open(ModalComponent)
+            modalRef.componentInstance.friendName = user.displayName
+            modalRef.componentInstance.name = "Ismerősnek jelölve."
+            if(counter === 0) {
+              this.router.navigate(['chat'])
+              counter = 1
+             }
+          }
+        )
+
         // .then(() => this.router.navigate(['chat']));
     } else {
       this.signAsAFriend(user, i);
@@ -294,7 +320,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   signAsAFriend(user: UserClass, i: number) {
-    this.removedFriend = false
+    let counter = 0
     if(i>0) {
     var signedFriend = this.userProfiles.slice(i-1,i)
    
@@ -321,12 +347,27 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (friend.length === 0) {
       this.base
         .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
+        .then(
+          () => {
+            const modalRef = this.ngbModal.open(ModalComponent)
+            modalRef.componentInstance.friendName = user.displayName
+            this.toastVal = user
+            console.log(this.toastVal)
+            modalRef.componentInstance.name = "Ismerősnek jelölve."
+            if(counter === 0) {
+              this.router.navigate(['chat'])
+              counter = 1
+             }
+          }
+        )
+
         // .then(() => this.router.navigate(['chat']));
     } else return;
   }
 
-  removeFriend(id: string, i:number) {
-    this.base.removeFriend(id).then(() => 
+  removeFriend(friend: any, i:number) {
+    let counter = 0
+    this.base.removeFriend(friend.key).then(() => 
     {
       if(i>0) {
         var removedFriend = this.userProfiles.slice(i-1,i)
@@ -337,8 +378,17 @@ export class ChatComponent implements OnInit, OnDestroy {
           }}
          )
          this.decreasedUserProfSubject.next(this.userProfiles)
-         this.removedFriend = true
-    // this.router.navigate(['chat'])
+         const modalRef = this.ngbModal.open(ModalComponent, { ariaLabelledBy: 'modal-basic-title' })
+         modalRef.componentInstance.name = "Törölve az ismerősök közül."
+         console.log(this.toastHeader)
+         if(this.toastVal.uid == friend.friendId){
+         modalRef.componentInstance.friendName = this.toastVal.displayName
+         }
+         if(counter === 0) {
+          this.router.navigate(['chat'])
+          counter = 1
+         }
+     
     }
     )
   

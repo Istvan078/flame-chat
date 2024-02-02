@@ -25,7 +25,7 @@
               matBadge="{{ userFriends.length }}"
               matBadgeColor="primary"
               class="ms-2"
-              >groups</mat-icon
+              >groups</mat-icon 
             ></mat-panel-title
           >
         </mat-expansion-panel-header>
@@ -60,9 +60,7 @@
                       </mat-card-subtitle>
                       <div class="text-center">
                         <button
-                          data-bs-toggle="modal" 
-                          data-bs-target="#signedModal"
-                          (click)="removeFriend(friend.friendKey, i)"
+                          (click)="removeFriend(friend, i)"
                           class="btn btn-sm btn-danger"
                           type="button"
                         >
@@ -193,6 +191,7 @@
         class="d-grid justify-content-center text-center mt-2"
         [autohide]="false"
         [header]="user.displayName"
+        #toastHeader
       >
         <img [src]="user.profilePicture" width="50px" height="50px" alt="" />
         <div>
@@ -201,8 +200,7 @@
         <ng-container *ngIf="notFriend.uid === user.uid">
           <ng-container *ngFor="let notFriend of userNotFriends">
             <button
-              data-bs-toggle="modal"
-              data-bs-target="#signedModal"
+
               *ngIf="notFriend.uid === user.uid"
               (click)="signAsFirstFriend(user, i)"
               mat-raised-button
@@ -233,38 +231,6 @@
         </h4> -->
       </ngb-toast>
     </ng-container>
-  </div>
-</div>
-
-<div id="signedModal" class="modal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title"></h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div class="modal-body">
-        <p>{{!removedFriend ? 'Ismerősnek jelölve.' : 'Törölve az ismerősök közül.'}}</p>
-      </div>
-      <div class="modal-footer">
-        <button
-          type="button"
-          class="btn btn-secondary green"
-          data-bs-dismiss="modal"
-        >
-          <span class="icons"
-            ><mat-icon>
-              {{ "done" }}
-            </mat-icon></span
-          >
-        </button>
-      </div>
-    </div>
   </div>
 </div>
 

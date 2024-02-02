@@ -8,15 +8,16 @@ import { LoginComponent } from './components/login/login.component';
 import { UsersComponent } from './components/users/users.component';
 import { WeatherComponent } from './components/weather/weather.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
+import { loginGuardGuard } from './guards/login-guard.guard';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'notes', component: NotesComponent },
+  { path: 'notes', component: NotesComponent, canActivate: [loginGuardGuard]},
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
   { path: 'users', component: UsersComponent },
   { path: 'weather', component: WeatherComponent },
-  { path: 'profile/:uid', component: UserProfileComponent },
+  { path: 'profile/:uid', component: UserProfileComponent, canActivate: [loginGuardGuard] },
   {
     path: 'recipes',
     loadChildren: () =>

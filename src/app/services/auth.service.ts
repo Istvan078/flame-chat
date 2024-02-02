@@ -107,6 +107,12 @@ export class AuthService implements OnInit {
     return this.aFireAuth.authState;
   }
 
+  isLoggedInBoolean() {
+    if(this.user.uid) {
+      return true
+    } else return false
+  }
+
   loginWithEmAndPa(email: string, password: string) {
     this.aFireAuth.signInWithEmailAndPassword(email, password);
   }
