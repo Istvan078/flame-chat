@@ -50,7 +50,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       message: ['', [Validators.required, Validators.minLength(5)]],
       pictures: this.fBuilder.array([]),
       sharing: ['yes'],
-      timeStamp: [new Date().toLocaleTimeString()],
+      timeStamp: [''],
       displayName: [this.userProfile.displayName]
     });
 
@@ -93,6 +93,10 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.uploadFiles();
     }
     setTimeout(() => {
+      const date: Date = new Date()
+      this.publishForm.patchValue({
+        timeStamp: date.toLocaleDateString() + " " + date.toLocaleTimeString()
+      })
       this.privatePost = this.publishForm.value;
       this.privatePost.pictures = this.picturesArray;
       console.log(this.picturesArray);

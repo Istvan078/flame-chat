@@ -49,28 +49,35 @@ export class BaseService implements OnInit {
   basePath: any = '/pictures';
   dbRef: AngularFireList<any>;
 
-  userKeySubject: Subject<any> = new Subject();
+  userKeySubject: BehaviorSubject<any> = new BehaviorSubject(null);
   userMessageRef: any;
+
+  // userKey: any
+  userProfile: any
 
   constructor(
     private realTimeDatabase: AngularFireDatabase,
-
+    private auth: AuthService,
     private fireStorage: AngularFireStorage,
     private http: HttpClient,
     private authService: AuthService
   ) {
-    this.userKeySubject.subscribe((userKey:any) => {
-      console.log(userKey);
-      this.refFriends = this.realTimeDatabase.list(
-        `/users/${userKey}/friends`
-      );
-    });
+    // this.userKeySubject.subscribe((userKey:any) => {
+    //   console.log(userKey);
+    //   this.userKey = userKey
+    // });
 
     this.refChats = realTimeDatabase.list(`/chats`);
     this.refNotes = realTimeDatabase.list('/notes');
     this.refRecipeList = realTimeDatabase.list<Recipe>('/recipes');
     this.refUsers = realTimeDatabase.list('/users');
     this.dbRef = realTimeDatabase.list(this.basePath);
+
+    this.userKeySubject.subscribe(
+      (userKey:any) => {
+        this.refFriends = realTimeDatabase.list(`/users/${userKey}/friends`)
+    })
+     
   }
 
   ngOnInit(): void {}
@@ -84,20 +91,30 @@ export class BaseService implements OnInit {
         )
       );
   }
+  
+  // id: string,
+  addFriends( data: UserClass) {
+    //this.refFriends = this.realTimeDatabase.list(`/users/${this.userProfile[0]['key']}/friends`)
 
-  addFriends(id: string, data: UserClass) {
-   return this.refFriends.update(id, data);
+    //  this.refFriends = this.realTimeDatabase.list('/friends')
+  //  return this.refFriends.update(id, data);
+  return this.refFriends.push(data);
   }
 
   removeFriend(id: string) {
+
+    // this.refFriends = this.realTimeDatabase.list('/friends')
+   
+      // this.refFriends = this.realTimeDatabase.list(
+      //   `/users/${this.userKey}/friends`
+      // );
+     
   return this.refFriends.remove(id)
   }
 
   getFriends() {
-
-
-    return this.refFriends
-    .snapshotChanges()
+    // let datRef = this.realTimeDatabase.database.ref('/users/').child(`${this.userProfile[0]['key']}`).child('/friends')
+    return this.refFriends.snapshotChanges()
     .pipe(
       map((changes) =>
         changes.map((c) => ({
@@ -105,6 +122,12 @@ export class BaseService implements OnInit {
           ...c.payload.val(),
         }))
       )
+    )
+  }
+
+  getFriend() {
+   return this.refFriends.query.once(
+      ('value')
     )
   }
 

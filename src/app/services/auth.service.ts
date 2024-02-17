@@ -46,6 +46,7 @@ export class AuthService implements OnInit {
             console.log('A felhasználó már rendelkezik jogosultságokkal.');
             this.isSuperAdmin.next(this.user.claims.superAdmin);
             this.userLoggedInSubject.next(this.user);
+            console.log(this.userLoggedInSubject)
             this.getUsers().subscribe((users: UserClass[]) => {
               this.usersSubject = new BehaviorSubject(users);
             });
@@ -55,19 +56,26 @@ export class AuthService implements OnInit {
             this.userLoggedInSubject.next(this.user);
             console.log('Alap jogosultságok sikeresen beállítva.');
             this.isSuperAdmin.next(false);
+            console.log(this.userLoggedInSubject)
           }
         });
       });
       if (!user) {
         this.user = null;
         console.log('Ön kijelentkezett');
-        this.userLoggedInSubject.next(this.user);
+        this.userLoggedInSubject.next(null);
+        console.log(this.userLoggedInSubject)
       }
     });
+    console.log(this.userLoggedInSubject)
   }
 
   createUserWithEmAndPa(email: string, password: string) {
     return this.aFireAuth.createUserWithEmailAndPassword(email, password);
+  }
+
+  getUserLoggedInSubject() {
+    return this.userLoggedInSubject
   }
 
   getUsersSubject() {

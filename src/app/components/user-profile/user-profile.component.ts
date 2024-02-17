@@ -123,7 +123,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           this.userProf.profilePicture = userProfile[0].profilePicture;
         }
 
-        this.base.updateUserData(this.userProf, userProfile[0].key);
+        this.base.updateUserData(this.userProf, userProfile[0]['key']);
       });
       setTimeout(() => {
         this.route.navigate(['']);

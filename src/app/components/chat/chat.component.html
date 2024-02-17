@@ -25,7 +25,8 @@
               matBadge="{{ userFriends.length }}"
               matBadgeColor="primary"
               class="ms-2"
-              >groups</mat-icon 
+              aria-hidden="false"
+              >groups</mat-icon
             ></mat-panel-title
           >
         </mat-expansion-panel-header>
@@ -33,21 +34,21 @@
         <div class="row">
           <div
             class="col-12 col-md-4 col-lg-3 col-xl-2"
-            *ngFor="let user of userProfiles; let i = index"
+            *ngFor="let friend of userFriends; let i = index"
           >
-            <ng-container *ngFor="let friend of userFriends">
-              <ng-container *ngIf="friend.friendId === user.uid">
+            <ng-container>
+              <ng-container>
                 <mat-card
                   class="mb-2 mt-3 d-grid justify-content-center matCardBg"
                 >
                   <mat-card-header class="d-grid justify-content-center">
                     <mat-card-title>
-                      {{ user.displayName }}
+                      {{ friend.displayName }}
                     </mat-card-title>
                   </mat-card-header>
                   <mat-card-content class="d-flex justify-content-center"
                     ><img
-                      [src]="user.profilePicture"
+                      [src]="friend.profilePicture"
                       alt=""
                       width="50px"
                       height="50px"
@@ -56,11 +57,11 @@
                   <mat-card-footer>
                     <mat-card-content class="d-grid justify-content-center">
                       <mat-card-subtitle>
-                        {{ user.email }}
+                        {{ friend.email }}
                       </mat-card-subtitle>
                       <div class="text-center">
                         <button
-                          (click)="removeFriend(friend, i)"
+                          (click)="removeFriend(friend.friendKey)"
                           class="btn btn-sm btn-danger"
                           type="button"
                         >
@@ -89,6 +90,7 @@
               matBadge="{{ haventSeenMessagesArr.length }}"
               matBadgeColor="primary"
               class="ms-2"
+              aria-hidden="false"
               >chat</mat-icon
             ></mat-panel-title
           >
@@ -96,30 +98,30 @@
         <div class="row">
           <div
             class="col-12 col-md-4 col-lg-3 col-xl-2"
-            *ngFor="let user of userProfiles; let i = index"
+            *ngFor="let friendd of userFriends; let i = index"
           >
             <ng-container *ngFor="let mess of newMessagesArr">
               <div
                 class="mt-2 text-center fw-b text-danger"
-                *ngIf="user.uid === mess.friendId"
+                *ngIf="friendd.friendId === mess.friendId"
               >
                 <h3>Új üzenet érkezett</h3>
               </div>
 
-              <ng-container *ngFor="let friend of userFriends">
-                <ng-container *ngIf="friend.friendId === user.uid">
+              <ng-container >
+                <ng-container>
                   <div
                     class="card mt-2 text-white text-center"
                     [ngClass]="
-                      mess.friendId === user.uid ? 'bg-primary' : 'bg-warning'
+                      mess.friendId === friendd.friendId ? 'bg-primary' : 'bg-warning'
                     "
                   >
                     <h5 class="card-header">
-                      <h2>{{ user.displayName }}</h2>
+                      <h2>{{ friendd.displayName }}</h2>
                     </h5>
                     <div class="card-body">
                       <img
-                        [src]="user.profilePicture"
+                        [src]="friendd.profilePicture"
                         width="50px"
                         height="50px"
                         class="rounded-circle"
@@ -128,9 +130,9 @@
                     </div>
                     <div class="card-footer">
                       <button
-                        (click)="getMessageUser(user)"
+                        (click)="getMessageUser(friendd)"
                         mat-raised-button
-                        *ngIf="friend.friendId === user.uid"
+                        
                         class="btn btn-sm btn-primary ms-2 blue"
                         type="button"
                       >
@@ -181,28 +183,31 @@
 
 <div class="row" *ngIf="!sendPrivateMessageOn && friendsOn">
   <div
-    *ngFor="let user of userProfiles; let i = index"
+    *ngFor="let notFriend of userNotFriends; let i = index"
     class="col-12 col-md-6 col-lg-3 mb-2"
   >
-    <ng-container *ngFor="let notFriend of userNotFriends">
+    <ng-container>
       <ngb-toast
-        *ngIf="notFriend.uid === user.uid && userProfile[0].uid !== user.uid"
-        [id]="user.uid"
+        [id]="notFriend.uid"
         class="d-grid justify-content-center text-center mt-2"
         [autohide]="false"
-        [header]="user.displayName"
+        [header]="notFriend.displayName"
         #toastHeader
       >
-        <img [src]="user.profilePicture" width="50px" height="50px" alt="" />
+        <img
+          [src]="notFriend.profilePicture"
+          width="50px"
+          height="50px"
+          alt=""
+        />
         <div>
-          <small>{{ user.email }}</small>
+          <small>{{ notFriend.email }}</small>
         </div>
-        <ng-container *ngIf="notFriend.uid === user.uid">
-          <ng-container *ngFor="let notFriend of userNotFriends">
-            <button
 
-              *ngIf="notFriend.uid === user.uid"
-              (click)="signAsFirstFriend(user, i)"
+        <ng-container>
+          <ng-container>
+            <button
+              (click)="signAsAFriend(notFriend)"
               mat-raised-button
               color="accent"
               type="button"
@@ -211,24 +216,6 @@
             </button>
           </ng-container>
         </ng-container>
-
-        <!-- <ng-container *ngFor="let friend of userFriends">
-          <button *ngIf="friend.friendId=== user.uid" (click)="getMessageUser(user)" class="btn btn-sm btn-primary ms-2"
-            type="button">
-            <span class="icons"><mat-icon>
-                {{ user.uid === signedFriend.friendId ? "chat" : "chat" }}
-              </mat-icon></span>
-          </button> -->
-        <!-- <button class="ms-2" *ngIf="friend.friendId=== user.uid" [ngClass]="user.uid == friend ? 'green' : ''"
-            (click)="signAsFirstFriend(user)" mat-raised-button color="accent" type="button">
-            <span class="icons"><mat-icon>
-                {{ "done" }}
-              </mat-icon></span>
-          </button> -->
-        <!-- </ng-container> -->
-        <!-- <h4 class="fw-bold text-success mt-2" *ngIf="user.uid === signedFriend.friendId">
-          Ismerősök
-        </h4> -->
       </ngb-toast>
     </ng-container>
   </div>
@@ -330,10 +317,10 @@
     >
       <ng-container
         *ngIf="
-          (object.message.senderId === selectedFriend[0].friendId &&
+          (object.message.senderId === selectedFriend.friendId &&
             object.participants[1] === userProfile[0].uid) ||
           (object.message.senderId == userProfile[0].uid &&
-            object.participants[1] === selectedFriend[0].friendId)
+            object.participants[1] === selectedFriend.friendId)
         "
       >
         <mat-card-header>

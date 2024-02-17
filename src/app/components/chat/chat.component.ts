@@ -35,11 +35,10 @@ type Friend = {
   styleUrls: ['./chat.component.scss'],
 })
 export class ChatComponent implements OnInit, OnDestroy, OnChanges {
-  @ViewChild('spanAnchor') toCreated!: ElementRef;
   @ViewChild(MatAccordion) accordion!: MatAccordion;
-  @ViewChild('toastHeader') toastHeader!: ElementRef
+  @ViewChild('toastHeader') toastHeader!: ElementRef;
 
-  toastVal: any
+  toastVal: any = {};
 
   users: Chat[] = [];
   signAsFriend: UserClass = new UserClass();
@@ -62,16 +61,14 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
   messageButtonsOn: boolean = false;
   messageButtonClicked: boolean = false;
 
-  decreasedUserProfSubject: BehaviorSubject<any> = new BehaviorSubject(null)
-  decreasedUserProf: any [] = []
-  friendsUserProfArr: any[] = []
+  friendsUserProfArr: any[] = [];
   removedFriend: boolean = false;
 
   allChatsArray: any[] = [];
   userMessages: boolean = false;
-  haventSeenMessagesArr: any[] =[]
-  messFromSelFriendArr: any[] = []
-  newMessagesArr: any[] = []
+  haventSeenMessagesArr: any[] = [];
+  messFromSelFriendArr: any[] = [];
+  newMessagesArr: any[] = [];
 
   userNotFriends: any[] = [];
   userFriends: any[] = [];
@@ -80,7 +77,7 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
     friendId: '',
   };
 
-  selectedFriend: any[] = [];
+  selectedFriend: any = {};
 
   userLoggedInSubscription!: Subscription;
   isSuperAdminSubscription!: Subscription;
@@ -94,17 +91,17 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
     private router: Router,
     private _snackbar: MatSnackBar,
     private ngbModal: NgbModal
-  ) {
-  }
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log(changes)
+    console.log(changes);
   }
 
   ngOnInit() {
-    setTimeout(() => {
-      this.userLoggedInSubscription = this.auth.userLoggedInSubject.subscribe(
-        (user: any) => {
+    // setTimeout(() => {
+      this.userLoggedInSubscription = this.auth
+        .getUserLoggedInSubject()
+        .subscribe((user: any) => {
           // felhasznaloi adatok lekerese
           this.base.getUserProfiles().subscribe((userProfiles: any[]) => {
             this.userProfiles = userProfiles;
@@ -112,68 +109,78 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
               (userProfile: any) => userProfile.uid === user.uid
             );
 
-            this.userProfile[0]['key'] = this.userProfile[0]['key'];
-
+            this.userProfile[0].key = this.userProfile[0]['key']
+            // userKey átadása base service-nek
+            this.base.userKeySubject.next(this.userProfile[0]['key']);
             // baratok listajanak lekerese
-            this.base.userKeySubject.next( this.userProfile[0]['key'])
-              this.base.getFriends()
-              .subscribe((val: any[]) => {
-                this.friendsOn = true;
-                this.userProfile[0].friends = val;
+            this.base.getFriends().subscribe((val: any[]) => {
+              this.friendsOn = true;
+              this.userProfile[0].friends = val;
 
-                //  baratok tomb
-                let friendsUids: any[] = [];
-                let friends: any;
-                friends = this.userProfile[0].friends.map((f) => {
+              //  baratok tomb
+              let friendsUids: any[] = [];
+              let friendsTomb: any[] = [];
+
+              this.userProfiles.map((up) => {
+                return this.userProfile[0].friends?.map((f) => {
+                  let prof = this.userProfiles.find(
+                    (uP) => f.friendId === uP.uid
+                  );
+                  console.log(prof);
                   friendsUids.push(f.friendId);
-                  return (friends = {
-                    friendKey: f['key'],
-                    friendId: f.friendId,
-                  });
+                  if (up.uid === f.friendId) {
+                    return friendsTomb.push({
+                      friendKey: f['key'],
+                      friendId: f.friendId,
+                      displayName: prof?.displayName,
+                      profilePicture: prof?.profilePicture,
+                      email: prof?.email,
+                    });
+                  }
                 });
-                this.userFriends = friends;
-
-                //  nem baratok tomb
-                let userProf: any[] = this.userProfiles
-                  .map((uP) => uP)
-                  .filter((item) => !friendsUids.includes(item.uid));
-                this.userNotFriends = userProf;
               });
+
+              this.userFriends = friendsTomb;
+              console.log(this.userFriends);
+              //  nem baratok tomb
+              let userProf: any[] = this.userProfiles
+                .map((uP) => uP)
+                .filter(
+                  (item) =>
+                    !friendsUids.includes(item.uid) &&
+                    item.uid !== this.userProfile[0].uid
+                );
+              this.userNotFriends = userProf;
+              console.log(this.userNotFriends);
+            });
 
             // chatek lekérése
             this.getMessages().subscribe((val) => {
               console.log(val);
               this.allChatsArray = val;
-              this.haventSeenMessagesArr = this.allChatsArray.filter((item) => item.message.seen === false && this.userProfile[0].uid === item.participants[1])
-              let [tomb] =  this.haventSeenMessagesArr.map((item) => {
-               return this.userProfile[0].friends!.filter((friend) => friend.friendId === item.message.senderId)
-                     })
-              this.newMessagesArr = tomb
-              if(!this.newMessagesArr) {
-                this.newMessagesArr = [1]
-                console.log(this.newMessagesArr) 
+              this.haventSeenMessagesArr = this.allChatsArray.filter(
+                (item) =>
+                  item.message.seen === false &&
+                  this.userProfile[0].uid === item.participants[1]
+              );
+              let [tomb] = this.haventSeenMessagesArr.map((item) => {
+                return this.userProfile[0].friends!.filter(
+                  (friend) => friend.friendId === item.message.senderId
+                );
+              });
+              this.newMessagesArr = tomb;
+              if (!this.newMessagesArr) {
+                this.newMessagesArr = [1];
+                console.log(this.newMessagesArr);
               }
-              console.log(this.userProfiles)
-              this.decreasedUserProfSubject.subscribe(
-                (userProfs) => {
-                  if(userProfs) {
-                    this.decreasedUserProf = userProfs
-                    console.log(this.decreasedUserProf)
-                  }
-                  //  if(this.userProfiles.length == 0 || this.userProfiles.length == 1) {
-                  //   this.userProfiles = userProfs
-                  //  }
-                }
-               )
             });
-            
           });
-        }
+        });
+
+      this.isSuperAdminSubscription = this.auth.isSuperAdmin.subscribe(
+        (value) => (this.isSAdmin = value)
       );
-    }, 1000);
-    this.isSuperAdminSubscription = this.auth.isSuperAdmin.subscribe(
-      (value) => (this.isSAdmin = value)
-    );
+    // }, 2000);
   }
 
   randomIdGenerator() {
@@ -203,7 +210,7 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
     this.message.message.senderId = this.userProfile[0].uid;
     this.message.message.timeStamp = dateString;
     this.message.participants[0] = this.userProfile[0].uid;
-    this.message.participants[1] = this.selectedFriend[0].friendId;
+    this.message.participants[1] = this.selectedFriend.friendId;
     this.message.message.displayName = this.userProfile[0].displayName;
     this.message.message.email = this.userProfile[0].email as string;
     this.message.message.profilePhoto = this.userProfile[0].profilePicture;
@@ -211,28 +218,25 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
     this.base.updateMessage(this.randomIdGenerator(), this.message);
   }
 
-  getMessageUser(user: UserClass) {
-    let friend = this.userProfile[0].friends!.filter(
-      (f) => f.friendId == user.uid
-    );
-    this.selectedFriend = friend;
+  getMessageUser(user: any) {
+    // let friend = this.userProfile[0].friends!.filter(
+    //   (f) => f.friendId == user.uid
+    // );
+    this.selectedFriend = user; // objektum
+    console.log(this.selectedFriend)
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
-    let messFromSelFriendArr = this.allChatsArray.filter((item) => this.selectedFriend[0].friendId === item.message.senderId && this.userProfile[0].uid === item.participants[1])
-    messFromSelFriendArr.forEach(
-      (mess) => {
-        if(mess.message.seen === false) {
-          mess.message.seen = true
-          this.base.updateMessage(mess.key, mess)
-        }
+    let messFromSelFriendArr = this.allChatsArray.filter(
+      (item) =>
+        this.selectedFriend.friendId === item.message.senderId &&
+        this.userProfile[0].uid === item.participants[1]
+    );
+    messFromSelFriendArr.forEach((mess) => {
+      if (mess.message.seen === false) {
+        mess.message.seen = true;
+        this.base.updateMessage(mess.key, mess);
       }
-    )
-    
-    //  a find objektet is visszaad!
-    // console.log(object)
-    //  filter vagy find message ez alapján
-
-  
+    });
   }
 
   clearInput() {
@@ -283,121 +287,34 @@ export class ChatComponent implements OnInit, OnDestroy, OnChanges {
     this.userMessages = false;
   }
 
-  signAsFirstFriend(user: UserClass, i: number) {
-    let counter = 0
-    if (this.userProfile[0].friends!.length === 0) {
-      let friends = {
-        friendId: user.uid,
-      };
-      if(i>0) {
-        var signedFriend = this.userProfiles.slice(i-1,i)
-       
-      } else {signedFriend = this.userProfiles.slice(i,i+1)}
-         this.userProfiles = this.userProfiles.filter(
-           (user) => {if(user.uid){
-           return signedFriend[0].uid !== user.uid
-          }}
-         )
-     this.decreasedUserProfSubject.next(this.userProfiles)
-      this.base
-        .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
-        .then(
-          () => {
-            const modalRef = this.ngbModal.open(ModalComponent)
-            modalRef.componentInstance.friendName = user.displayName
-            modalRef.componentInstance.name = "Ismerősnek jelölve."
-            if(counter === 0) {
-              this.router.navigate(['chat'])
-              counter = 1
-             }
-          }
-        )
-
-        // .then(() => this.router.navigate(['chat']));
-    } else {
-      this.signAsAFriend(user, i);
-    }
-  }
-
-  signAsAFriend(user: UserClass, i: number) {
-    let counter = 0
-    if(i>0) {
-    var signedFriend = this.userProfiles.slice(i-1,i)
-   
-  } else {signedFriend = this.userProfiles.slice(i,i+1)}
-     this.userProfiles = this.userProfiles.filter(
-       (user) => {if(user.uid){
-       return signedFriend[0].uid !== user.uid
-      }}
-     )
-     this.decreasedUserProfSubject.next(this.userProfiles)
-    console.log(this.userProfiles)
-    let friends = {
+  signAsAFriend(user: UserClass) {
+    let friend = {
       friendId: user.uid,
     };
-    let friend = this.userProfile[0].friends!.filter(
-      (f) => f.friendId == user.uid
-    );
-    for (let key in friend[0]) {
-      this.signedFriend = {
-        friendId: friend[0].friendId,
-      };
-    }
-
-    if (friend.length === 0) {
-      this.base
-        .addFriends(this.randomIdGenerator(), friends as unknown as UserClass)
-        .then(
-          () => {
-            const modalRef = this.ngbModal.open(ModalComponent)
-            modalRef.componentInstance.friendName = user.displayName
-            this.toastVal = user
-            console.log(this.toastVal)
-            modalRef.componentInstance.name = "Ismerősnek jelölve."
-            if(counter === 0) {
-              this.router.navigate(['chat'])
-              counter = 1
-             }
-          }
-        )
-
-        // .then(() => this.router.navigate(['chat']));
-    } else return;
+    this.base.addFriends(friend as unknown as UserClass).then(() => {
+      const modalRef = this.ngbModal.open(ModalComponent,{
+        centered:true
+      });
+      modalRef.componentInstance.friendName = user.displayName;
+      this.toastVal = user;
+      console.log(this.toastVal);
+      modalRef.componentInstance.name = 'Ismerősnek jelölve.';
+    });
   }
 
-  removeFriend(friend: any, i:number) {
-    let counter = 0
-    this.base.removeFriend(friend.key).then(() => 
-    {
-      if(i>0) {
-        var removedFriend = this.userProfiles.slice(i-1,i)
-      } else {removedFriend = this.userProfiles.slice(i,i+1)}
-         this.userProfiles = this.userProfiles.filter(
-           (user) => {if(user.uid){
-           return removedFriend[0].uid !== user.uid
-          }}
-         )
-         this.decreasedUserProfSubject.next(this.userProfiles)
-         const modalRef = this.ngbModal.open(ModalComponent, { ariaLabelledBy: 'modal-basic-title' })
-         modalRef.componentInstance.name = "Törölve az ismerősök közül."
-         console.log(this.toastHeader)
-         if(this.toastVal.uid == friend.friendId){
-         modalRef.componentInstance.friendName = this.toastVal.displayName
-         }
-         if(counter === 0) {
-          this.router.navigate(['chat'])
-          counter = 1
-         }
-     
-    }
-    )
-  
+  removeFriend(friend: any) {
+    this.base.removeFriend(friend).then(() => {
+      const modalRef = this.ngbModal.open(ModalComponent, {
+        ariaLabelledBy: 'modal-basic-title',
+        centered: true
+      });
+      modalRef.componentInstance.name = 'Törölve az ismerősök közül.';
+      console.log(this.toastHeader);
+      if (this.toastVal.uid == friend.friendId) {
+        modalRef.componentInstance.friendName = this.toastVal.displayName;
+      }
+    });
   }
-
-  // openSnackBar(message: string) {
-  //   this._snackbar.open(message, "Ismerősnek jelölve");
-  // }
-
 
   ngOnDestroy(): void {
     if (this.userLoggedInSubscription) {
