@@ -1,39 +1,59 @@
+import { HttpClient } from '@angular/common/http';
 import {
-  AfterViewInit,
   Component,
   ElementRef,
   OnDestroy,
+  OnInit,
   ViewChild,
 } from '@angular/core';
+import { MatSidenav } from '@angular/material/sidenav';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
+import { ModalComponent } from '../modals/modal/modal.component';
+import { BaseService } from 'src/app/services/base.service';
 
 @Component({
   selector: 'app-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
-export class UsersComponent implements AfterViewInit, OnDestroy {
+export class UsersComponent implements OnInit, OnDestroy {
+  isSideNavOn: boolean = false;
+  isReadyToDeleteProf: boolean = false;
+  userDisplayOn: boolean = false;
+  user: UserClass = new UserClass();
+  userProfiles: UserClass[] = [];
+  loggedInUser: UserClass = new UserClass();
   columns: string[] = [
     'Megjelenítési név',
     'Profilkép',
     'Email-cím',
     'Jogosultságok',
   ];
-  subscription!: Subscription;
-  users: any;
+  users: UserClass[] = [];
+  usersApiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
   @ViewChild('saveChanges', { static: false }) saveChanges!: ElementRef;
+  @ViewChild('sidenav') sidenav!: MatSidenav;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private http: HttpClient,
+    private modalRef: NgbModal,
+    private base: BaseService
+  ) {}
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.authService.getUsers().subscribe((users: UserClass[]) => {
-        this.users = users;
+  ngOnInit(): void {
+    console.log(this.user);
+    this.authService.getUsersSubject().subscribe((users: UserClass[]) => {
+      users.map((user) => {
+        user['isRenderOn'] = false;
       });
-    }, 1000);
+      this.users = users;
+      console.log('users adat megjött', this.users);
+    });
   }
 
   changeClaims(user: any) {
@@ -41,19 +61,69 @@ export class UsersComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.saveChanges.nativeElement.disabled = false;
       this.saveChanges.nativeElement.style.backgroundColor = 'darkgreen';
-    }, 3000);
+    }, 1000);
   }
 
   save() {
     this.authService.navDisappear.next(false);
-    this.subscription = this.authService.navDisappear.subscribe(
-      (isTrue: boolean) => {}
+    this.router.navigate(['']);
+  }
+
+  getLoggedInUser() {
+    this.authService
+      .getUserLoggedInSubject()
+      .subscribe((u) => (this.loggedInUser = u));
+  }
+
+  getIndexOfUser(index: number) {
+    this.user = this.users[index];
+    console.log(this.user);
+  }
+
+  getUserProfiles() {
+    this.base.getUserProfiles().subscribe((uPfs) => (this.userProfiles = uPfs));
+  }
+
+  removeUserProfile() {
+    const selectedUser = this.userProfiles.find(
+      (uP) => uP.uid === this.user.uid
     );
-    this.router.navigate(['home']);
+    if (selectedUser) this.base.removeUserProfile(selectedUser.key);
+  }
+
+  getUsers() {
+    return this.http
+      .get<UserClass[]>(this.usersApiUrl + 'users', {
+        headers: this.authService.httpHeaders,
+      })
+      .subscribe((users) => (this.users = users));
+  }
+
+  setUserProfile() {
+    this.http
+      .post(this.usersApiUrl + 'setUserProfile', this.user)
+      .subscribe((res) => {
+        console.log(res);
+        this.getUsers();
+      });
+  }
+
+  sureToDeleteUser() {
+    const actModal = this.modalRef.open(ModalComponent, {
+      centered: true,
+    });
+    if(this.user.displayName) {
+      actModal.componentInstance.userName = this.user.displayName;
+    } else {
+      actModal.componentInstance.userName = "Névtelen felhasználó";
+    }
+    actModal.componentInstance.uid = this.user.uid;
+    actModal.result
+      .then(() => this.getUsers())
+      .catch((err) => console.log(err));
   }
 
   ngOnDestroy(): void {
-    this.subscription.unsubscribe();
-    console.log('sikeres leiratkozas');
+    this.authService.navDisappear.next(false);
   }
 }

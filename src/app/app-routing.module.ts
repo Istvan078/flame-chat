@@ -12,12 +12,12 @@ import { loginGuardGuard } from './guards/login-guard.guard';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
-  { path: 'notes', component: NotesComponent, canActivate: [loginGuardGuard]},
+  { path: 'notes', component: NotesComponent},
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
   { path: 'users', component: UsersComponent },
   { path: 'weather', component: WeatherComponent },
-  { path: 'profile/:uid', component: UserProfileComponent, canActivate: [loginGuardGuard] },
+  { path: 'profile/:uid', component: UserProfileComponent },
   {
     path: 'recipes',
     loadChildren: () =>

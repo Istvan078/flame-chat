@@ -14,7 +14,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-
+import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 
 @Component({
   selector: 'app-user-profile',
@@ -35,11 +35,14 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   picturesUrl: any[] = [];
   userProf: UserClass = new UserClass();
   userPictures: any[] = [];
-  userBirthDate: string = "";
+  userBirthDate: string = '';
+  newDate: string = new Date().toLocaleString()
 
-  registeredSuccessfully: boolean = false
+  registeredSuccessfully: boolean = false;
+  registeredWithPhone!: boolean;
+  showPics: boolean = false;
 
-  picturesCarousel: any = document.getElementById("picturesCarousel")
+  picturesCarousel: any = document.getElementById('picturesCarousel');
 
   ngOnDestroy(): void {
     this.profilePicSub.unsubscribe();
@@ -51,8 +54,8 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     private auth: AuthService,
     private base: BaseService,
     private route: Router,
-    private modalService: NgbModal
-  ) {  }
+    private modalRef: NgbModal
+  ) {}
 
   ngOnInit(): void {
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
@@ -63,40 +66,40 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     this.picturesSubscription = this.base.picturesSubject.subscribe((url) => {
       this.picturesUrl.push(url);
     });
-
   }
 
   ngAfterViewInit(): void {
-    setTimeout(() => {
+    new Promise((res) => {
       this.router.params.subscribe((param: Params) => {
-        this.auth.getUsers().subscribe((users: UserClass[]) => {
-          const user: any[] = users.filter(
-            (user: any) => user.uid === param['uid']
-          );
-          this.users = user;
-          
-          
-        });
-
         this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
           const userProfil = userProfiles.filter(
             (userProfile) => userProfile['uid'] === param['uid']
           );
           this.userProf = Object.assign(this.userProf, ...userProfil);
-          if(!this.userProf.birthDate) {this.registeredSuccessfully = true}
-          if(this.userProf){
-          this.userBirthDate = this.userProf.birthDate
-        }
-
-          this.base.getData(this.userProf).snapshotChanges().pipe(
-            map((changes) => changes.map((c) => ({key:c.payload.key, ...c.payload.val()})))
-          ).subscribe((pictures) => this.userPictures = pictures)
-      
+          if (!this.userProf.birthDate) {
+            this.registeredSuccessfully = true;
+          }
+          if (this.userProf) {
+            this.userBirthDate = this.userProf.birthDate;
+          }
+          if (this.userProf.email) {
+            this.registeredWithPhone = false;
+          } else this.registeredWithPhone = true;
+          res('Sikeres profillekérés');
         });
-        console.log(this.form.form)
-
       });
-    }, 2000);
+    }).then((res) => {
+      console.log(res);
+      this.base
+        .getData(this.userProf)
+        .snapshotChanges()
+        .pipe(
+          map((changes) =>
+            changes.map((c) => ({ key: c.payload.key, ...c.payload.val() }))
+          )
+        )
+        .subscribe((pictures) => (this.userPictures = pictures));
+    });
   }
 
   selectFile(event: any) {
@@ -108,41 +111,46 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   saveProfile() {
-    this.auth.isLoggedIn().subscribe((user: any) => {
-      this.base.getUserProfiles().subscribe((userProfiles) => {
-        let userProfile = userProfiles.filter(
-          (userProfile: any) => userProfile.uid === user.uid
-        );
-        this.userProf.uid = user.uid;
-        if (
-          this.userProf.profilePicture == '' ||
-          this.userProf.profilePicture == undefined
-        ) {
-          this.userProf.profilePicture = this.profilePhotoUrl;
-        } else {
-          this.userProf.profilePicture = userProfile[0].profilePicture;
-        }
-
-        this.base.updateUserData(this.userProf, userProfile[0]['key']);
+    new Promise((res) => {
+      this.auth.isLoggedIn().subscribe((user: any) => {
+        this.base.getUserProfiles().subscribe((userProfiles) => {
+          let userProfile = userProfiles.filter(
+            (userProfile: any) => userProfile.uid === user.uid
+          );
+          this.userProf.ageCalc();
+          this.userProf.uid = user.uid;
+          this.userProf.key = userProfile[0].key;
+          console.log(userProfile[0]['key']);
+          if (
+            this.userProf.profilePicture == '' ||
+            this.userProf.profilePicture == undefined
+          ) {
+            this.userProf.profilePicture = this.profilePhotoUrl;
+          } else {
+            this.userProf.profilePicture = userProfile[0].profilePicture;
+          }
+        });
+        res('Sikeres Profil frissítés');
       });
-      setTimeout(() => {
-        this.route.navigate(['']);
-      }, 1000);
-    });
+    })
+      .then((res) => {
+        this.base.updateUserData(this.userProf, this.userProf.key);
+        console.log(res);
+      })
+      .then(() => this.route.navigate(['chat']));
   }
 
   addPictures() {
     Array.from(this.pictures).forEach((file) => {
-      this.base
-        .addPictures(this.userProf, file)
-        .subscribe((percent) => {this.percent = percent!
-        });
+      this.base.addPictures(this.userProf, file).subscribe((percent) => {
+        this.percent = percent!;
+      });
     });
   }
 
   toArray() {
-   let tomb =  [...this.userProf.pictures]
-   console.log(tomb)
+    let tomb = [...this.userProf.pictures];
+    console.log(tomb);
   }
 
   addProfilePic() {
@@ -158,11 +166,19 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
       .subscribe((percent) => (this.percent = percent!));
   }
 
-  deleteUserPicture(file:any, i: number) {
-    this.base.deleteUserPicture(this.userProf, file)
+  viewPic(url: string, i: number) {
+    const actModal = this.modalRef.open(FilesModalComponent, {
+      centered: true
+    })
+    actModal.componentInstance.picturesArr = this.userPictures
+    actModal.componentInstance.viewIndex = i
+  }
+
+  deleteUserPicture(file: any, i: number) {
+    this.base.deleteUserPicture(this.userProf, file);
   }
 
   deletePicture(pic: any) {
-    this.base.deleteUserPicture(this.userProf, pic)
+    this.base.deleteUserPicture(this.userProf, pic);
   }
 }

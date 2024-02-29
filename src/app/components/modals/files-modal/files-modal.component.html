@@ -1,0 +1,43 @@
+<div class="container">
+  <div class="modal-header">
+    <button
+      (click)="activeModal.dismiss('Cross-click')"
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="modal"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="modal-body text-center">
+    <div
+      *ngIf="picturesArr.length"
+      class="d-flex flex-wrap justify-content-center align-items-center tape"
+    >
+      <div class="left ms-2">
+        <span (click)="left()"><</span>
+      </div>
+      <img
+        [ngClass]="{ 'fade-in': fadeIn }"
+        class="me-1 rounded flex-grow-1"
+        [src]="picturesArr[viewIndex].url"
+        alt="Kép"
+      />
+      <div class="right">
+        <span (click)="right()">></span>
+      </div>
+    </div>
+    <h4 *ngIf="uploadTrue">
+      Sikeres feltöltés, küldéshez kattints a küldés gombra!
+    </h4>
+  </div>
+  <div class="modal-footer">
+    <button
+    *ngIf="uploadTrue"
+    (click)="activeModal.close('Modal bezárva')"
+    data-bs-dismiss="modal"
+    type="button"
+    class="btn btn-secondary green"
+  > Rendben <mat-icon class="align-middle">done</mat-icon>
+  </button>
+  </div>
+</div>

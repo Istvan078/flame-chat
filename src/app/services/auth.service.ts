@@ -1,81 +1,95 @@
-import { Injectable, OnInit } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import {
   FacebookAuthProvider,
   GoogleAuthProvider,
   RecaptchaVerifier,
-  User,
   getAuth,
 } from '@angular/fire/auth';
-import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserClass } from '../models/user.model';
+import { coerceStringArray } from '@angular/cdk/coercion';
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService implements OnInit {
+export class AuthService {
   usersApiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
 
   defaultClaims: {} = { basic: true, admin: false, superAdmin: false };
-  user: any = {};
+  user: UserClass = new UserClass();
 
   isSuperAdmin: BehaviorSubject<boolean> = new BehaviorSubject(false);
   navDisappear: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  userClaimsSubj: BehaviorSubject<{}> = new BehaviorSubject({})
 
   httpHeaders: HttpHeaders = new HttpHeaders();
   authHeader: any;
 
-  usersSubject!: BehaviorSubject<UserClass[]>;
-  userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(null);
+  authNullSubject: BehaviorSubject<any> = new BehaviorSubject(2)
+
+  usersSubject: BehaviorSubject<any> = new BehaviorSubject([]);
+  userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(new UserClass());
 
   constructor(private aFireAuth: AngularFireAuth, private http: HttpClient) {
-    this.isLoggedIn().subscribe((user) => {
+    this.isLoggedIn().subscribe((user: any) => {
       if (user) {
         this.user = user;
+        this.getIdToken(user);
+        
       }
-      user?.getIdToken().then((idToken) => {
-        this.user.idToken = idToken;
-        this.authHeader = this.httpHeaders.set(
-          'Authorization',
-          this.user.idToken
-        );
-        this.getClaims().subscribe((claims) => {
-          if (claims) {
-            this.user.claims = claims;
-            console.log('A felhasználó már rendelkezik jogosultságokkal.');
-            this.isSuperAdmin.next(this.user.claims.superAdmin);
-            this.userLoggedInSubject.next(this.user);
-            console.log(this.userLoggedInSubject)
-            this.getUsers().subscribe((users: UserClass[]) => {
-              this.usersSubject = new BehaviorSubject(users);
-            });
-          } else {
-            this.setCustomClaims(this.user.uid, this.defaultClaims);
-            this.user.claims = this.defaultClaims;
-            this.userLoggedInSubject.next(this.user);
-            console.log('Alap jogosultságok sikeresen beállítva.');
-            this.isSuperAdmin.next(false);
-            console.log(this.userLoggedInSubject)
-          }
-        });
-      });
       if (!user) {
-        this.user = null;
+        this.user = new UserClass();
         console.log('Ön kijelentkezett');
-        this.userLoggedInSubject.next(null);
-        console.log(this.userLoggedInSubject)
+        this.userLoggedInSubject.next(new UserClass());
       }
     });
-    console.log(this.userLoggedInSubject)
   }
+
+  getIdToken(user: any) {
+    user?.getIdToken().then((idToken: string) => {
+      this.user.idToken = idToken;
+      this.httpHeaders = this.httpHeaders.set(
+        'Authorization',
+        this.user.idToken
+      );
+      this.getClaims().subscribe((claims: any) => {
+        if (claims) {
+          console.log(claims)
+          this.user.claims = claims;
+          this.userLoggedInSubject.next(this.user);
+          this.isSuperAdmin.next(this.user.claims?.superAdmin);
+          this.userClaimsSubj.next(claims)
+          
+          this.getUsers().subscribe((users:any) => {
+              this.usersSubject.next(users);
+              console.log(users)
+            })
+          // .subscribe((users: UserClass[]) => {
+          //   console.log('users adat megjött')
+          // this.usersSubject = new BehaviorSubject(users);
+          // });
+        } else {
+          if(this.user.uid) {
+          this.setCustomClaims(this.user.uid, this.defaultClaims);
+          this.userLoggedInSubject.next(this.user);
+          console.log('Alap jogosultságok sikeresen beállítva.');
+          this.isSuperAdmin.next(false);
+        }
+        }
+      });
+    });
+  }
+
+
 
   createUserWithEmAndPa(email: string, password: string) {
     return this.aFireAuth.createUserWithEmailAndPassword(email, password);
   }
 
   getUserLoggedInSubject() {
-    return this.userLoggedInSubject
+    return this.userLoggedInSubject;
   }
 
   getUsersSubject() {
@@ -97,18 +111,18 @@ export class AuthService implements OnInit {
 
   getClaims() {
     return this.http.get(this.usersApiUrl + `users/${this.user.uid}/claims`, {
-      headers: this.authHeader,
+      headers: this.httpHeaders,
     });
   }
 
   getUsers(): Observable<UserClass[]> {
-    if (this.user.idToken) {
-      let headers = new HttpHeaders().set('Authorization', this.user.idToken);
+      if (this.user.idToken) {
+        // let headers = new HttpHeaders().set('Authorization', this.user.idToken);
       return this.http.get<UserClass[]>(this.usersApiUrl + 'users', {
-        headers,
-      });
-    }
-    return of([]);
+          headers: this.httpHeaders,
+        });
+      }
+      return of([]);
   }
 
   isLoggedIn() {
@@ -116,22 +130,20 @@ export class AuthService implements OnInit {
   }
 
   isLoggedInBoolean() {
-    if(this.user.uid) {
-      return true
-    } else return false
+    if (this.user.uid) {
+      return true;
+    } else return false;
   }
 
   loginWithEmAndPa(email: string, password: string) {
     this.aFireAuth.signInWithEmailAndPassword(email, password);
   }
 
-  ngOnInit(): void {}
-
   setCustomClaims(uid: string, claims: any) {
     const body = { uid, claims };
     this.http
       .post(this.usersApiUrl + 'setCustomClaims', body, {
-        headers: this.authHeader,
+        headers: this.httpHeaders,
       })
       .subscribe({
         next: () => console.log('A claims beállítása sikeres!'),
@@ -139,7 +151,7 @@ export class AuthService implements OnInit {
   }
 
   signOut() {
-    this.aFireAuth.signOut();
+   return this.aFireAuth.signOut();
   }
 
   signInWithGoogle() {

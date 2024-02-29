@@ -6,16 +6,18 @@ import { UserProfileComponent } from '../user-profile/user-profile.component';
 import { NewsComponent } from './news/news.component';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { loginGuardGuard } from 'src/app/guards/login-guard.guard';
+import { FriendProfileComponent } from '../user-profile/friend-profile/friend-profile.component';
 
 @NgModule({
-  declarations: [ChatComponent, UserProfileComponent, NewsComponent],
+  declarations: [ChatComponent, UserProfileComponent, NewsComponent, FriendProfileComponent],
   imports: [
     
     SharedModule,
     RouterModule.forChild([
-      { path: '', component: ChatComponent, canActivate: [loginGuardGuard] },
+      { path: '', component: ChatComponent },
       // { path: ':uid', component: ChatComponent },
-      { path: '**', component: ChatComponent, canActivate: [loginGuardGuard] },
+      { path: ':uid/friend-profile', component: FriendProfileComponent},
+      { path: '**', component: ChatComponent },
     ]),
   ],
   exports: [

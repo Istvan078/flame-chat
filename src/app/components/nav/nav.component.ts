@@ -1,52 +1,95 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { getLocaleFirstDayOfWeek } from '@angular/common';
+import { Component, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { MatSidenav } from '@angular/material/sidenav';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Subscription } from 'rxjs';
+import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
+import { BaseService } from 'src/app/services/base.service';
+import { ModalComponent } from '../modals/modal/modal.component';
 
 @Component({
   selector: 'app-nav',
   templateUrl: './nav.component.html',
-  styleUrls: ['./nav.component.scss']
+  styleUrls: ['./nav.component.scss'],
 })
-export class NavComponent implements OnInit, OnDestroy{
-  
-  isLoggedIn: any;
+export class NavComponent implements OnInit, OnDestroy {
+  user: UserClass = new UserClass();
   isSuperAdmin: boolean = false;
-  isNavDisappeared:boolean = false;
+  isNavDisappeared: boolean = false;
   isMenuClicked: boolean = false;
+  sideNavToggle: boolean = false;
+  allNotifications: number = 0;
+  isSuperAdminSub!: Subscription;
+  userLoggedInSubjSub!: Subscription;
+
+  compOfNoti!: boolean;
+
   constructor(
-    private authService: AuthService
-    ){
-    }
-  
+    private authService: AuthService,
+    private base: BaseService,
+    private modalRef: NgbModal
+  ) {}
+
   ngOnInit(): void {
-      this.authService.isLoggedIn().subscribe({
-      
-          next: (user) => {
-            if(user?.uid || user?.providerData[0]?.providerId=="facebook.com" || user?.providerData[0]?.providerId == "phone")
-            this.isLoggedIn=user
-            else{user?.sendEmailVerification()
-            this.isLoggedIn=""}
-          },
-          error: (err) => console.log(err)
-      })
-      this.authService.isSuperAdmin.subscribe((booleanSA)=> {
-        this.isSuperAdmin = booleanSA
-      })
+    //   this.authService.userLoggedInSubject.subscribe({
+    //     next: (usr:any) => {
+
+    //       if (
+    //         !usr.emailVerified
+    //       ) {
+    //         usr?.sendEmailVerification();
+    //         this.user = new UserClass();
+    //         console.log(this.user)
+    //       }
+    //       else {
+    //         this.user =usr
+    //       }
+    //     },
+    //     error: (err) => console.log(err),
+    // })
+    // this.authService.isLoggedIn().subscribe({
+    //   next: (usr) => {
+
+    this.userLoggedInSubjSub = this.authService.userLoggedInSubject.subscribe(
+      (usr) => {
+        if (usr.uid || usr.claims.basic) {
+          console.log(usr);
+          this.user = usr;
+          console.log(this.user);
+        }
+      }
+    );
+    //   },
+    //   error: (err) => console.log(err),
+    // });
+    this.isSuperAdminSub = this.authService.isSuperAdmin.subscribe(
+      (booleanSA) => {
+        this.isSuperAdmin = booleanSA;
+      }
+    );
   }
 
   signOut() {
     this.authService.signOut();
+    this.authService.authNullSubject.next(null);
     this.isSuperAdmin = false;
+  }
+
+  rOutletOn() {
+    this.sideNavToggle = !this.sideNavToggle;
   }
 
   navDisappear() {
     this.authService.navDisappear.next(true);
     this.authService.navDisappear.subscribe((isTrue: boolean) => {
-    this.isNavDisappeared = isTrue
-  }
-    )
+      this.isNavDisappeared = isTrue;
+    });
   }
   ngOnDestroy(): void {
+    this.userLoggedInSubjSub.unsubscribe();
+    this.isSuperAdminSub.unsubscribe();
     this.authService.navDisappear.unsubscribe();
-    console.log("sikeres leiratkozas")
+    console.log('sikeres leiratkozas');
   }
 }

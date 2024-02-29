@@ -1,0 +1,26 @@
+mat-sidenav {
+    width: 150px;
+    background-color: rgba(206, 100, 14, 0.7);
+
+}
+mat-sidenav-container {
+    width: 150px;
+    position: fixed;
+    right: 0;
+    top: 55px;
+   border-bottom-left-radius: 10px;
+}
+mat-sidenav-content {
+    z-index: 4;
+}
+
+mat-card {
+    background-color: rgba(38, 0, 255, 0.7);
+    
+    mat-card-content{
+        mat-card-subtitle {
+            color: white;
+        }
+    }
+}
+

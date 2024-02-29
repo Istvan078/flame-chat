@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { ModalComponent } from '../modals/modal/modal.component';
+import { UserClass } from 'src/app/models/user.model';
 
 @Component({
   selector: 'app-signup',
@@ -25,25 +26,33 @@ export class SignupComponent {
     private authService: AuthService,
     private router: Router,
     private base: BaseService,
-    private modalService: NgbModal
+    private modalRef: NgbModal
   ) {}
 
   createUserWithEmAndPa() {
     this.authService
       .createUserWithEmAndPa(this.email, this.password)
-      .then((user) => {
-        this.base
-          .addUserData({
-            uid: user.user?.uid,
-            email: user.user?.email,
-          })
-          .then((res) => {
-           let modal =  document.getElementById("registeredModal")
-          modal?.classList.add("modal-dialog-centered")
-          })
-          .then(() => setTimeout(() => {
-            this.router.navigate(['profile/' + user.user?.uid])
-          }, 3000) );
+      .then((usr) => {
+        this.base.addUserData({
+          uid: usr.user?.uid,
+          email: usr.user?.email,
+        });
+        usr.user?.sendEmailVerification();
+        return usr.user;
+      })
+      .then((usr) => {
+        console.log('Email megerősítő email elküldve');
+        console.log(usr);
+        const actModal = this.modalRef.open(ModalComponent, {
+          centered: true,
+        });
+        actModal.componentInstance.userEmail = usr?.email;
+      })
+      .then(() => {
+        this.authService.signOut().then(() => {
+          this.authService.userLoggedInSubject.next(new UserClass())
+          this.router.navigate(['login'])
+        });
       });
   }
 }

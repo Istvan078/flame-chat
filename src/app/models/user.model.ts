@@ -1,22 +1,64 @@
-
-
+type Claims = {
+  basic: boolean;
+  admin: boolean;
+  superAdmin: boolean;
+};
 
 export class UserClass {
-  [indexS: string | number] : string | undefined | object | number 
-  public friends?: { [indexS: string | number] : string | undefined | object | number 
-    key?:string;
+  [indexS: string | number]: string | undefined | object | number | boolean;
+  public friends!: {
+    key: string;
     friendId: string;
+    seenMe: boolean;
   }[];
-
+  public age: number;
+  public phoneNumber: string = '';
+  public email?: string;
+  public claims: Claims;
+  public idToken?: string;
+  public key: string = '';
+  public uid: string = '';
   constructor(
-    public key?: string,
     public birthDate: string = '',
     public gender: string = '',
-    public uid: string = '',
-    public email?: string,
     public displayName: string = '',
-    public pictures: {name:string, url: string}[] = [],
+    public pictures: { name: string; url: string }[] = [],
     public profilePicture: string = ''
   ) {
+    this.claims = {
+      basic: true,
+      admin: false,
+      superAdmin: false,
+    };
+    this.age = 0;
+  }
+
+  // get token() {
+  //   if (!this._tokenExpirationDate || new Date() > this._tokenExpirationDate) {
+  //     return undefined
+  //   }
+  //   return this._token
+  // }
+
+  ageCalc() {
+    const date = new Date().toLocaleDateString().split(' ');
+    const birthDate = this.birthDate.split('-');
+    const actDateObj = {
+      year: Number(date[0].substring(0, 4)),
+      month: Number(date[1].substring(0, 2)),
+      day: Number(date[2].substring(0, 2)),
+    };
+
+    const birthDateObj = {
+      year: Number(birthDate[0]),
+      month: Number(birthDate[1]),
+      day: Number(birthDate[2]),
+    };
+
+    this.age =
+      actDateObj.year -
+      birthDateObj.year -
+      (birthDateObj.month * 30 - actDateObj.month * 30) / 360;
+    this.age = Math.floor(this.age);
   }
 }

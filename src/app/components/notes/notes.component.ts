@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { Notes } from 'src/app/models/notes';
+import { Notes } from 'src/app/models/notes.model';
 import { AuthService } from 'src/app/services/auth.service';
 
 import { BaseService } from 'src/app/services/base.service';
@@ -61,7 +61,7 @@ export class NotesComponent implements OnInit, OnDestroy {
   }
 
   createNote() {
-    const body = {
+    const body: Partial<Notes> = {
       title: this.title,
       body: this.body,
       timeStamp: this.timeStamp.getTime().toString(),

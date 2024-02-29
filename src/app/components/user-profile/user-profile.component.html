@@ -1,189 +1,236 @@
-<div class="row">
-  <div class="col-12">
-    <form
-      class="d-grid justify-content-center"
+<!-- <div class="row justify-content-center">
+  <div class="col-12 col-md-7 col-lg-8 col-xl-8"> -->
+    <div   class="d-flex flex-wrap justify-content-center">
+      <form
+      
+      class="d-flex flex-column flex-wrap justify-content-center"
       (ngSubmit)="saveProfile()"
       #f="ngForm"
-    >
-      <mat-form-field>
-        <mat-label for="email">Email</mat-label>
-        <input
-          matInput
-          [(ngModel)]="userProf.email"
-          type="email"
-          name="email"
-          email
-          required
-          #emaill="ngModel"
-        />
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label for="displayName">Felhasználónév</mat-label>
-        <input
-          matInput
-          [(ngModel)]="userProf.displayName"
-          type="text"
-          name="displayName"
-          required
-        />
-      </mat-form-field>
-
-      <mat-form-field>
-        <mat-label for="birthDate">Születési idő</mat-label>
-        <input
-          matInput
-          [(ngModel)]="userProf['birthDate']"
-          type="date"
-          name="birthDate"
-          required
-        />
-      </mat-form-field>
-
-      <div *ngFor="let gender of genders">
-        <label>
+        >
+      <mat-vertical-stepper [animationDuration]="'2000'" style="width: 90vw;" linear>
+        <mat-step [stepControl]="f.form" label="Alapadatok">
+      
+      
+        <mat-form-field class="me-2">
+          <mat-label for="email">Email</mat-label>
           <input
-            [(ngModel)]="userProf['gender']"
-            ngModel
-            [value]="gender"
-            type="radio"
-            name="gender"
-            id="gender"
+            matInput
+            [(ngModel)]="userProf.email"
+            type="email"
+            name="email"
+            email
+            required
+            [disabled]="registeredWithPhone === false"
+            #emaill="ngModel"
+          />
+        </mat-form-field>
+        <mat-form-field class="me-2">
+          <mat-label for="displayName">Felhasználónév</mat-label>
+          <input
+            matInput
+            [(ngModel)]="userProf.displayName"
+            type="text"
+            name="displayName"
             required
           />
-          {{ gender }}
-        </label>
-      </div>
-
-      <div class="mt-2">
-        <h2 class="text-center">
-          <label id="profilePicture" class="form-label" for="profilePicture"
-            >Profilkép kiválasztása:</label
-          >
-        </h2>
-        <input
-          id="profilePicture"
-          (change)="selectFile($event)"
-          class="form-control"
-          [(ngModel)]="profilePhoto"
-          type="file"
-          name="profilePicture"
-          [required]="!userProf.profilePicture"
-        />
-        <button [disabled]="!profilePhoto"
-          (click)="
-            userProf.profilePicture ? changeProfilePic() : addProfilePic()
-          "
-          type="button"
-          class="btn btn-primary mt-1"
-        >
-          Profilkép Feltöltése
-        </button>
-      </div>
-
-      <div
-        *ngIf="profilePhoto"
-        class="progress mt-2 progressC"
-        style="height: 50px; width: 100%"
-      >
-        <div
-          [style]="{ width: percent + '%' }"
-          class="progress-bar progressC"
-          role="progressbar"
-          [attr.aria-valuenow]="percent"
-          [attr.aria-valuemin]="percent"
-          aria-valuemax="100"
-        >
-          <h4 class="pt-2">{{ percent }}%</h4>
-        </div>
-      </div>
-
-      <div class="d-grid justify-content-center">
-        <div
-          *ngIf="percent === 0 || pictures; else newPic"
-          class="profilePicContainer"
-        >
-          <img
-            [src]="userProf.profilePicture"
-            [alt]="userProf.profilePicture"
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label for="birthDate">Születési idő</mat-label>
+          <input
+            matInput
+            [(ngModel)]="userProf['birthDate']"
+            type="date"
+            name="birthDate"
+            required
           />
+        </mat-form-field>
+        <div *ngFor="let gender of genders">
+          <label>
+            <input
+              [(ngModel)]="userProf['gender']"
+              ngModel
+              [value]="gender"
+              type="radio"
+              name="gender"
+              id="gender"
+              required
+            />
+            {{ gender }}
+          </label>
         </div>
-      </div>
-
-      <ng-template #newPic>
-        <div class="d-grid justify-content-center">
-          <div class="profilePicContainer">
-            <img [src]="profilePhotoUrl" alt="Profilkep" />
+        <div class="d-flex justify-content-end">
+          <button color="primary" mat-flat-button matStepperNext type="button">Következő</button>
+        </div>
+      
+      </mat-step>
+      <mat-step [stepControl]="f.form" label="Töltsd fel a profilképed">
+        <div class="mt-2">
+          <h2 class="text-center">
+            <label id="profilePicture" class="form-label" for="profilePicture"
+              >Profilkép kiválasztása:</label
+            >
+          </h2>
+          <input
+            id="profilePicture"
+            (change)="selectFile($event)"
+            class="form-control"
+            [(ngModel)]="profilePhoto"
+            type="file"
+            name="profilePicture"
+            [required]="!userProf.profilePicture"
+          />
+          <button [disabled]="!profilePhoto"
+            (click)="
+              userProf.profilePicture ? changeProfilePic() : addProfilePic()
+            "
+            type="button"
+            class="btn btn-primary mt-1"
+          >
+            Profilkép Feltöltése
+          </button>
+        </div>
+        <div
+          *ngIf="profilePhoto"
+          class="progress mt-2 progressC"
+          style="height: 50px; width: 100%"
+        >
+          <div
+            [style]="{ width: percent + '%' }"
+            class="progress-bar progressC"
+            role="progressbar"
+            [attr.aria-valuenow]="percent"
+            [attr.aria-valuemin]="percent"
+            aria-valuemax="100"
+          >
+            <h4 class="pt-2">{{ percent }}%</h4>
           </div>
         </div>
-      </ng-template>
-
-      <div *ngIf="userBirthDate" class="mb-2">
-        <h2 class="text-center">
-          <label id="profilePicture" class="form-label" for="profilePicture"
-            >Képek feltöltése</label
+        <div class="row justify-content-center mt-2">
+          <div
+            *ngIf="percent === 0 || pictures; else newPic"
+            class="col-12 d-flex justify-content-center align-items-center"
+            style="height: 40vh;"
+      
           >
-        </h2>
-        <input
-          name="pictures"
-          class="form-control"
-          (change)="selectFiles($event)"
-          type="file"
-          multiple
-        />
-        <button
-        [disabled]="!pictures"
-          (click)="addPictures()"
-          type="button"
-          class="btn btn-primary mt-1"
+            <img
+            width="100%"
+            height="100%"
+              class="rounded"
+              [src]="userProf.profilePicture"
+              [alt]="userProf.profilePicture"
+            />
+          </div>
+        </div>
+        <ng-template #newPic>
+          <div class="d-grid justify-content-center">
+            <div class="profilePicContainer">
+              <img [src]="profilePhotoUrl" alt="Profilkep" />
+            </div>
+          </div>
+        </ng-template>
+        <div class="d-flex mt-2 justify-content-between">
+          <button mat-flat-button color="accent" matStepperPrevious type="button">Vissza</button>
+          <button mat-flat-button color="primary" matStepperNext type="button">Következő</button>
+        </div>
+         
+        </mat-step>
+        <mat-step [stepControl]="f.form" label="Albumod">
+        <div *ngIf="userBirthDate" class="mb-2">
+          <h2 class="text-center">
+            <label id="profilePicture" class="form-label" for="profilePicture"
+              >Képek feltöltése</label
+            >
+          </h2>
+          <input
+            name="pictures"
+            class="form-control"
+            (change)="selectFiles($event)"
+            type="file"
+            multiple
+          />
+          <button
+          [disabled]="!pictures"
+            (click)="addPictures()"
+            type="button"
+            class="btn btn-primary mt-1"
+          >
+            Képek Feltöltése
+          </button>
+        </div>
+        <div
+          *ngIf="pictures"
+          class="progress my-2 progressC"
+          style="height: 50px; width: 100%"
         >
-          Képek Feltöltése
+          <div
+            [style]="{ width: percent + '%' }"
+            class="progress-bar progressC"
+            role="progressbar"
+            [attr.aria-valuenow]="percent"
+            [attr.aria-valuemin]="percent"
+            aria-valuemax="100"
+          >
+            <h4 class="pt-2">{{ percent }}%</h4>
+          </div>
+        </div>
+        <div>
+          <mat-list>
+            <div mat-subheader>
+              Mappa
+            </div>
+            <mat-list-item (click)="showPics = !showPics">
+              <mat-icon [ngClass]="[showPics ? 'folderOpened' : 'folder']" matListItemIcon>{{!showPics ? 'folder' : 'folder_open'}}</mat-icon>
+              <mat-icon *ngIf="showPics" matListItemIcon>expand_more</mat-icon>
+              <div class="d-inline" matListItemTitle>Képeim - </div>
+              <div class="d-inline" matListItemLine>{{newDate}}</div>
+            </mat-list-item>
+
+          </mat-list>
+        </div>
+        <div *ngIf="showPics" class="d-flex m-0 justify-content-start flex-wrap">
+          <div *ngFor="let pic of userPictures; let i = index" class="mb-2 mx-2">
+            <a (click)="viewPic(pic.url, i)">
+              <img
+                [src]="pic.url"
+                alt=""
+                width="50px"
+                height="50px"
+                class="rounded"
+              />
+            </a>
+          </div>
+        </div>
+        <mat-divider></mat-divider>
+        <div class="d-flex mt-2 justify-content-between">
+          <button mat-flat-button color="accent" matStepperPrevious type="button">Vissza</button>
+          <button mat-flat-button color="primary" matStepperNext type="button">Következő</button>
+        </div>
+      
+        </mat-step>
+        <mat-step>
+      <ng-template matStepLabel>Kész</ng-template>
+      <h3>Már készen is vagyunk. Kattints a profil mentése gombra és megkezdheted a csevegést.</h3>
+      <div class="d-flex justify-content-between">
+        <button class="me-2" mat-flat-button color="accent" matStepperPrevious type="button">Vissza</button>
+        <button [disabled]="!f.valid" color="primary" mat-raised-button type="submit">
+          Profil mentése
         </button>
       </div>
-
-      <div
-        *ngIf="pictures"
-        class="progress my-2 progressC"
-        style="height: 50px; width: 100%"
-      >
-        <div
-          [style]="{ width: percent + '%' }"
-          class="progress-bar progressC"
-          role="progressbar"
-          [attr.aria-valuenow]="percent"
-          [attr.aria-valuemin]="percent"
-          aria-valuemax="100"
-        >
-          <h4 class="pt-2">{{ percent }}%</h4>
-        </div>
-      </div>
-
-      <div class="d-flex justify-content-start flex-wrap">
-        <div *ngFor="let pic of userPictures" class="my-2 mx-2">
-          <a [href]="pic.url">
-            <img
-            data-bs-toggle="carousel"
-            data-bs-target="#picturesCarousel"
-              [src]="pic.url"
-              alt=""
-              width="50px"
-              height="50px"
-              class="rounded"
-            />
-          </a>
-        </div>
-      </div>
-
-          <div *ngIf="userPictures.length > 0" [attr.data-bs-interval]="false" id="picturesCarousel" class="carousel slide" data-bs-ride="carousel">
+      
+        </mat-step>
+      </mat-vertical-stepper>
+      </form>
+    </div>
+          <!-- <div  *ngIf="userPictures.length > 0" [attr.data-bs-interval]="false" id="picturesCarousel" class="carousel slide" data-bs-ride="carousel">
             <div  class="carousel-indicators">
               <button *ngFor="let pic of userPictures; let i = index" type="button" [attr.data-bs-target]="'#picturesCarousel'" [attr.data-bs-slide-to]="i" [class.active]="i === 0" attr.aria-label="Slide {{i + 1}}"></button>
             </div>
-            <div class="carousel-inner">
-              <div *ngFor="let pic of userPictures; let i = index" class="carousel-item" [ngClass]="{'active': i === 0}">
+            <div  class="carousel-inner">
+              <div style="height: 70vh;" *ngFor="let pic of userPictures; let i = index" class="carousel-item" [ngClass]="{'active': i === 0}">
                 
                   <mat-icon (click)="deletePicture(pic)" class="deletePicture">delete_forever</mat-icon>
                 
-                <img  [src]="pic.url" class="d-block w-100" alt="...">
+                <img style="width: 100%; max-height: 70vh;" [src]="pic.url" class="d-block rounded position-absolute top-50 start-50 translate-middle" [alt]="pic.url">
               </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#picturesCarousel" data-bs-slide="prev">
@@ -199,11 +246,11 @@
 
 
       <button [disabled]="!f.valid" class="mt-2" color="accent" mat-raised-button type="submit">
-        Adatok mentése
+        Profil mentése
       </button>
       <button [disabled]="!userBirthDate" routerLink="/chat" class="greenButton mt-1" mat-raised-button type="button">
         Vissza
-      </button>
-    </form>
-  </div>
-</div>
+      </button> -->
+    <!-- </form> -->
+  <!-- </div>
+</div> -->

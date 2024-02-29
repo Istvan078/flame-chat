@@ -1,0 +1,144 @@
+<div
+  *ngIf="friendProfile.displayName !== ''"
+  class="d-flex justify-content-center"
+>
+  <mat-card class="example-card">
+    <mat-card-header>
+      <div
+        [ngStyle]="{
+          'background-image': 'url(' + friendProfile.profilePicture + ')'
+        }"
+        mat-card-avatar
+        class="example-header-image"
+      ></div>
+      <mat-card-title>{{ friendProfile.displayName }}</mat-card-title>
+      <mat-card-subtitle>{{ friendProfile.gender }}</mat-card-subtitle>
+    </mat-card-header>
+    <div
+      *ngIf="friendProfile.pictures"
+      class="d-flex justify-content-center mb-1 bigImg mx-1"
+    >
+      <img
+        style="max-width: 90vw; max-height: 80vh; border-radius: 10px"
+        [src]="allPicsArr[viewIndex]"
+        alt="Felhasználó képe"
+        class="flex-grow-1"
+      />
+    </div>
+
+    <div
+      *ngIf="friendProfile.pictures"
+      class="d-flex flex-wrap justify-content-center align-items-center tape"
+    >
+      <div class="left ms-2">
+        <span *ngIf="actIndex > 0" (click)="left()"><</span>
+      </div>
+      <img
+        (mouseover)="showPicBig(i)"
+        (click)="showPicBig(i)"
+        *ngFor="let pic of friendProfile.pictures; let i = index"
+        class="me-1 rounded flex-grow-1"
+        style="min-width: 18%; max-width: 25%; max-height: 100px"
+        mat-card-image
+        [src]="pic"
+        alt="Felhasználó képe"
+      />
+      <div class="right">
+        <span *ngIf="actIndex + 4 <= allPicsArr.length" (click)="right()"
+          >></span
+        >
+      </div>
+    </div>
+
+    <mat-card-content class="mt-2">
+      <p>Születési Idő: {{ friendProfile.birthDate }}</p>
+      <div class="d-flex">
+        <span class="me-1">Email:</span
+        ><mat-card-subtitle>{{ friendProfile.email }}</mat-card-subtitle>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button
+        (click)="showFriends(); showFriendsOn = !showFriendsOn"
+        class="me-1"
+        color="accent"
+        mat-flat-button
+      >
+        Ismerősei
+      </button>
+      <button color="primary" mat-flat-button>Lájkolom</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<!-- <mat-form-field>
+        <mat-label>Filter</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input>
+      </mat-form-field> -->
+
+<ng-template [ngIf]="showFriendsOn">
+  <div class="mat-elevation-z8 mt-2">
+    <mat-table class="bg-dark" [dataSource]="tableDataSource">
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <mat-header-cell class="text-white" *matHeaderCellDef>
+          Név
+        </mat-header-cell>
+        <mat-cell class="text-white" *matCellDef="let friend">
+          {{ friend.displayName }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- Profile Picture Column -->
+      <ng-container matColumnDef="profilePicture">
+        <mat-header-cell class="text-white" *matHeaderCellDef>
+          Profilkép
+        </mat-header-cell>
+        <mat-cell *matCellDef="let friend">
+          <img
+            class="rounded-circle"
+            width="50px"
+            height="50px"
+            [src]="friend.profilePicture"
+            alt="Profilkép"
+          />
+        </mat-cell>
+      </ng-container>
+      <!-- Birthdate Column -->
+      <ng-container matColumnDef="birthDate">
+        <mat-header-cell class="text-white" *matHeaderCellDef>
+          Kor
+        </mat-header-cell>
+        <mat-cell class="text-white" *matCellDef="let friend">
+          {{ friend.age }} éves
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="columnsToDisplay"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: columnsToDisplay"></mat-row>
+
+      <!-- Row shown when there is no matching data. -->
+      <!-- <tr class="mat-row" *matNoDataRow>
+                            <td class="mat-cell" colspan="4">No data matching the filter "{{input.value}}"</td>
+                          </tr> -->
+    </mat-table>
+
+    <mat-paginator
+      [pageSizeOptions]="[3, 6, 9, 12]"
+      [length]="profilesOfFriendsArr.length"
+      color="primary"
+      class="bg-primary text-white mt-1"
+      aria-label="Select page of users"
+    ></mat-paginator>
+  </div>
+</ng-template>
+
+<button
+  routerLink="chat"
+  class="mt-1"
+  mat-raised-button
+  color="warn"
+  type="button"
+>
+  Vissza
+</button>

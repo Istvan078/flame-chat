@@ -29,6 +29,9 @@ import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
 
 import { SharedModule } from './components/shared/shared.module';
 import { ModalComponent } from './components/modals/modal/modal.component';
+import { NotificationsComponent } from './components/nav/notifications/notifications.component';
+import { VisitedMeComponent } from './components/nav/notifications/visited-me/visited-me.component';
+import { FilesModalComponent } from './components/modals/files-modal/files-modal.component';
 
 
 @NgModule({
@@ -43,8 +46,10 @@ import { ModalComponent } from './components/modals/modal/modal.component';
     UsersComponent,
     WeatherComponent,
     LoadingSpinnerComponent,
-    ModalComponent
-  
+    ModalComponent,
+    NotificationsComponent,
+    VisitedMeComponent,
+    FilesModalComponent,  
   
   ],
   imports: [

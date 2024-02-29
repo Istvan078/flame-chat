@@ -1,80 +1,144 @@
 <ng-container *ngIf="!isNavDisappeared">
-  
-  <nav class="navbar navbar-expand-lg navbar-light bg-secondary fixed-top">
-    <div  class="container-fluid text-center justify-content-center">
-      <!-- <div class="row"> -->
-        <div>
-          <button (click)="isMenuClicked = !isMenuClicked" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span>Menu </span><span class="navbar-toggler-icon"></span>
+  <p>
+    <mat-toolbar
+      class="justify-content-center"
+      [ngClass]="isMenuClicked ? 'matToolbarHeight' : ''"
+      color="primary"
+    >
+      <div class="columnDisp">
+        <div class="text-center">
+          <span>Menü</span
+          ><button
+            mat-icon-button
+            (click)="isMenuClicked = !isMenuClicked"
+            type="button"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <mat-icon class="align-middle">menu</mat-icon>
           </button>
         </div>
-        <div [ngbCollapse]="!isMenuClicked" class="collapse navbar-collapse">
-      <!-- <div class="col-12 col-md-6 col-lg-6 col-xl-6 my-2"> -->
+      </div>
+      <!-- <span class="spacer"></span> -->
 
-      <!-- </div> -->
-      <!-- <div class="col-12 col-md-6 col-lg-6 col-xl-6 my-2"> -->
+      <div
+        [ngbCollapse]="isMenuClicked"
+        class="justify-content-center"
+        [ngClass]="[isMenuClicked ? 'columnDisp' : 'flexDisp']"
+      >
+        <span
+          
+          
+          [routerLinkActiveOptions]="{ exact: true }"
+          routerLink=""
+          routerLinkActive="active-link"
+          class="navbar-brand nav-link me-3"
+        >
+          <mat-icon class="bi bi-house-fill"></mat-icon>
+          Kezdőlap
+        </span>
 
-      <!-- </div> -->
-    <!-- </div> -->
-  
-      <ul [ngClass]="{'mt-3':isMenuClicked}" class="navbar-nav h5">
-        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item text-center">
-          <a [routerLinkActiveOptions]="{exact:true}" routerLink="" routerLinkActive="active-link"  class="navbar-brand nav-link">
-            <span class="bi bi-house-fill"></span>
-            Kezdőlap</a
-          >
-        </li>
-        <li class="nav-item">
-          <a (click)="navDisappear()" *ngIf="isSuperAdmin" routerLink="users" class="nav-link" routerLinkActive="active-link">
-            <span>Felhasználók</span>
-          </a>
-        </li>
-        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
-          <a class="nav-link" routerLinkActive="active-link" routerLink="weather"
-            >Időjárás</a
-          >
-        </li>
-        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
-          <a class="nav-link" routerLinkActive="active-link" routerLink="chat"
-            >Chat</a
-          >
-        </li>
-        <li (click)="isMenuClicked = !isMenuClicked" class="nav-item">
-          <a class="nav-link" routerLinkActive="active-link" [routerLink]="['recipes']"
-            >Receptek</a
-          >
-        </li>
-        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
-          <a class="nav-link" routerLinkActive="active-link" routerLink="notes"
-            >Jegyzetek</a
-          >
-        </li>
-        <li *ngIf="!isLoggedIn" (click)="isMenuClicked = !isMenuClicked" class="nav-item">
-          <a class="nav-link" routerLink="signup" routerLinkActive="active-link">
-            Regisztráció
-          </a>
-        </li>
-        <li *ngIf="!isLoggedIn" (click)="isMenuClicked = !isMenuClicked" class="nav-item">
-          <a
-            class="nav-link"
+          <span
+            *ngIf="isSuperAdmin || user.claims.admin"
+            (click)="navDisappear()"
+            routerLink="users"
+            class="nav-link me-3"
             routerLinkActive="active-link"
-            [routerLinkActiveOptions]="{ exact: true }"
-            routerLink="/login"
-            >Bejelentkezés</a
           >
-        </li>
-        <li (click)="isMenuClicked = !isMenuClicked" *ngIf="isLoggedIn" class="nav-item">
-          <a
-            class="nav-link sign-out"
-  
-            routerLink=""
-  
-            (click)="signOut()"
-            >Kijelentkezés
-          </a>
-        </li>
-      </ul>
-    </div>
-    </div>
-  </nav>
+            Felhasználók
+          </span>
+
+
+        <span
+          *ngIf="user.uid"
+          class="nav-link me-3"
+          routerLinkActive="active-link"
+          routerLink="weather"
+        >
+          Időjárás
+        </span>
+
+        <span
+          *ngIf="user.uid"
+          class="nav-link me-3"
+          routerLinkActive="active-link"
+          routerLink="chat"
+          >Chat
+        </span>
+
+        <span
+          class="nav-link me-3"
+          routerLinkActive="active-link"
+          [routerLink]="['recipes']"
+          >Receptek
+        </span>
+
+        <span
+          *ngIf="user.uid"
+          class="nav-link me-3"
+          routerLinkActive="active-link"
+          routerLink="notes"
+          >Jegyzetek
+        </span>
+
+        <span
+          *ngIf="!user.uid"
+          class="nav-link me-3"
+          routerLink="signup"
+          routerLinkActive="active-link"
+        >
+          Regisztráció
+        </span>
+
+        <span
+          *ngIf="!user.uid"
+          class="nav-link me-3"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: true }"
+          routerLink="/login"
+          >Bejelentkezés
+        </span>
+
+        <span
+          *ngIf="user.uid"
+          class="nav-link me-3 sign-out"
+          routerLink=""
+          (click)="signOut()"
+          >Kijelentkezés
+        </span>
+
+        <div>
+          <span
+            *ngIf="user.uid && !isMenuClicked"
+            class="text-center me-3 notiFlex"
+            [matBadge]="allNotifications"
+            matBadgeColor="warn"
+            (click)="rOutletOn()"
+            ><mat-icon [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
+              >notifications</mat-icon
+            ></span
+          >
+        </div>
+      </div>
+
+      <span
+        *ngIf="user.uid"
+        class="text-center noti"
+        [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
+        [matBadge]="allNotifications"
+        matBadgeColor="warn"
+        (click)="rOutletOn()"
+        ><mat-icon>notifications</mat-icon></span
+      >
+    </mat-toolbar>
+  </p>
 </ng-container>
+
+<app-notifications
+  (allNotifications)="allNotifications = $event"
+  [sideNavToggle]="sideNavToggle"
+  (compOfNoti)="compOfNoti = $event"
+  [toVisitedMeOn]="compOfNoti"
+  (sideNavToggleToNav)="sideNavToggle = $event"
+></app-notifications>

@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import {  Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { Post } from 'src/app/models/post.model';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -41,7 +41,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
         let userProfile = userProfiles.filter((uP) => uP.uid === user.uid);
         Object.assign(this.userProfile, ...userProfile);
-        console.log(this.userProfile);
       });
     });
 
@@ -51,7 +50,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       pictures: this.fBuilder.array([]),
       sharing: ['yes'],
       timeStamp: [''],
-      displayName: [this.userProfile.displayName]
+      displayName: [this.userProfile.displayName],
     });
 
     this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
@@ -71,16 +70,17 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.firestoreService.getPrivatePosts(this.userProfile.key as string)
-      .subscribe(
-        (privatePosts: any) => this.privatePosts = privatePosts
-      )
+      this.firestoreService
+        .getPrivatePosts(this.userProfile.key as string)
+        .subscribe((privatePosts: any) => (this.privatePosts = privatePosts));
 
       this.firestoreService.getSharedPosts().subscribe((res: any[]) => {
         this.sharedPosts = res;
-        console.log(this.sharedPictures);
       });
-      this.publishForm.patchValue({ name: this.userProfile.displayName , displayName: this.userProfile.displayName});
+      this.publishForm.patchValue({
+        name: this.userProfile.displayName,
+        displayName: this.userProfile.displayName,
+      });
     }, 1000);
   }
 
@@ -93,16 +93,20 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.uploadFiles();
     }
     setTimeout(() => {
-      const date: Date = new Date()
+      const date: Date = new Date();
       this.publishForm.patchValue({
-        timeStamp: date.toLocaleDateString() + " " + date.toLocaleTimeString()
-      })
+        timeStamp: date.toLocaleDateString() + ' ' + date.toLocaleTimeString(),
+      });
       this.privatePost = this.publishForm.value;
       this.privatePost.pictures = this.picturesArray;
       console.log(this.picturesArray);
-      this.firestoreService.createPost(this.privatePost, this.notShared, this.userProfile.key);
+      this.firestoreService.createPost(
+        this.privatePost,
+        this.notShared,
+        this.userProfile.key
+      );
       this.picturesArray = [];
-      if(this.notShared) this.showNotSharedPosts = true
+      if (this.notShared) this.showNotSharedPosts = true;
     }, 3000);
   }
 

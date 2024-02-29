@@ -10,6 +10,18 @@
   background-color: rgba(21, 179, 21, 0.7) !important;
 }
 
+#picUploadInput {
+  display: none;
+}
+
+
+.seen {
+  color: rgb(6, 60, 6);
+  border: 2px solid rgb(6, 60, 6);
+  padding: 2px;
+  width: fit-content;
+}
+
 mat-expansion-panel-header{
   grid-template-columns: auto auto;
   background-color: rgba(209, 230, 18, 0.4) !important;
@@ -261,7 +273,7 @@ mat-expansion-panel-header:hover{
   margin-left: 100px;
   padding-left: 20px;
 }
-.updateButton, .blue{
+ .blue{
   background-color: rgba(33, 33, 182, 0.7) !important;
 }
 
@@ -272,5 +284,11 @@ mat-expansion-panel-header:hover{
   left: 50%;
   z-index: 2;
   transform: translate(-50%, -50%);
-  
+  width: 100vw;
+}
+
+.fileButton {
+  label {
+    cursor: pointer !important
+  }
 }

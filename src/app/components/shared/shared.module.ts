@@ -11,11 +11,17 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { MatExpansionModule } from "@angular/material/expansion";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatStepperModule } from "@angular/material/stepper";
 import { MatIconModule } from "@angular/material/icon";
+import { MatListModule } from "@angular/material/list";
+import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatInputModule } from "@angular/material/input";
 import { MatProgressBarModule } from "@angular/material/progress-bar";
 import { MatSelectModule } from "@angular/material/select";
 import { MatTableModule } from "@angular/material/table";
+import { MatPaginatorModule} from "@angular/material/paginator";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { NgbModalModule, NgbModule } from "@ng-bootstrap/ng-bootstrap";
 import { FilterPipe } from "src/app/pipes/filter.pipe";
@@ -42,12 +48,18 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
         MatInputModule,
         MatTooltipModule,
         MatSelectModule,
+        MatSidenavModule,
+        MatStepperModule,
+        MatToolbarModule,
+        MatListModule,
+        MatSlideToggleModule,
         MatTableModule,
         MatProgressBarModule,
         MatDatepickerModule,
         MatNativeDateModule,
         MatExpansionModule,
         MatDialogModule,
+        MatPaginatorModule,
         MatBadgeModule,
         MatSnackBarModule,
         NgbModalModule
@@ -63,10 +75,16 @@ import { SortPipe } from "src/app/pipes/sort.pipe";
         MatFormFieldModule,
         MatCardModule,
         MatButtonModule,
+        MatSlideToggleModule,
+        MatStepperModule,
+        MatToolbarModule,
         MatIconModule,
+        MatSidenavModule,
+        MatListModule,
         MatCheckboxModule,
         MatInputModule,
         MatTooltipModule,
+        MatPaginatorModule,
         MatSelectModule,
         MatTableModule,
         MatProgressBarModule,

@@ -1,79 +1,79 @@
-<div class="modal-header">
-  <h5 class="modal-title">
-    {{friendName}}
-  </h5>
-  <button
-    (click)="activeModal.dismiss('Cross-click')"
-    type="button"
-    class="btn-close"
-    data-bs-dismiss="modal"
-    aria-label="Close"
-  ></button>
-</div>
-<div class="modal-body">
-  <p>{{name}}</p>
-</div>
-<div class="modal-footer">
-  <button
-    (click)="activeModal.close('Close click')"
-    type="button"
-    class="btn btn-secondary green"
-    data-bs-dismiss="modal"
-  >
-    <span class="icons"
-      ><mat-icon>
-        {{ "done" }}
-      </mat-icon></span
+<ng-container *ngIf="name">
+  <div class="modal-header">
+    <h5 class="modal-title">
+      {{friendName}}
+    </h5>
+    <button
+      (click)="activeModal.dismiss('Cross-click')"
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="modal"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="modal-body">
+    <p>{{name}}</p>
+  </div>
+  <div class="modal-footer">
+    <button
+      (click)="activeModal.close('Close click')"
+      type="button"
+      class="btn btn-secondary green"
+      data-bs-dismiss="modal"
     >
-  </button>
-</div>
+      <span class="icons"
+        ><mat-icon>
+          {{ "done" }}
+        </mat-icon></span
+      >
+    </button>
+  </div>
+</ng-container>
 
-<!-- <div class="modal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"></h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-        <div class="modal-body">
-          <p>{{ 'Sikeres regisztráció'}}</p>
-        </div>
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary green"
-            data-bs-dismiss="modal"
-          >
-            <span class="icons"
-              ><mat-icon>
-                {{ "done" }}
-              </mat-icon></span
-            >
-          </button>
-        </div>
-      </div>
-    </div>
-  </div> -->
+<ng-container *ngIf="userName">
+  <div class="modal-header">
+    <h5 class="modal-title">
+      {{userName}}
+    </h5>
+  </div>
+  <div class="modal-body">
+    <h3>Biztos, hogy törölni akarod {{userName}}-t?</h3>
+  </div>
+  <div class="modal-footer">
+    <button
+      (click)="deleteUser(); activeModal.close()"
+      type="button"
+      class="btn btn-danger"
+      data-bs-dismiss="modal"
+    >
+      <span class="text-white align-middle"
+        >Igen <mat-icon class="text-white align-middle">
+           {{ "done" }}
+        </mat-icon></span
+      >
+    </button>
+    <button
+      (click)="activeModal.dismiss('Modal bezárva')"
+      type="button"
+      class="btn btn-secondary green"
+      data-bs-dismiss="modal"
+    > Nem <mat-icon class="align-middle">cancel</mat-icon>
+    </button>
+  </div>
+</ng-container>
 
-<!-- <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          ...
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary">Understood</button>
-        </div>
-      </div>
-    </div>
-  </div> -->
+<ng-container *ngIf="userEmail">
+  <div class="modal-body">
+    <h3>Megerősítő e-mail sikeresen elküldve a megadott e-mail-címre: <span class="email">{{userEmail}}</span>, <b> kattints a benne levő linkre az e-mail címed megerősítéséhez. </b> 
+      Az e-mail címed megerősítése után tudsz sikeresen bejelentkezni.</h3>
+  </div>
+  <div class="modal-footer">
+    <button
+      (click)="activeModal.close('Modal bezárva')"
+      data-bs-dismiss="modal"
+      type="button"
+      class="btn btn-secondary green"
+    > Rendben <mat-icon class="align-middle">done</mat-icon>
+    </button>
+  </div>
+</ng-container>

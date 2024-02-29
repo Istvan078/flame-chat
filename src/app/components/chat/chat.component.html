@@ -22,7 +22,7 @@
             Ismerősök
             <mat-icon
               matBadgeSize="small"
-              matBadge="{{ userFriends.length }}"
+              [matBadge]="userFriends.length"
               matBadgeColor="primary"
               class="ms-2"
               aria-hidden="false"
@@ -31,7 +31,7 @@
           >
         </mat-expansion-panel-header>
 
-        <div class="row">
+        <div class="row justify-content-center">
           <div
             class="col-12 col-md-4 col-lg-3 col-xl-2"
             *ngFor="let friend of userFriends; let i = index"
@@ -55,19 +55,32 @@
                       class="rounded"
                   /></mat-card-content>
                   <mat-card-footer>
-                    <mat-card-content class="d-grid justify-content-center">
-                      <mat-card-subtitle>
+                    <mat-card-content class="d-flex flex-column justify-content-center flex-wrap">
+                      <mat-card-subtitle class="text-center">
                         {{ friend.email }}
                       </mat-card-subtitle>
                       <div class="text-center">
                         <button
+                        style="width: max-content;"
+                        matIconSuffix
+                        (click)="toFriendProfile(friend.friendId)"
+                        class="btn btn-sm btn-primary me-2 mb-1"
+                        type="button"
+                      >
+                        <span class="text-center align-middle">Profil megtekintése </span>
+                        
+                          <mat-icon class="text-center align-middle">person</mat-icon>
+                      </button>
+                        <button
+                          matIconSuffix
                           (click)="removeFriend(friend.friendKey)"
                           class="btn btn-sm btn-danger"
                           type="button"
                         >
-                          <span class="icons text-center"
-                            ><mat-icon>person_remove</mat-icon></span
-                          >
+                          <span class="align-middle">Törlés</span>
+                          
+                            <mat-icon class="align-middle">person_remove</mat-icon>
+                          
                         </button>
                       </div>
                     </mat-card-content>
@@ -80,6 +93,7 @@
       </mat-expansion-panel>
       <mat-expansion-panel>
         <mat-expansion-panel-header
+          (click)="getNewMessage()"
           class="d-grid justify-content-center"
           [ngClass]="haventSeenMessagesArr.length > 0 ? 'newMessage' : ''"
         >
@@ -95,53 +109,52 @@
             ></mat-panel-title
           >
         </mat-expansion-panel-header>
-        <div class="row">
+        <div class="row justify-content-center">
           <div
             class="col-12 col-md-4 col-lg-3 col-xl-2"
-            *ngFor="let friendd of userFriends; let i = index"
+            *ngFor="let mess of showFriendsMess"
           >
-            <ng-container *ngFor="let mess of newMessagesArr">
-              <div
-                class="mt-2 text-center fw-b text-danger"
-                *ngIf="friendd.friendId === mess.friendId"
-              >
-                <h3>Új üzenet érkezett</h3>
-              </div>
-
-              <ng-container >
-                <ng-container>
-                  <div
-                    class="card mt-2 text-white text-center"
-                    [ngClass]="
-                      mess.friendId === friendd.friendId ? 'bg-primary' : 'bg-warning'
-                    "
-                  >
-                    <h5 class="card-header">
-                      <h2>{{ friendd.displayName }}</h2>
-                    </h5>
-                    <div class="card-body">
-                      <img
-                        [src]="friendd.profilePicture"
-                        width="50px"
-                        height="50px"
-                        class="rounded-circle"
-                      />
-                      <p class="card-text"></p>
+            <ng-container >
+              <ng-container>
+                <div
+                  class="mt-2 text-center fw-b text-danger"
+                  *ngIf="mess.seen === false"
+                >
+                  <h3>Új üzenet érkezett</h3>
+                </div>
+                
+                    <div
+                      class="card mt-2 text-white text-center"
+                      [ngClass]="
+                        mess.seen === false ? 'bg-primary' : 'bg-warning'
+                      "
+                    >
+                      <h5 class="card-header">
+                        <h2>{{ mess.displayName }}</h2>
+                      </h5>
+                      <div class="card-body">
+                        <img
+                          [src]="mess.profilePicture"
+                          width="50px"
+                          height="50px"
+                          class="rounded-circle"
+                        />
+                        <p class="card-text"></p>
+                      </div>
+                      <div class="card-footer">
+                        <button
+                          (click)="getMessageUser(mess)"
+                          mat-raised-button
+                
+                          class="btn btn-sm btn-primary ms-2 blue"
+                          type="button"
+                        >
+                          <span class="icons"><mat-icon> chat </mat-icon></span>
+                        </button>
+                      </div>
                     </div>
-                    <div class="card-footer">
-                      <button
-                        (click)="getMessageUser(friendd)"
-                        mat-raised-button
-                        
-                        class="btn btn-sm btn-primary ms-2 blue"
-                        type="button"
-                      >
-                        <span class="icons"><mat-icon> chat </mat-icon></span>
-                      </button>
-                    </div>
-                  </div>
-                </ng-container>
               </ng-container>
+                
             </ng-container>
           </div>
         </div>
@@ -159,7 +172,7 @@
         </mat-expansion-panel-header>
         <div class="row">
           <div class="col">
-            <app-user-profile></app-user-profile>
+            <app-user-profile *ngIf="isUserProfileOn"></app-user-profile>
           </div>
         </div>
       </mat-expansion-panel>
@@ -167,7 +180,7 @@
       <mat-expansion-panel class="mt-2">
         <mat-expansion-panel-header class="d-grid justify-content-center">
           <mat-panel-title
-            >Kezdőlap
+            >Üzenőfal
             <mat-icon class="ms-2">feed</mat-icon>
           </mat-panel-title>
         </mat-expansion-panel-header>
@@ -181,10 +194,10 @@
   </div>
 </div>
 
-<div class="row" *ngIf="!sendPrivateMessageOn && friendsOn">
+<div class="row justify-content-center" *ngIf="!sendPrivateMessageOn && friendsOn">
   <div
     *ngFor="let notFriend of userNotFriends; let i = index"
-    class="col-12 col-md-6 col-lg-3 mb-2"
+    class="col-12 col-md-6 col-lg-3 mb-2 d-flex justify-content-center"
   >
     <ng-container>
       <ngb-toast
@@ -198,7 +211,7 @@
           [src]="notFriend.profilePicture"
           width="50px"
           height="50px"
-          alt=""
+          alt="Profilkép"
         />
         <div>
           <small>{{ notFriend.email }}</small>
@@ -223,21 +236,22 @@
 
 <div
   *ngIf="sendPrivateMessageOn"
-  class="d-flex justify-content-center sendMessageOpenButton"
+  class="d-flex flex-wrap justify-content-center sendMessageOpenButton"
 >
   <button
     *ngIf="!messageButtonClicked"
     (click)="backToUsers()"
-    class="green ms-2 me-2"
+    class="green ms-2 me-2 mt-2"
     type="button"
     mat-raised-button
   >
-    <span class="icons">
+   
       <mat-icon> keyboard_backspace </mat-icon>
-    </span>
+    
+    Vissza
   </button>
   <button
-    class="ms-2"
+    class="ms-2 mt-2"
     *ngIf="!messageButtonClicked"
     (click)="messageButtonClicked = true"
     mat-raised-button
@@ -255,14 +269,15 @@
     <mat-card-header class="justify-content-center">
       <mat-card-title>
         <button
-          (click)="backToUsers(); messageButtonClicked = false"
+          (click)="messageButtonClicked ? messageButtonClicked = false : backToUsers(); messageButtonClicked = false"
           class="green ms-2 me-2 mb-2"
           type="button"
           mat-raised-button
         >
-          <span class="icons">
-            <mat-icon> keyboard_backspace </mat-icon>
-          </span>
+
+            <mat-icon> {{messageButtonClicked ? 'arrow_downward' :  'keyboard_backspace'}} </mat-icon>
+            {{messageButtonClicked ? 'Bezár' :  'Vissza'}}
+
         </button>
         <mat-form-field class="messageInput">
           <mat-label>Üzenet írása</mat-label>
@@ -275,24 +290,32 @@
       </mat-card-title>
     </mat-card-header>
 
-    <mat-card-content class="text-center">
+    <mat-card-content class="text-center d-flex justify-content-center flex-wrap">
       <button
+    
         *ngIf="message.message"
-        class="me-2"
+        class="me-2 mb-1"
         color="accent"
-        (click)="!editMessage ? addMessage() : updateMessage()"
+        [disabled]="uploadFinished == false"
+        (click)="!editMessage ? addMessage() : updateMessage(); messageButtonClicked = false"
         mat-raised-button
       >
-        {{ !editMessage ? "Üzenet küldése" : "Uzenet Modositasa" }}
+        
+        {{ !editMessage ? "Küldés" : "Módosítás" }}
+        <mat-icon>send</mat-icon>
       </button>
-      <button
-        *ngIf="message.message"
-        class="deleteButton"
-        (click)="isSAdmin ? deleteMessages() : clearInput()"
-        mat-raised-button
-      >
-        {{ isSAdmin ? "Üzenetek törlése" : "Mezö törlése" }}
-      </button>
+      <div >
+
+        <button (click)="!uploadFinished ? uploadFiles() : ''" class="me-2 mb-1 fileButton" [ngClass]="[uploadFinished ? 'bg-primary' : 'bg-success']" mat-raised-button type="button">
+          <label *ngIf="!uploadFinished" for="fileUpload">Fájlok feltöltése</label>
+          <label *ngIf="uploadFinished"  for="picUploadInput">Fájlok csatolása</label>
+          <input *ngIf="uploadFinished" (change)="uploadFinished ? selectedFs($event) : ''" id="picUploadInput" multiple type="file">
+        </button>
+        
+      </div>
+    </mat-card-content>
+    <mat-card-content>
+      <div class="text-center" *ngFor="let file of selectedFiles">{{file.name}}</div>
     </mat-card-content>
   </mat-card>
 </div>
@@ -300,16 +323,16 @@
 <ng-container *ngIf="userMessages">
   <div
     [ngClass]="
-      object.message.senderId === userProfile[0].uid
+      object.message.senderId === userProfile.uid
         ? 'justify-content-start mainDivUser'
         : 'justify-content-end mainDivUsers'
     "
     class="d-grid mainDiv"
-    *ngFor="let object of allChatsArray | sort | filter : searchWord"
+    *ngFor="let object of getFirstFiveMessagesForSelectedFriend() | sort | filter : searchWord"
   >
     <mat-card
       [ngClass]="
-        object.message.senderId === userProfile[0].uid
+        object.message.senderId === userProfile.uid
           ? 'left messagesCard'
           : 'right'
       "
@@ -318,9 +341,10 @@
       <ng-container
         *ngIf="
           (object.message.senderId === selectedFriend.friendId &&
-            object.participants[1] === userProfile[0].uid) ||
-          (object.message.senderId == userProfile[0].uid &&
-            object.participants[1] === selectedFriend.friendId)
+            object.participants[1] === userProfile.uid) ||
+          (object.message.senderId == userProfile.uid &&
+            object.participants[1] === selectedFriend.friendId) 
+            
         "
       >
         <mat-card-header>
@@ -340,9 +364,14 @@
           </mat-card-title-group>
         </mat-card-header>
 
-        <div class="recipe-making-container">
+        <div class="recipe-making-container mt-2">
           <mat-card-content>
-            <b>{{ object.message.message }}</b>
+            <p><b>{{ object.message.message }}</b></p>
+            <ng-container *ngFor="let file of sentFilesArr">
+              <ng-container *ngIf="file.chatId === object.key">
+                <img (click)="fileModalOpen(file.files, i)" class="me-1 rounded" *ngFor="let pic of file.files; let i = index" mat-card-sm-image [src]="pic.url" alt="">
+              </ng-container>
+            </ng-container>
           </mat-card-content>
           <mat-card-content class="card-content">
             <mat-card-subtitle> </mat-card-subtitle>
@@ -357,7 +386,7 @@
               <div class="emailDateDiv d-grid justify-content-start">
                 <mat-card-subtitle
                   [ngClass]="
-                    object.message.senderId === userProfile[0].uid
+                    object.message.senderId === userProfile.uid
                       ? 'grey'
                       : 'right'
                   "
@@ -365,7 +394,7 @@
                 >
                 <mat-card-subtitle
                   [ngClass]="
-                    object.message.senderId === userProfile[0].uid
+                    object.message.senderId === userProfile.uid
                       ? 'grey'
                       : 'right'
                   "
@@ -380,7 +409,7 @@
                   class="me-2"
                   [id]="object['key']"
                   class="updateButton me-2"
-                  *ngIf="userProfile[0].uid === object.message.senderId"
+                  *ngIf="userProfile.uid === object.message.senderId"
                   (click)="
                     navigateToUpdateMessage(object);
                     messageButtonClicked = !messageButtonClicked
@@ -392,13 +421,19 @@
                   Módosítás
                 </button>
 
-                <span
-                  class="ms-2 mt-2 bi bi-trash3-fill h3 text-danger rounded"
-                  *ngIf="userProfile[0].uid === object.message.senderId"
-                  (click)="deleteMessage(object)"
-                ></span>
+                <button class="bg-warning text-center" mat-raised-button type="button"
+                *ngIf="userProfile.uid === object.message.senderId"
+                    (click)="deleteMessage(object)">
+                  <span class="align-middle">Törlés</span><span
+                    class="ms-2 mt-2 bi bi-trash3-fill h3 text-danger rounded align-middle"
+                    
+                  ></span>
+                </button>
               </mat-card-actions>
             </div>
+            <mat-card-subtitle class="seen fs-2 mt-2 ms-2" *ngIf="object.message.senderId === userProfile.uid && object.message.seen === true">
+              látta
+            </mat-card-subtitle>
           </mat-card-content>
         </mat-card-footer>
       </ng-container>
