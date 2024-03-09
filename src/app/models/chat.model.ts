@@ -4,7 +4,7 @@ export class Chat {
   public message: {
     senderId: string;
     message: string;
-    timeStamp: number;
+    timeStamp: string;
     displayName: string;
     profilePhoto: string;
     email: string;
@@ -17,7 +17,7 @@ export class Chat {
     this.message = {
       senderId: 'user_id_1',
       message: '',
-      timeStamp: 0,
+      timeStamp: '',
       displayName: '',
       profilePhoto: '',
       email: '',

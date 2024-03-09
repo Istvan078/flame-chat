@@ -9,7 +9,11 @@ import {
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { UserClass } from '../models/user.model';
-import { coerceStringArray } from '@angular/cdk/coercion';
+import { SwPush } from '@angular/service-worker';
+import { FirestoreService } from './firestore.service';
+
+
+// import  {NotificationsScript}  from '../utils/notifications';
 
 @Injectable({
   providedIn: 'root',
@@ -20,9 +24,14 @@ export class AuthService {
   defaultClaims: {} = { basic: true, admin: false, superAdmin: false };
   user: UserClass = new UserClass();
 
+  notiSub: any
+
   isSuperAdmin: BehaviorSubject<boolean> = new BehaviorSubject(false);
   navDisappear: BehaviorSubject<boolean> = new BehaviorSubject(false);
   userClaimsSubj: BehaviorSubject<{}> = new BehaviorSubject({})
+
+  readonly VAPID_PUBLIC_KEY = "BNDP_ZCBO61xD-DAXQiGkshAMJdemtl0-jSsRl6amjuD3RD--YFRMK-yt9ZTN92I8kbRI8krLihrFSXDs8QMM0k"
+
 
   httpHeaders: HttpHeaders = new HttpHeaders();
   authHeader: any;
@@ -32,7 +41,7 @@ export class AuthService {
   usersSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(new UserClass());
 
-  constructor(private aFireAuth: AngularFireAuth, private http: HttpClient) {
+  constructor(private aFireAuth: AngularFireAuth, private http: HttpClient, private swPush: SwPush, private fStoreServ: FirestoreService) {
     this.isLoggedIn().subscribe((user: any) => {
       if (user) {
         this.user = user;
@@ -45,6 +54,36 @@ export class AuthService {
         this.userLoggedInSubject.next(new UserClass());
       }
     });
+    // this.swPush.subscription.subscribe((val) => {
+       this.subscribeToNotifications()
+       this.swPush.messages.subscribe(
+        (val) => console.log(val))
+        
+       this.swPush.notificationClicks.subscribe(
+        ((event) => 
+        
+            console.log('rákattoltál a gombra', event)
+
+          )
+      )
+    // })
+  }
+
+  swPushh() {
+   return this.notiSub
+  }
+
+  subscribeToNotifications() {
+    this.swPush.requestSubscription({
+      serverPublicKey: this.VAPID_PUBLIC_KEY
+    })
+    .then((sub) => {
+      
+      this.notiSub = sub
+      console.log(sub)
+      localStorage.setItem('notificationSubscription', this.notiSub)
+    })
+    .catch(err => console.error("Could not subscribe to notifications", err));
   }
 
   getIdToken(user: any) {

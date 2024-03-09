@@ -145,4 +145,55 @@ app.get("/weather", (req, res) => {
   );
 });
 
+const webpush = require('web-push');
+
+const vapidKeys = {
+    "publicKey": "BPbt5XazS8K5bwDOrF_d1yA7-pzjscYlhnBbtnaUQIGzMdbf73uNBwKt7XK1aE9aRaHawJbSsCDm-uhLI-vHZ2U",
+    "privateKey": "gBCH9XUIBYHrHTlgj4cxtNMCo0vPGqdJQGvIonkZ9TE"
+};
+
+// inicializálás
+webpush.setVapidDetails(
+    'mailto:kalmaristvan078@gmail.com',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+);
+
+app.route('/message').post((req,res) => {
+  const msg = req.body.msg
+  const subscriptions = req.body.sub
+
+
+  const notificationPayload = {
+      "notification": {
+          "title": msg.displayName,
+          "body": msg.message,
+          "icon": msg.profilePhoto,
+          "vibrate": [100, 50, 100],
+          "data": {
+              "onActionClick": {
+                "default": { "operation": "openWindow"},
+                "navigate": {
+                  "operation": "focusLastFocusedOrOpen",
+                  "url": "/chat"
+                }
+              }
+          },
+          "actions": [{
+              "action": "navigate",
+              "title": "Elolvasom",
+          }]
+      }
+  }
+
+  subscriptions.forEach((subscription) => {
+    webpush.sendNotification(subscription, JSON.stringify(notificationPayload) )
+    .then(() => res.status(200).json({message: 'Értesítés sikeresen elküldve!'}))
+    .catch((err) => {
+      console.error("Hiba az értesítés kiküldésekor", err)
+      res.sendStatus(500);
+    });
+  })
+  })
+
 exports.api = functions.https.onRequest(app);

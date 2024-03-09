@@ -93,6 +93,16 @@ export class FirestoreService {
     return upload.percentageChanges();
   }
 
+  saveUserNotiSubscription(userKey: string, sub: any) {
+    const notiSubPath = this.fireStore.collection(`users/profiles/pushSubscription/${userKey}/subscription`)
+    return notiSubPath.add(sub)
+  }
+
+  getUserNotiSubscription(userKey: string) {
+    const notiSubPath = this.fireStore.collection(`users/profiles/pushSubscription/${userKey}/subscription`)
+    return notiSubPath.valueChanges()
+  }
+
   addFilesFromMessages(user: any, file: any) {
     // const basePath = `fromChats/${user.displayName}/files`;
     const filesPath = `fromChats/${user.email}/files/${file.name}`;

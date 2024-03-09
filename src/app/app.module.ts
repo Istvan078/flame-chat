@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AppRoutingModule } from './app-routing.module';
@@ -9,6 +9,7 @@ import { AngularFireDatabaseModule } from '@angular/fire/compat/database';
 import { AngularFireStorageModule } from '@angular/fire/compat/storage';
 import { AngularFirestoreModule } from "@angular/fire/compat/firestore";
 import { AngularFireAuthModule } from "@angular/fire/compat/auth";
+import { AngularFireMessagingModule } from "@angular/fire/compat/messaging";
 import { Environments } from './environments';
 
 import {  NgbModalModule, NgbTooltipConfig, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
@@ -32,6 +33,7 @@ import { ModalComponent } from './components/modals/modal/modal.component';
 import { NotificationsComponent } from './components/nav/notifications/notifications.component';
 import { VisitedMeComponent } from './components/nav/notifications/visited-me/visited-me.component';
 import { FilesModalComponent } from './components/modals/files-modal/files-modal.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
 
 
 @NgModule({
@@ -64,13 +66,20 @@ import { FilesModalComponent } from './components/modals/files-modal/files-modal
     AngularFireAuthModule,
     AngularFirestoreModule,
     AngularFireStorageModule,
+    AngularFireMessagingModule,
     BrowserAnimationsModule,
     
     SharedModule,
 
 
     NgbTooltipModule,
-    NgbModalModule
+    NgbModalModule,
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      // Register the ServiceWorker as soon as the application is stable
+      // or after 30 seconds (whichever comes first).
+      registrationStrategy: 'registerWhenStable:10000'
+    })
     
   ],
   providers: [

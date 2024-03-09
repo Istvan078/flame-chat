@@ -34,7 +34,10 @@ export class VisitedMeComponent implements OnInit {
       nM.message.seen = true
       this.base.updateMessage(nM.key, nM)
     })
+    // this.newMessages = []
     
+     this.base.haventSeenMsgsArr.next([])
+
     this.base.profileSeenSubject.next(tomb)
     this.base.logicalSubject.next(false);
     this.backToChats.emit(true);

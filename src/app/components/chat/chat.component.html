@@ -1,3 +1,4 @@
+<button (click)="sendMessNotifications()" type="button">Swpush</button>
 <h1 class="text-center">Flame Chat</h1>
 
 <div *ngIf="sendPrivateMessageOn" class="text-center searchContainer">
@@ -297,11 +298,11 @@
         class="me-2 mb-1"
         color="accent"
         [disabled]="uploadFinished == false"
-        (click)="!editMessage ? addMessage() : updateMessage(); messageButtonClicked = false"
+        (click)="addMessage(); messageButtonClicked = false"
         mat-raised-button
       >
         
-        {{ !editMessage ? "Küldés" : "Módosítás" }}
+        {{ "Küldés" }}
         <mat-icon>send</mat-icon>
       </button>
       <div >
@@ -398,29 +399,13 @@
                       ? 'grey'
                       : 'right'
                   "
-                  >{{ object.message.timeStamp }}</mat-card-subtitle
+                  >{{ object.message.viewTimeStamp }}</mat-card-subtitle
                 >
               </div>
             </mat-card-title-group>
 
             <div class="buttonCont">
               <mat-card-actions class="d-flex flex-wrap justify-content-end">
-                <button
-                  class="me-2"
-                  [id]="object['key']"
-                  class="updateButton me-2"
-                  *ngIf="userProfile.uid === object.message.senderId"
-                  (click)="
-                    navigateToUpdateMessage(object);
-                    messageButtonClicked = !messageButtonClicked
-                  "
-                  mat-raised-button
-                  color="accent"
-                  type="button"
-                >
-                  Módosítás
-                </button>
-
                 <button class="bg-warning text-center" mat-raised-button type="button"
                 *ngIf="userProfile.uid === object.message.senderId"
                     (click)="deleteMessage(object)">

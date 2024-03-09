@@ -58,6 +58,7 @@ export class BaseService implements OnDestroy {
   logicalSubject: BehaviorSubject<boolean> = new BehaviorSubject(false);
   getAllMessagesSubject: BehaviorSubject<any> = new BehaviorSubject({});
   newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([])
+  haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([])
 
   userKeySubject: BehaviorSubject<any> = new BehaviorSubject('');
   userKeySubjectSubscription!: Subscription;
@@ -166,30 +167,22 @@ export class BaseService implements OnDestroy {
     if (key) {
       return ref.query.orderByChild('key').equalTo(key).once('value');
     } 
-    
-    // else {
-    //   const date = Date.now();
-    //   return ref.query
-    //     .orderByChild('message/timeStamp')
-    //     .equalTo(date)
-    //     .once('value');
-    // }
   }
 
   getNewMessage() {
     const ref = this.realTimeDatabase.list('chats');
-    const currentTimeStamp = Date.now()
-    const oneHourAgo = new Date()
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1)
-    const oneHourAgoTimeStamp = oneHourAgo.getTime()
+    const currentTimeStamp = new Date().toLocaleString()
+    const newDate = new Date()
+    newDate.setHours(newDate.getHours() - 1)
+    const oneHourAgo =  newDate.toLocaleString()
     console.log(currentTimeStamp)
-    console.log(oneHourAgoTimeStamp)
+    console.log(oneHourAgo)
     return ref.query
     .orderByChild('message/timeStamp')
-      .startAt(oneHourAgoTimeStamp)
+      .startAt(oneHourAgo)
       .endAt(currentTimeStamp)
       // .equalTo(date)
-      .limitToLast(1)
+      .limitToLast(5)
       .once('value');
   }
 

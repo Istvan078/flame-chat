@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html?version=1",
+          "/manifest.webmanifest",
+          "/*.css?version=1",
+          "/*.js?version=1"
+        ],
+        "urls": [
+          "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css"
+        ]
+      }
+     
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-call",
+      "urls": ["https://project0781.web.app"],
+      "cacheConfig": {
+        "maxAge": "10h",
+        "maxSize": 20,
+        "strategy": "freshness",
+        "timeout": "5s"
+      }
+    }
+  ]
+
+}

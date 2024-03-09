@@ -22,9 +22,18 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
+import { AnyCatcher } from 'rxjs/internal/AnyCatcher';
+import { HttpClient } from '@angular/common/http';
 
 type Friend = {
   friendId: string;
+};
+
+type Notification = {
+  displayName: string;
+  message: string;
+  profilePhoto: string;
+  timeStamp: string;
 };
 
 @Component({
@@ -86,12 +95,18 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   authNull = 2;
 
+  msgCount = 0;
+
   userLoggedInSubscription!: Subscription;
   isSuperAdminSubscription!: Subscription;
   usersSubscription!: Subscription;
   userFriendSubjectSub!: Subscription;
   getAllMessagesSubjectSub!: Subscription;
   filesBehSubjectSub!: Subscription;
+  haventSeenMsgsArrSubjSub!: Subscription;
+
+  friendPushSub: any;
+  myPushSubscription: any;
 
   constructor(
     private realTimeDatabase: AngularFireDatabase,
@@ -101,10 +116,17 @@ export class ChatComponent implements OnInit, OnDestroy {
     private router: Router,
     private _snackbar: MatSnackBar,
     private ngbModal: NgbModal,
-    private firestore: FirestoreService
+    private firestore: FirestoreService,
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
+    // if(!this.friendPushSub) {
+    //   this.auth.swPushh().subscribe(sub => {
+    //     this.friendPushSub = sub
+    //     console.log(this.friendPushSub)
+    //   });
+    // }
     this.auth.authNullSubject.subscribe((authNull) => {
       this.authNull = authNull;
     });
@@ -133,6 +155,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         if (obj.haventSeenMessagesArr) {
           this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
         }
+      }
+    );
+    this.haventSeenMsgsArrSubjSub = this.base.haventSeenMsgsArr.subscribe(
+      (hSMArr) => {
+        this.haventSeenMessagesArr = hSMArr;
       }
     );
     new Promise((res) => {
@@ -176,6 +203,71 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.isSuperAdminSubscription = this.auth.isSuperAdmin.subscribe(
       (value) => (this.isSAdmin = value)
     );
+  }
+
+  sendMessNotifications() {
+    const apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
+    let friend = this.userProfiles.find(
+      (uP) => uP.uid === this.selectedFriend.friendId
+    );
+    let myPushSubscription: PushSubscription = this.auth.swPushh();
+    let JSONed = myPushSubscription.toJSON();
+    this.firestore
+      .getUserNotiSubscription(this.userProfile.key)
+      .subscribe((mySub) => {
+        let subInDatabase = [];
+        subInDatabase = mySub.filter(
+          (sub: any) => sub.endpoint === JSONed.endpoint
+        );
+        if (subInDatabase.length === 0) {
+          this.firestore.saveUserNotiSubscription(this.userProfile.key, JSONed);
+        }
+      });
+
+    const msg: Notification = {
+      displayName: this.message.message.displayName,
+      message: this.message.message.message,
+      profilePhoto: this.message.message.profilePhoto,
+      timeStamp: this.message.message.timeStamp,
+    };
+
+    new Promise((res, rej) => {
+      this.firestore.getUserNotiSubscription(friend!.key).subscribe((sub) => {
+        this.friendPushSub = sub;
+        if (this.friendPushSub !== undefined) {
+          res(this.friendPushSub);
+        }
+      });
+    }).then((pushSub) => {
+      this.http
+        .post(apiUrl + 'message', { msg: msg, sub: pushSub })
+        .subscribe((res) => console.log(res));
+    });
+  }
+
+  calcMinutesPassed(sentMessDate: any) {
+    const newDate = new Date();
+    const currPassedMinutesInMonth =
+      newDate.getDate() * 24 * 60 +
+      newDate.getHours() * 60 +
+      newDate.getMinutes() -
+      1440;
+    sentMessDate =
+      sentMessDate.getDate() * 24 * 60 +
+      sentMessDate.getHours() * 60 +
+      sentMessDate.getMinutes() -
+      1440;
+    const passedMinsSMessSent = currPassedMinutesInMonth - sentMessDate;
+
+    // var millisecondsPerDay = 1000 * 60 * 60 * 24;
+    let hours: number = 0;
+    for (let i = 60; i < passedMinsSMessSent && 1440; i += 60) {
+      hours += 1;
+    }
+
+    if (passedMinsSMessSent < 60)
+      return `${passedMinsSMessSent} perccel ezelőtt írta`;
+    return `${hours} órával ezelőtt írta`;
   }
 
   getAllMessages() {
@@ -231,40 +323,36 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   getNewMessage() {
+    this.filterShowFriendsMessArr();
     this.base
       .getNewMessage()
       .then((jSM) => {
-        let justSentM: any = {};
-        const newMess: { key: string } = { key: '' };
+        console.log(jSM.val());
+        let msgArr: any[] = [];
         if (jSM.val()) {
-          justSentM = Object.values(jSM.val());
-          justSentM = justSentM.find((jSM: any) => jSM.key === jSM.key);
-        }
-        return { justSentM: justSentM, newMess };
-      })
-      .then((val) => {
-        console.log(val);
-        if (val.justSentM) {
-          val.newMess = this.allChatsArray.find((ch) => {
-            return ch.key === val.justSentM.key;
+          const newMsgs = Object.values(jSM.val());
+          msgArr = [...newMsgs];
+          let keyArr: any[] = [];
+          this.allChatsArray.map((jSM: any) => {
+            keyArr.push(jSM.key);
           });
-        }
-        if (val.newMess === undefined) {
-          val.newMess = { key: 'új üzenet' };
-        }
+          console.log(keyArr);
+          msgArr = msgArr.filter(
+            (msg) => !keyArr.includes(msg.key) && msg.message.seen === false
+          );
 
-        if (val.justSentM) {
-          if (val.newMess.key === 'új üzenet' && val.justSentM.key) {
-            for (let ch of this.allChatsArray) {
-              let vala = [];
-              vala.push(val.justSentM);
-              console.log(vala);
-              this.haventSeenMessagesArr.push(val.justSentM);
-              this.allChatsArray.unshift(val.justSentM);
-              this.filterShowFriendsMessArr();
-              break;
-            }
-          }
+          console.log(msgArr);
+        }
+        return msgArr;
+      })
+      .then((msgArr) => {
+        console.log(msgArr);
+
+        for (let msg of msgArr) {
+          console.log(msg);
+          this.haventSeenMessagesArr.push(msg);
+          this.allChatsArray.unshift(msg);
+          this.filterShowFriendsMessArr();
         }
         this.base.newMessageNotiSubject.next(this.haventSeenMessagesArr);
         this.base.getAllMessagesSubject.next({
@@ -436,7 +524,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.router.navigate([`profile/${this.userProfile.uid}`]);
   }
 
-  fileModalOpen(picturesArr: [], i:number) {
+  fileModalOpen(picturesArr: [], i: number) {
     const modalRef = this.ngbModal.open(FilesModalComponent, {
       centered: true,
     });
@@ -445,7 +533,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   addMessage() {
-    let actualTime = Date.now();
+    const actualTime = new Date().toLocaleString();
     this.message.message.senderId = this.userProfile.uid;
     this.message.message.timeStamp = actualTime;
     this.message.participants[0] = this.userProfile.uid;
@@ -460,12 +548,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         if (jSMess.val()) {
           let newMessIterator: any[] = [];
           newMessIterator = Object.values(jSMess.val());
-          let [toTimeStringObj] = [...newMessIterator];
-          console.log(toTimeStringObj);
-          toTimeStringObj.message.timeStamp = new Date(
-            toTimeStringObj.message.timeStamp
-          ).toLocaleString();
-          this.allChatsArray.unshift(toTimeStringObj);
+          const [justSentMessObj] = [...newMessIterator];
+          justSentMessObj.message.viewTimeStamp = this.calcMinutesPassed(
+            new Date(justSentMessObj.message.timeStamp)
+          );
+          this.allChatsArray.unshift(justSentMessObj);
           this.base.getAllMessagesSubject.next({
             allChatsArray: this.allChatsArray,
           });
@@ -496,25 +583,47 @@ export class ChatComponent implements OnInit, OnDestroy {
             });
         });
     }
+    this.sendMessNotifications();
   }
 
   getMessageUser(user: any) {
     this.selectedFriend = user; // objektum
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
-    let messFromSelFriendArr = this.allChatsArray.filter(
+    const messFromSelFriendArr = this.allChatsArray.filter(
       (item) =>
         this.selectedFriend.friendId === item.message.senderId &&
         this.userProfile.uid === item.participants[1]
     );
-    this.allChatsArray.map((mess) => {
-      mess.message.timeStamp = new Date(
-        mess.message.timeStamp
-      ).toLocaleString();
+
+    this.allChatsArray = this.allChatsArray.map((mess) => {
+      // const postedMinutes = new Date(
+      //   mess.message.timeStamp
+      // ).to;
+      if (!mess.message.viewTimeStamp) {
+        const msgDate = new Date(mess.message.timeStamp);
+        console.log(msgDate);
+        console.log(mess.message.timeStamp);
+        // console.log(d)
+        mess.message.viewTimeStamp = this.calcMinutesPassed(msgDate);
+        // mess.message.convertedToMins = true;
+      }
+
+      //  mess.message.timeStamp =
       return mess;
     });
-    messFromSelFriendArr.forEach((mess) => {
+    console.log(messFromSelFriendArr);
+
+    const newTomb = [...messFromSelFriendArr];
+    // console.log(newTomb)
+    newTomb.map((mess) => {
       if (mess.message.seen === false) {
+        // const originalDate = new Date(mess.message.timeStamp)
+
+        console.log(mess.message.timeStamp);
+        // const unixTimeStamp = originalDate.getTime()
+        // console.log(unixTimeStamp)
+        // mess.message.timeStamp = unixTimeStamp
         mess.message.seen = true;
         this.base.updateMessage(mess['key'], mess).then(() => {
           this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
@@ -523,7 +632,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.filterShowFriendsMessArr();
           this.base.newMessageNotiSubject.next(this.haventSeenMessagesArr);
           this.base.getAllMessagesSubject.next({
-            // allChatsArray: this.allChatsArray,
+            //  allChatsArray: this.allChatsArray,
             showFriendsMess: this.showFriendsMess,
             haventSeenMessagesArr: this.haventSeenMessagesArr,
           });
@@ -593,34 +702,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.base.deleteMessages();
   }
 
-  navigateToUpdateMessage(message: Chat) {
-    this.updateUserMessage = message;
-    console.log(this.updateUserMessage);
-    this.updateMessageKey = message['key'] as string;
-    console.log(this.updateMessageKey);
-    this.editMessage = true;
-    this.message.message.message = message.message.message;
-    this.viewPortScroller.scrollToPosition([0, 0]);
-  }
-
-  updateMessage() {
-    let actualTime = Date.now();
-    // let dateString = date.toLocaleString();
-    this.updateUserMessage.message.timeStamp = actualTime;
-    this.updateUserMessage.message.message = this.message.message.message;
-    this.base
-      .updateMessage(this.updateMessageKey, this.updateUserMessage)
-      .then(() => {
-        this.base
-          .getJustSentMessage(this.updateUserMessage.key)
-          ?.then((jSMess: any) => {
-            this.allChatsArray.push(...Object.values(jSMess.val()));
-          });
-      });
-    this.viewPortScroller.scrollToAnchor(this.updateMessageKey);
-    this.editMessage = false;
-  }
-
   backToUsers() {
     this.sendPrivateMessageOn = false;
     this.userMessages = false;
@@ -688,10 +769,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     promise.then(() =>
       this.router.navigate(['chat/' + friendId + '/friend-profile'])
     );
-
-    // setTimeout(() => {
-    //   this.router.navigate(['chat/' + friendId + '/friend-profile']);
-    // }, 2000);
   }
 
   signAsAFriend(user: UserClass) {
@@ -734,7 +811,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.base.getAllMessagesSubject.next({
           showFriendsMess: this.showFriendsMess,
         });
-      });;
+      });
     });
   }
 
@@ -749,6 +826,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.usersSubscription.unsubscribe();
     }
     if (this.getAllMessagesSubjectSub) {
+      this.getAllMessagesSubjectSub.unsubscribe();
+    }
+    if (this.haventSeenMsgsArrSubjSub) {
       this.getAllMessagesSubjectSub.unsubscribe();
     }
     if (this.userFriendSubjectSub) {
