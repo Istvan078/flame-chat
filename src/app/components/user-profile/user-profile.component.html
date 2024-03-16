@@ -8,7 +8,7 @@
       #f="ngForm"
         >
       <mat-vertical-stepper [animationDuration]="'2000'" style="width: 90vw;" linear>
-        <mat-step [stepControl]="f.form" label="Alapadatok">
+        <mat-step [stepControl]="f.form.value" label="Alapadatok">
       
       
         <mat-form-field class="me-2">
@@ -63,7 +63,7 @@
         </div>
       
       </mat-step>
-      <mat-step [stepControl]="f.form" label="Töltsd fel a profilképed">
+      <mat-step [stepControl]="f.form.value" label="Töltsd fel a profilképed">
         <div class="mt-2">
           <h2 class="text-center">
             <label id="profilePicture" class="form-label" for="profilePicture"
@@ -134,7 +134,7 @@
         </div>
          
         </mat-step>
-        <mat-step [stepControl]="f.form" label="Albumod">
+        <mat-step [stepControl]="f.form.value" label="Albumod">
         <div *ngIf="userBirthDate" class="mb-2">
           <h2 class="text-center">
             <label id="profilePicture" class="form-label" for="profilePicture"
