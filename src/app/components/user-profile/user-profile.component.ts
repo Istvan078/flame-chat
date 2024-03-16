@@ -61,6 +61,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
       (url: string) => {
         this.profilePhotoUrl = url;
+        console.log(this.profilePhotoUrl)
       }
     );
     this.picturesSubscription = this.base.picturesSubject.subscribe((url) => {
@@ -127,8 +128,8 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           } else {
             this.userProf.profilePicture = userProfile[0].profilePicture;
           }
+          res('Sikeres Profil frissítés');
         });
-        res('Sikeres Profil frissítés');
       });
     })
       .then((res) => {
