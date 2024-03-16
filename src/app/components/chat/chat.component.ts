@@ -259,7 +259,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       1440;
     const passedMinsSMessSent = currPassedMinutesInMonth - sentMessDate;
 
-    // var millisecondsPerDay = 1000 * 60 * 60 * 24;
     let hours: number = 0;
     for (let i = 60; i < passedMinsSMessSent && 1440; i += 60) {
       hours += 1;
@@ -287,17 +286,12 @@ export class ChatComponent implements OnInit, OnDestroy {
         .then((mySentMsgs: any) => {
           let mySentMessages = Object.assign({}, mySentMsgs);
           mySentMessgs = Object.values(mySentMessages);
-          // let [tomb] = [...mySentMessages]
-          // mySentMessages.push(...mySentMsgs.val())
         })
         .then(() => {
           myAllMessagesPromises[1].then((msgsFFr: any) => {
             let messagesFromFriends = Object.assign({}, msgsFFr);
             msgsFFrArr = Object.values(messagesFromFriends);
-
-            // let [tomb] = [...mySentMessages]
-            // mySentMessages.push(...mySentMsgs.val())
-          });
+         });
         })
         .then(() => {
           myAllMessagesArr = [...mySentMessgs, ...msgsFFrArr];

@@ -99,7 +99,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       this.privatePost = this.publishForm.value;
       this.privatePost.pictures = this.picturesArray;
-      console.log(this.picturesArray);
       this.firestoreService.createPost(
         this.privatePost,
         this.notShared,

@@ -12,7 +12,6 @@ import { UserClass } from '../models/user.model';
 import { SwPush } from '@angular/service-worker';
 import { FirestoreService } from './firestore.service';
 
-
 // import  {NotificationsScript}  from '../utils/notifications';
 
 @Injectable({
@@ -24,29 +23,35 @@ export class AuthService {
   defaultClaims: {} = { basic: true, admin: false, superAdmin: false };
   user: UserClass = new UserClass();
 
-  notiSub: any
+  notiSub: any;
 
   isSuperAdmin: BehaviorSubject<boolean> = new BehaviorSubject(false);
   navDisappear: BehaviorSubject<boolean> = new BehaviorSubject(false);
-  userClaimsSubj: BehaviorSubject<{}> = new BehaviorSubject({})
+  userClaimsSubj: BehaviorSubject<{}> = new BehaviorSubject({});
 
-  readonly VAPID_PUBLIC_KEY = "BNDP_ZCBO61xD-DAXQiGkshAMJdemtl0-jSsRl6amjuD3RD--YFRMK-yt9ZTN92I8kbRI8krLihrFSXDs8QMM0k"
-
+  readonly VAPID_PUBLIC_KEY =
+    'BNDP_ZCBO61xD-DAXQiGkshAMJdemtl0-jSsRl6amjuD3RD--YFRMK-yt9ZTN92I8kbRI8krLihrFSXDs8QMM0k';
 
   httpHeaders: HttpHeaders = new HttpHeaders();
   authHeader: any;
 
-  authNullSubject: BehaviorSubject<any> = new BehaviorSubject(2)
+  authNullSubject: BehaviorSubject<any> = new BehaviorSubject(2);
 
   usersSubject: BehaviorSubject<any> = new BehaviorSubject([]);
-  userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(new UserClass());
+  userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(
+    new UserClass()
+  );
 
-  constructor(private aFireAuth: AngularFireAuth, private http: HttpClient, private swPush: SwPush, private fStoreServ: FirestoreService) {
+  constructor(
+    private aFireAuth: AngularFireAuth,
+    private http: HttpClient,
+    private swPush: SwPush,
+    private fStoreServ: FirestoreService
+  ) {
     this.isLoggedIn().subscribe((user: any) => {
       if (user) {
         this.user = user;
         this.getIdToken(user);
-        
       }
       if (!user) {
         this.user = new UserClass();
@@ -54,36 +59,30 @@ export class AuthService {
         this.userLoggedInSubject.next(new UserClass());
       }
     });
-    // this.swPush.subscription.subscribe((val) => {
-       this.subscribeToNotifications()
-       this.swPush.messages.subscribe(
-        (val) => console.log(val))
-        
-       this.swPush.notificationClicks.subscribe(
-        ((event) => 
-        
-            console.log('rákattoltál a gombra', event)
+    this.subscribeToNotifications();
+    this.swPush.messages.subscribe((val) => console.log(val));
 
-          )
-      )
-    // })
+    this.swPush.notificationClicks.subscribe((event) =>
+      console.log('rákattoltál a gombra', event)
+    );
   }
 
   swPushh() {
-   return this.notiSub
+    return this.notiSub;
   }
 
   subscribeToNotifications() {
-    this.swPush.requestSubscription({
-      serverPublicKey: this.VAPID_PUBLIC_KEY
-    })
-    .then((sub) => {
-      
-      this.notiSub = sub
-      console.log(sub)
-      localStorage.setItem('notificationSubscription', this.notiSub)
-    })
-    .catch(err => console.error("Could not subscribe to notifications", err));
+    this.swPush
+      .requestSubscription({
+        serverPublicKey: this.VAPID_PUBLIC_KEY,
+      })
+      .then((sub) => {
+        this.notiSub = sub;
+        localStorage.setItem('notificationSubscription', this.notiSub);
+      })
+      .catch((err) =>
+        console.error('Could not subscribe to notifications', err)
+      );
   }
 
   getIdToken(user: any) {
@@ -95,33 +94,24 @@ export class AuthService {
       );
       this.getClaims().subscribe((claims: any) => {
         if (claims) {
-          console.log(claims)
           this.user.claims = claims;
           this.userLoggedInSubject.next(this.user);
           this.isSuperAdmin.next(this.user.claims?.superAdmin);
-          this.userClaimsSubj.next(claims)
-          
-          this.getUsers().subscribe((users:any) => {
-              this.usersSubject.next(users);
-              console.log(users)
-            })
-          // .subscribe((users: UserClass[]) => {
-          //   console.log('users adat megjött')
-          // this.usersSubject = new BehaviorSubject(users);
-          // });
+          this.userClaimsSubj.next(claims);
+
+          this.getUsers().subscribe((users: any) => {
+            this.usersSubject.next(users);
+          });
         } else {
-          if(this.user.uid) {
-          this.setCustomClaims(this.user.uid, this.defaultClaims);
-          this.userLoggedInSubject.next(this.user);
-          console.log('Alap jogosultságok sikeresen beállítva.');
-          this.isSuperAdmin.next(false);
-        }
+          if (this.user.uid) {
+            this.setCustomClaims(this.user.uid, this.defaultClaims);
+            this.userLoggedInSubject.next(this.user);
+            this.isSuperAdmin.next(false);
+          }
         }
       });
     });
   }
-
-
 
   createUserWithEmAndPa(email: string, password: string) {
     return this.aFireAuth.createUserWithEmailAndPassword(email, password);
@@ -155,13 +145,13 @@ export class AuthService {
   }
 
   getUsers(): Observable<UserClass[]> {
-      if (this.user.idToken) {
-        // let headers = new HttpHeaders().set('Authorization', this.user.idToken);
+    if (this.user.idToken) {
+      // let headers = new HttpHeaders().set('Authorization', this.user.idToken);
       return this.http.get<UserClass[]>(this.usersApiUrl + 'users', {
-          headers: this.httpHeaders,
-        });
-      }
-      return of([]);
+        headers: this.httpHeaders,
+      });
+    }
+    return of([]);
   }
 
   isLoggedIn() {
@@ -190,7 +180,7 @@ export class AuthService {
   }
 
   signOut() {
-   return this.aFireAuth.signOut();
+    return this.aFireAuth.signOut();
   }
 
   signInWithGoogle() {

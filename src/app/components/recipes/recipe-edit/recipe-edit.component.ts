@@ -50,7 +50,6 @@ export class RecipeEditComponent implements OnInit {
       if (params['key']) {
         this.submitButtonValue = 'Recept modositasa';
       }
-      console.log(params);
       this.key = params['key'];
       this.baseService.getRecipes().subscribe((recipes) => {
         for (let recipe of recipes) {

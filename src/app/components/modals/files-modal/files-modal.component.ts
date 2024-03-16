@@ -16,7 +16,6 @@ export class FilesModalComponent {
   // @Output() passViewIndex: EventEmitter<any> = new EventEmitter()
 
   left() {
-    console.log('bal');
     if (this.viewIndex > 0) {
       this.viewIndex = this.viewIndex - 1;
       this.fadeIn = true;

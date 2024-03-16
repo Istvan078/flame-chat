@@ -46,13 +46,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log(this.user);
     this.authService.getUsersSubject().subscribe((users: UserClass[]) => {
       users.map((user) => {
         user['isRenderOn'] = false;
       });
       this.users = users;
-      console.log('users adat megjött', this.users);
     });
   }
 
@@ -77,7 +75,6 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   getIndexOfUser(index: number) {
     this.user = this.users[index];
-    console.log(this.user);
   }
 
   getUserProfiles() {
@@ -103,7 +100,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.http
       .post(this.usersApiUrl + 'setUserProfile', this.user)
       .subscribe((res) => {
-        console.log(res);
         this.getUsers();
       });
   }

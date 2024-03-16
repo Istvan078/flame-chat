@@ -89,7 +89,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
         });
       });
     }).then((res) => {
-      console.log(res);
       this.base
         .getData(this.userProf)
         .snapshotChanges()
@@ -120,7 +119,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           this.userProf.ageCalc();
           this.userProf.uid = user.uid;
           this.userProf.key = userProfile[0].key;
-          console.log(userProfile[0]['key']);
           if (
             this.userProf.profilePicture == '' ||
             this.userProf.profilePicture == undefined
@@ -150,7 +148,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
   toArray() {
     let tomb = [...this.userProf.pictures];
-    console.log(tomb);
   }
 
   addProfilePic() {

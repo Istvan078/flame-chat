@@ -32,24 +32,6 @@ export class NavComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    //   this.authService.userLoggedInSubject.subscribe({
-    //     next: (usr:any) => {
-
-    //       if (
-    //         !usr.emailVerified
-    //       ) {
-    //         usr?.sendEmailVerification();
-    //         this.user = new UserClass();
-    //         console.log(this.user)
-    //       }
-    //       else {
-    //         this.user =usr
-    //       }
-    //     },
-    //     error: (err) => console.log(err),
-    // })
-    // this.authService.isLoggedIn().subscribe({
-    //   next: (usr) => {
 
     this.userLoggedInSubjSub = this.authService.userLoggedInSubject.subscribe(
       (usr) => {
@@ -60,9 +42,6 @@ export class NavComponent implements OnInit, OnDestroy {
         }
       }
     );
-    //   },
-    //   error: (err) => console.log(err),
-    // });
     this.isSuperAdminSub = this.authService.isSuperAdmin.subscribe(
       (booleanSA) => {
         this.isSuperAdmin = booleanSA;

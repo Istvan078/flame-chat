@@ -41,7 +41,6 @@ export class NotesComponent implements OnInit, OnDestroy {
     this.subscription =    this.authService.isSuperAdmin.subscribe(
           (value) => this.isSuperAdmin = value
         )
-        console.log(this.subscription)
       },
       error: (err) => {
         this.errorm = err.message;
@@ -112,6 +111,5 @@ export class NotesComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe()
-    console.log(this.subscription)
   }
 }

@@ -41,8 +41,6 @@ export class SignupComponent {
         return usr.user;
       })
       .then((usr) => {
-        console.log('Email megerősítő email elküldve');
-        console.log(usr);
         const actModal = this.modalRef.open(ModalComponent, {
           centered: true,
         });

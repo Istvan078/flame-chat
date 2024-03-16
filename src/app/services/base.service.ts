@@ -74,10 +74,6 @@ export class BaseService implements OnDestroy {
     private http: HttpClient,
     private authService: AuthService
   ) {
-    // this.userKeySubject.subscribe((userKey:any) => {
-    //   console.log(userKey);
-    //   this.userKey = userKey
-    // });
 
     this.refChats = realTimeDatabase.list(`/chats`);
     this.refNotes = realTimeDatabase.list('/notes');
@@ -124,7 +120,6 @@ export class BaseService implements OnDestroy {
       .ref(`users/${this.userKey}/friends`)
       .once('value')
       .then((val) => {
-        console.log(val, 'sikerrrrrrrrr');
         return this.refFriends.update(friendKey, body);
       });
   }
@@ -141,8 +136,6 @@ export class BaseService implements OnDestroy {
          value = val.val()
         return res(value)
       })
-    // .then((val) => console.log(val.val()));
-      // return res(value)
     })
     const promise2 =  new Promise((res,rej) => {
       let value;
@@ -153,8 +146,6 @@ export class BaseService implements OnDestroy {
          value = val.val()
         return res(value)
       });
-    // .then((val) => console.log(val.val()));
-      // return res(value)
     })
 
     const myAllMessagesArr = [promise1, promise2];
@@ -175,8 +166,6 @@ export class BaseService implements OnDestroy {
     const newDate = new Date()
     newDate.setHours(newDate.getHours() - 1)
     const oneHourAgo =  newDate.toLocaleString()
-    console.log(currentTimeStamp)
-    console.log(oneHourAgo)
     return ref.query
     .orderByChild('message/timeStamp')
       .startAt(oneHourAgo)
@@ -273,8 +262,6 @@ export class BaseService implements OnDestroy {
   }
 
   addPictures(user: any, file: any) {
-    // const storageBaseRef = this.fireStorage.ref(`${this.basePath}/${user.displayName}`)
-    // storageBaseRef.child(file.name).getDownloadURL().subscribe()
     const fullPath = `${this.basePath}/${user.displayName}/${file.name}`;
     const storageRef = this.fireStorage.ref(fullPath);
     const upload = this.fireStorage.upload(fullPath, file);
@@ -283,12 +270,6 @@ export class BaseService implements OnDestroy {
       .pipe(
         finalize(() => {
           return storageRef.getDownloadURL().subscribe((url: any) => {
-            // if(!user.pictures) user.pictures = []
-            // let imgObj = {
-            //   imageUrl: url,
-            //   fileName: file.name
-            // }
-            // user.pictures.push(imgObj)
             this.addFileData(user, file.name, url);
           });
         })
