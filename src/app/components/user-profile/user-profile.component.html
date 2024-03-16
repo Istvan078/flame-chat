@@ -189,7 +189,7 @@
         </div>
         <div *ngIf="showPics" class="d-flex m-0 justify-content-start flex-wrap">
           <div *ngFor="let pic of userPictures; let i = index" class="mb-2 mx-2">
-            <a (click)="viewPic(pic.url, i)">
+            <a (click)="viewPic(i)">
               <img
                 [src]="pic.url"
                 alt=""

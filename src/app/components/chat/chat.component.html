@@ -22,7 +22,8 @@
             Ismerősök
             <mat-icon
               matBadgeSize="small"
-              [matBadge]="userFriends.length"
+              [matBadgeDisabled]="!userFriends?.length"
+              [matBadge]="userFriends?.length"
               matBadgeColor="primary"
               class="ms-2"
               aria-hidden="false"
@@ -95,13 +96,14 @@
         <mat-expansion-panel-header
           (click)="getNewMessage()"
           class="d-grid justify-content-center"
-          [ngClass]="haventSeenMessagesArr.length > 0 ? 'newMessage' : ''"
+          [ngClass]="haventSeenMessagesArr!.length > 0 ? 'newMessage' : ''"
         >
           <mat-panel-title class="pt-2">
             Üzenetek
             <mat-icon
               matBadgeSize="small"
-              matBadge="{{ haventSeenMessagesArr.length }}"
+              [matBadgeDisabled]="!haventSeenMessagesArr?.length"
+              matBadge="{{ haventSeenMessagesArr?.length }}"
               matBadgeColor="primary"
               class="ms-2"
               aria-hidden="false"
@@ -328,7 +330,7 @@
         : 'justify-content-end mainDivUsers'
     "
     class="d-grid mainDiv"
-    *ngFor="let object of getFirstFiveMessagesForSelectedFriend() | sort | filter : searchWord"
+    *ngFor="let object of getFirstFiveMessagesForSelectedFriend() | filter : searchWord"
   >
     <mat-card
       [ngClass]="

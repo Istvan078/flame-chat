@@ -114,14 +114,17 @@ export class FriendProfileComponent
             // Barátok listája összegyűjtése és tömbbe helyezése
             this.userProfilesSubscription =
               this.base.userProfilesSubject.subscribe((uProfs: UserClass[]) => {
-                const friendsArr = Object.values(
-                  this.friendProfile.friends as any
-                ).map((friend: any) => friend.friendId);
+                if(this.friendProfile.friends) {
+                  var friendsArr = Object.values(
+                    this.friendProfile.friends as any
+                  ).map((friend: any) => friend.friendId);
+                }
+
                 this.profilesOfFriendsArr = uProfs.filter((uP: UserClass) => {
-                  if (uP.age < 1 || !uP.age) {
-                    uP.age = 2024 - +uP.birthDate.substring(0, 4);
+                  if (uP.age < 1 || !uP.age && uP.birthDate) {                 
+                    uP.age = (2024) - (+uP.birthDate.substring(0, 4)); 
                   }
-                  return friendsArr.includes(uP.uid);
+                  if(friendsArr) return friendsArr.includes(uP.uid);
                 });
 
                 // paginator címke

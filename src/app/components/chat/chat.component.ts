@@ -13,7 +13,7 @@ import {
 import { Router } from '@angular/router';
 import { Subject, Subscription } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
-import { UserClass } from 'src/app/models/user.model';
+import { Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { MatAccordion } from '@angular/material/expansion';
@@ -74,13 +74,13 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   allChatsArray: any[] = [];
   userMessages: boolean = false;
-  haventSeenMessagesArr: any[] = [];
+  haventSeenMessagesArr?: any[] = [];
   messFromSelFriendArr: any[] = [];
   showFriendsMess: any[] = [];
   seenMeArr: any[] = [];
 
   userNotFriends: any[] = [];
-  userFriends: any[] = [];
+  userFriends?: Friends[] = [];
 
   signedFriend: Friend = {
     friendId: '',
@@ -121,6 +121,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+
+    
     // if(!this.friendPushSub) {
     //   this.auth.swPushh().subscribe(sub => {
     //     this.friendPushSub = sub
@@ -132,7 +134,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
     if (
       Object.keys(this.base.userFriendsSubject.getValue()).length !== 0 &&
-      !this.userFriends.length
+      !this.userFriends?.length
     ) {
       this.userFriendSubjectSub = this.base.userFriendsSubject.subscribe(
         (uFrs) => {
@@ -174,6 +176,9 @@ export class ChatComponent implements OnInit, OnDestroy {
                 (userProfile: any) => userProfile.uid === user.uid
               );
               console.log(this.userProfile);
+              if(this.userProfile && !this.userProfile.birthDate) {
+                this.router.navigate(['profile/' + user.uid])
+              }
               // userKey átadása base service-nek
               if (this.userProfile?.key) {
                 this.base.userKeySubject.next(this.userProfile?.key);
@@ -211,8 +216,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       (uP) => uP.uid === this.selectedFriend.friendId
     );
     let myPushSubscription: PushSubscription = this.auth.swPushh();
-    let JSONed = myPushSubscription.toJSON();
-    this.firestore
+    if(myPushSubscription) {
+      let JSONed = myPushSubscription.toJSON();
+      this.firestore
       .getUserNotiSubscription(this.userProfile.key)
       .subscribe((mySub) => {
         let subInDatabase = [];
@@ -223,7 +229,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.firestore.saveUserNotiSubscription(this.userProfile.key, JSONed);
         }
       });
-
+    }
     const msg: Notification = {
       displayName: this.message.message.displayName,
       message: this.message.message.message,
@@ -260,13 +266,23 @@ export class ChatComponent implements OnInit, OnDestroy {
     const passedMinsSMessSent = currPassedMinutesInMonth - sentMessDate;
 
     let hours: number = 0;
-    for (let i = 60; i < passedMinsSMessSent && 1440; i += 60) {
+    for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
       hours += 1;
+    }
+
+    let days: number = 0;
+    for (let i = 1440;passedMinsSMessSent >= 1440 && i <= passedMinsSMessSent; i += 1440) {
+      days += 1;
     }
 
     if (passedMinsSMessSent < 60)
       return `${passedMinsSMessSent} perccel ezelőtt írta`;
+
+    if(hours < 24)
     return `${hours} órával ezelőtt írta`;
+    
+    if(hours >= 24)
+    return `${days} nappal ezelőtt írta`;
   }
 
   getAllMessages() {
@@ -304,7 +320,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           );
           this.filterShowFriendsMessArr();
           if (this.showFriendsMess.length === 0) {
-            this.showFriendsMess.push(this.userFriends.length);
+            this.showFriendsMess.push(this.userFriends?.length);
           }
           this.base.newMessageNotiSubject.next(this.haventSeenMessagesArr);
           this.base.getAllMessagesSubject.next({
@@ -344,7 +360,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
         for (let msg of msgArr) {
           console.log(msg);
-          this.haventSeenMessagesArr.push(msg);
+          this.haventSeenMessagesArr?.push(msg);
           this.allChatsArray.unshift(msg);
           this.filterShowFriendsMessArr();
         }
@@ -437,6 +453,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.authNull === null
         ) {
           this.userFriends = friendsTomb;
+          console.log(this.userFriends)
           // subjecttel átküldi a userFriendst
           this.base.profileSeenSubject.next(this.userFriends);
           const forFriendsSubject = {
@@ -590,49 +607,63 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.userProfile.uid === item.participants[1]
     );
 
-    this.allChatsArray = this.allChatsArray.map((mess) => {
-      // const postedMinutes = new Date(
-      //   mess.message.timeStamp
-      // ).to;
-      if (!mess.message.viewTimeStamp) {
-        const msgDate = new Date(mess.message.timeStamp);
-        console.log(msgDate);
-        console.log(mess.message.timeStamp);
-        // console.log(d)
-        mess.message.viewTimeStamp = this.calcMinutesPassed(msgDate);
-        // mess.message.convertedToMins = true;
-      }
-
-      //  mess.message.timeStamp =
-      return mess;
-    });
     console.log(messFromSelFriendArr);
 
     const newTomb = [...messFromSelFriendArr];
-    // console.log(newTomb)
-    newTomb.map((mess) => {
-      if (mess.message.seen === false) {
-        // const originalDate = new Date(mess.message.timeStamp)
 
-        console.log(mess.message.timeStamp);
-        // const unixTimeStamp = originalDate.getTime()
-        // console.log(unixTimeStamp)
-        // mess.message.timeStamp = unixTimeStamp
-        mess.message.seen = true;
-        this.base.updateMessage(mess['key'], mess).then(() => {
-          this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
-            (msg) => msg['key'] !== mess['key']
-          );
-          this.filterShowFriendsMessArr();
-          this.base.newMessageNotiSubject.next(this.haventSeenMessagesArr);
-          this.base.getAllMessagesSubject.next({
-            //  allChatsArray: this.allChatsArray,
-            showFriendsMess: this.showFriendsMess,
-            haventSeenMessagesArr: this.haventSeenMessagesArr,
+    new Promise((res,rej) => {
+      newTomb.map((mess) => {
+        // if(mess.message.viewTimeStamp) {
+        //   mess.message.viewTimeStamp = null
+        //   this.base.updateMessage(mess['key'], mess)
+        //   .then(()=> console.log('sikeres törlés'))
+        // }
+        if (mess.message.seen === false) {
+          // const originalDate = new Date(mess.message.timeStamp)
+  
+          console.log(mess.message.timeStamp);
+          // const unixTimeStamp = originalDate.getTime()
+          // console.log(unixTimeStamp)
+          // mess.message.timeStamp = unixTimeStamp
+          mess.message.seen = true;
+          this.base.updateMessage(mess['key'], mess).then(() => {
+            this.haventSeenMessagesArr = this.haventSeenMessagesArr?.filter(
+              (msg) => msg['key'] !== mess['key']
+            );
+            this.filterShowFriendsMessArr();
+            this.base.newMessageNotiSubject.next(this.haventSeenMessagesArr);
+            this.base.getAllMessagesSubject.next({
+              //  allChatsArray: this.allChatsArray,
+              showFriendsMess: this.showFriendsMess,
+              haventSeenMessagesArr: this.haventSeenMessagesArr,
+            });
           });
-        });
-      }
-    });
+        }
+      });
+      res('Promise resolve ága lefutott')
+    })
+    .then((res) => {
+      this.allChatsArray = this.allChatsArray.map((mess) => {
+        // const postedMinutes = new Date(
+        //   mess.message.timeStamp
+        // ).to;
+        if (!mess.message.viewTimeStamp || mess.message.viewTimeStamp == "") {
+          const msgDate = new Date(mess.message.timeStamp);
+          // console.log(msgDate);
+          // console.log(mess.message.timeStamp);
+          // console.log(d)
+          mess.message.viewTimeStamp = this.calcMinutesPassed(msgDate);
+          console.log(mess.message.viewTimeStamp)
+          // mess.message.convertedToMins = true;
+        }
+  
+        //  mess.message.timeStamp =
+        return mess;
+      });
+    })
+    // console.log(newTomb)
+
+
 
     this.filesBehSubjectSub = this.firestore.filesBehSubject.subscribe(
       (flArr) => (this.sentFilesArr = flArr)
@@ -649,15 +680,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   filterShowFriendsMessArr() {
-    let tomb: any = this.haventSeenMessagesArr.map((item) => {
+    let tomb: any = this.haventSeenMessagesArr?.map((item) => {
       console.log(item.message.message);
       return this.userFriends
-        .filter((friend) => friend.friendId === item.message.senderId)
+        ?.filter((friend) => friend.friendId === item.message.senderId)
         .map((friend) => ({ ...friend, seen: false }));
     });
     tomb = tomb.flat(1);
     console.log(this.userFriends);
-    let ujTomb = [...tomb, ...this.userFriends];
+    let ujTomb = [...tomb, ...this.userFriends!];
     const latottFriendIdk: any = {};
     const szurtObjektumokTomb = ujTomb.filter((obj, i) => {
       if (!latottFriendIdk[obj.friendId]) {
@@ -716,6 +747,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       );
     });
 
+    selectedFriendMessages.map((mess) => {
+      mess.message.timeStamp = new Date(mess.message.timeStamp).getTime()
+    })
+
     selectedFriendMessages.sort((a: any, b: any) => {
       if (a.message.timeStamp < b.message.timeStamp) return 1;
       else return -1;
@@ -732,32 +767,40 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
       // send friendprofilekey with subj
       this.base.userKeySubject.next(friendProfile?.key);
-      let array = [...Object.entries(friendProfile!.friends)];
-      let arr: any = array.flat();
-
-      let newArr = [];
-      let obj: any = {};
-      for (let i = 0; i < arr.length; i++) {
-        if (typeof arr[i] === 'string') {
-          obj.key = arr[i];
-        } else {
-          obj.friendId = arr[i].friendId;
-          newArr.push(obj);
-          obj = {};
+      console.log(friendProfile)
+      if(friendProfile?.friends) {
+        const friendsArrIterable = [...Object.entries(friendProfile!.friends)];
+        const friendsArr: any = friendsArrIterable.flat();
+  
+        const friendsArray = [];
+        let obj: any = {};
+        for (let i = 0; i < friendsArr.length; i++) {
+          if (typeof friendsArr[i] === 'string') {
+            obj.key = friendsArr[i];
+          } else {
+            obj.friendId = friendsArr[i].friendId;
+            friendsArray.push(obj);
+            obj = {};
+          }
         }
-      }
-      const user: any = newArr.find(
-        (f: any) => f.friendId === this.userProfile.uid
-      );
-      if (user) user.seenMe = true;
+        console.log(friendsArray)
 
-      this.base
+        const user: any = friendsArray.find(
+          (f: any) => f.friendId === this.userProfile.uid
+        );
+        if (user) user.seenMe = true;
+        this.base
         .updateFriend(user.key, { seenMe: user.seenMe } as any)
         .then(() => {
           this.base.userProfilesSubject.next(this.userProfiles);
           this.base.friendProfileSubject.next(friendProfile);
           res('');
         });
+      } else {
+        
+        this.base.friendProfileSubject.next(friendProfile);
+        res('');
+      }
     });
 
     promise.then(() =>

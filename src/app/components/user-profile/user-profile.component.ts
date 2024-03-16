@@ -1,7 +1,6 @@
 import {
   AfterViewInit,
   Component,
-  ElementRef,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -12,7 +11,6 @@ import { Subscription, map } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
-import { ModalComponent } from '../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 
@@ -134,7 +132,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     })
       .then((res) => {
         this.base.updateUserData(this.userProf, this.userProf.key);
-        console.log(res);
       })
       .then(() => this.route.navigate(['chat']));
   }
@@ -164,7 +161,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
       .subscribe((percent) => (this.percent = percent!));
   }
 
-  viewPic(url: string, i: number) {
+  viewPic(i: number) {
     const actModal = this.modalRef.open(FilesModalComponent, {
       centered: true
     })

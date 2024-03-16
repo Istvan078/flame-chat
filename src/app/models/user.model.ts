@@ -4,9 +4,18 @@ type Claims = {
   superAdmin: boolean;
 };
 
+export interface Friends {
+    displayName?: string;
+    email?: string;
+    friendId: string;
+    seenMe?: boolean;
+    friendKey?: string;
+    profilePicture?: string;
+}
+
 export class UserClass {
   [indexS: string | number]: string | undefined | object | number | boolean;
-  public friends!: {
+  public friends?: {
     key: string;
     friendId: string;
     seenMe: boolean;

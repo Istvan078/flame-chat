@@ -72,7 +72,8 @@ export class AuthService {
   }
 
   subscribeToNotifications() {
-    this.swPush
+    if(this.swPush.isEnabled) {
+      this.swPush
       .requestSubscription({
         serverPublicKey: this.VAPID_PUBLIC_KEY,
       })
@@ -83,6 +84,8 @@ export class AuthService {
       .catch((err) =>
         console.error('Could not subscribe to notifications', err)
       );
+    }
+
   }
 
   getIdToken(user: any) {
