@@ -18,7 +18,6 @@ import {
 } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Recipe } from '../models/recipe.model';
-import { AuthService } from './auth.service';
 import { Chat } from '../models/chat.model';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { UserClass } from '../models/user.model';
@@ -34,7 +33,6 @@ interface Friend {
   providedIn: 'root',
 })
 export class BaseService implements OnDestroy {
-  user: any;
   profilePicUrlSubject: Subject<string> = new Subject();
   picturesSubject: Subject<string[]> = new Subject();
   refNotes: AngularFireList<Partial<Notes>>;
@@ -57,24 +55,19 @@ export class BaseService implements OnDestroy {
   userFriendsSubject: BehaviorSubject<any> = new BehaviorSubject({});
   logicalSubject: BehaviorSubject<boolean> = new BehaviorSubject(false);
   getAllMessagesSubject: BehaviorSubject<any> = new BehaviorSubject({});
-  newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([])
-  haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([])
+  newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([]);
+  haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([]);
 
   userKeySubject: BehaviorSubject<any> = new BehaviorSubject('');
   userKeySubjectSubscription!: Subscription;
-  userMessageRef: any;
 
   userKey: any;
-  userProfile: any;
 
   constructor(
     private realTimeDatabase: AngularFireDatabase,
-    private auth: AuthService,
     private fireStorage: AngularFireStorage,
-    private http: HttpClient,
-    private authService: AuthService
+    private http: HttpClient
   ) {
-
     this.refChats = realTimeDatabase.list(`/chats`);
     this.refNotes = realTimeDatabase.list('/notes');
     this.refRecipeList = realTimeDatabase.list<Recipe>('/recipes');
@@ -99,14 +92,14 @@ export class BaseService implements OnDestroy {
     return this.refUsers
       .snapshotChanges()
       .pipe(
-        map((changes) =>
-          changes.map((c) => ({ key: c.payload.key, ...c.payload.val() }))
+        map(changes =>
+          changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
         )
       );
   }
 
   removeUserProfile(userKey: string) {
-    this.refUsers.remove(userKey)
+    this.refUsers.remove(userKey);
   }
 
   // id: string,
@@ -119,91 +112,87 @@ export class BaseService implements OnDestroy {
       .database()
       .ref(`users/${this.userKey}/friends`)
       .once('value')
-      .then((val) => {
+      .then(val => {
         return this.refFriends.update(friendKey, body);
       });
   }
 
-  getUserMessages(userUid: string) {
-    const ref = this.realTimeDatabase.list('chats');
-
-   const promise1 = new Promise((res, rej) => {
-      let value;
-      const mySentMessagesObj = ref.query
-      .orderByChild('message/senderId/')
-      .equalTo(userUid)
-      .on('value', (val) =>  {
-         value = val.val()
-        return res(value)
-      })
-    })
-    const promise2 =  new Promise((res,rej) => {
-      let value;
-      const messageFromFriendsObj = ref.query
-      .orderByChild('participants/1/')
-      .equalTo(userUid)
-      .on('value', (val) => { 
-         value = val.val()
-        return res(value)
+  getUserMessagesRefactored(userUid: string, friendUid: string) {
+    if (friendUid) {
+      const promise1 = new Promise((res, rej) => {
+        const ref2 = this.realTimeDatabase.list('chats', ref2 => {
+          const oneHourAgo = new Date();
+          oneHourAgo.setMonth(oneHourAgo.getMonth() - 3);
+          return ref2
+            .orderByChild('participants/2')
+            .startAt(
+              ((friendUid + userUid) as string) + '-' + oneHourAgo.getTime()
+            )
+            .endAt(
+              ((friendUid + userUid) as string) + '-' + new Date().getTime()
+            )
+            .limitToLast(10);
+        });
+        ref2.valueChanges(['child_added']).subscribe(val => {
+          console.log(val);
+          return res(val);
+        });
       });
-    })
 
-    const myAllMessagesArr = [promise1, promise2];
-    return myAllMessagesArr
+      const promise2 = new Promise((res, rej) => {
+        const ref3 = this.realTimeDatabase.list('chats', ref3 =>
+          ref3.orderByChild('message/senderId').equalTo(userUid as string)
+        );
+        ref3.valueChanges(['child_added']).subscribe(val => {
+          console.log(val);
+          res(val);
+        });
+      });
+      const myAllMessagesArr = [promise1, promise2];
+      const frAndMyMessages = Promise.all(myAllMessagesArr).then(res => {
+        return res.flat();
+      });
+      return frAndMyMessages;
+    }
   }
 
-
-  getJustSentMessage(key?: string) {
-    const ref = this.realTimeDatabase.list('chats');
-    if (key) {
-      return ref.query.orderByChild('key').equalTo(key).once('value');
-    } 
-  }
-
-  getNewMessage() {
-    const ref = this.realTimeDatabase.list('chats');
-    const currentTimeStamp = new Date().toLocaleString()
-    const newDate = new Date()
-    newDate.setHours(newDate.getHours() - 1)
-    const oneHourAgo =  newDate.toLocaleString()
-    return ref.query
-    .orderByChild('message/timeStamp')
-      .startAt(oneHourAgo)
-      .endAt(currentTimeStamp)
-      // .equalTo(date)
-      .limitToLast(5)
-      .once('value');
+  getNewMessages() {
+    const ref = this.realTimeDatabase.list('chats', ref2 =>
+      ref2.orderByChild('message/timeStamp').limitToLast(5)
+    );
+    return ref
+      .snapshotChanges(['child_added'])
+      .pipe(
+        map(ch =>
+          ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
+        )
+      );
   }
 
   removeFriend(id: string) {
     // this.refFriends = this.realTimeDatabase.list('/friends')
-
     return this.refFriends.remove(id);
   }
 
   getFriends(): Observable<Friend[]> {
     if (this.userKey) {
       return this.refFriends.snapshotChanges().pipe(
-        map((changes) =>
+        map(changes =>
           changes.map(
-            (c) =>
+            c =>
               <Friend>{
                 key: c.payload.key,
                 ...c.payload.val(),
               }
           )
         ),
-        catchError((errorRes) => {
+        catchError(errorRes => {
           return throwError(errorRes);
         })
       );
     }
-    const tomb: Observable<Friend[]> = of([]);
-    return tomb;
-  }
-
-  getFriend() {
-    return this.refFriends.query.once('value');
+    const emptyArrObs: Observable<Friend[]> = of([]);
+    return emptyArrObs;
   }
 
   addUserData(body: any) {
@@ -298,18 +287,18 @@ export class BaseService implements OnDestroy {
     return this.refChats
       .snapshotChanges()
       .pipe(
-        map((changes) =>
-          changes.map((c) => ({ key: c.payload.key, ...c.payload.val() }))
+        map(changes =>
+          changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
         )
       );
   }
 
   getNotes(): Observable<Notes[]> {
     return this.refNotes.snapshotChanges().pipe(
-      map((changes) =>
-        changes.map((c) => <Notes>{ key: c.payload.key, ...c.payload.val() })
+      map(changes =>
+        changes.map(c => <Notes>{ key: c.payload.key, ...c.payload.val() })
       ),
-      catchError((errorRes) => {
+      catchError(errorRes => {
         return throwError(errorRes);
       })
     );
@@ -337,22 +326,12 @@ export class BaseService implements OnDestroy {
     this.refNotes.update(item, body);
   }
 
-  getRecipe(key: string) {
-    return this.refRecipeList
-      .snapshotChanges()
-      .pipe(
-        map((changes) =>
-          changes.map((c) => ({ key: key, Recipe: c.payload.val() }))
-        )
-      );
-  }
-
   getRecipes(): Observable<any> {
     return this.refRecipeList
       .snapshotChanges()
       .pipe(
-        map((changes) =>
-          changes.map((c) => ({ key: c.payload.key, ...c.payload.val() }))
+        map(changes =>
+          changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
         )
       );
   }

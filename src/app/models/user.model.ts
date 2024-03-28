@@ -5,12 +5,12 @@ type Claims = {
 };
 
 export interface Friends {
-    displayName?: string;
-    email?: string;
-    friendId: string;
-    seenMe?: boolean;
-    friendKey?: string;
-    profilePicture?: string;
+  displayName?: string;
+  email?: string;
+  friendId: string;
+  seenMe?: boolean;
+  friendKey?: string;
+  profilePicture?: string;
 }
 
 export class UserClass {
@@ -19,6 +19,7 @@ export class UserClass {
     key: string;
     friendId: string;
     seenMe: boolean;
+    messaging?: boolean;
   }[];
   public age: number;
   public phoneNumber: string = '';

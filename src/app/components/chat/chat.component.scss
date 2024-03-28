@@ -2,6 +2,10 @@
   background-color: rgba(21, 154, 255, 0.1);
 }
 
+.messageCardBg {
+  background-color: rgba(93, 93, 237, 0.3);
+}
+
 .newMessage {
   background-color: rgba(255, 166, 0, 0.7) !important;
 }
@@ -14,10 +18,21 @@
   display: none;
 }
 
+.reducedHeight {
+  height: 40vh;
+}
 
+
+.seenDiv {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-right: 0px;
+  margin-bottom: 0;
+  margin-left: 1px;
+}
 .seen {
   color: rgb(6, 60, 6);
-  border: 2px solid rgb(6, 60, 6);
   padding: 2px;
   width: fit-content;
 }
@@ -41,6 +56,17 @@ mat-expansion-panel-header:hover{
 .card {
   height: fit-content;
 }
+
+.msgsCard {
+  width: 80vw !important;
+}
+
+.cardBg {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none;
+}
+
 .messageInput {
   width: 80vw;
 }
@@ -63,13 +89,16 @@ mat-expansion-panel-header:hover{
 }
 
 .left {
-  background-color: rgb(23, 23, 143, 0.5);
+  background-color: rgba(23, 23, 143, 0.5);
   color: white;
-  width: 50vw;
+  padding: 5px;
+  border-radius: 5px;
 }
 
 .right {
-  width: 100vw;
+  background-color: rgba(255, 255, 255, 0.952);
+  padding: 5px;
+  border-radius: 5px;
 }
 
 .buttonCont {
@@ -83,7 +112,13 @@ mat-expansion-panel-header:hover{
   padding: 0;
 }
 
+.timeDivRight {
+  width: 55vw !important;
+  justify-content: center !important;
+}
+
 .emailDateDiv {
+  margin-left: 40px;
   text-align: left;
   width: fit-content;
   overflow: auto;
@@ -112,16 +147,36 @@ mat-expansion-panel-header:hover{
   color: rgb(32, 31, 31);
 }
 
+.allMessagesContainer {
+  overflow-x:hidden;
+  overflow-y:auto;
+  max-height: 60vh !important;
+}
+
 .mainDiv {
   height: fit-content;
 }
 
 .mainDivUser {
   margin-bottom: 10px;
+  margin-left: 45px;
+  max-width: 60vw !important;
+}
+
+.myMessageRight {
+  margin-left: 40px !important;
+  max-width: 60vw !important;
+}
+
+.myMessageLeft {
+  margin-left: 8px !important;
+  max-width: 60vw !important;
 }
 
 .mainDivUsers {
   margin-bottom: 10px;
+  width: 70vw !important;
+
 }
 
 @media screen and (max-width: 400px) {
@@ -144,6 +199,10 @@ mat-expansion-panel-header:hover{
   .messageCard {
     width: 100vw;
     height: 35vh;
+  }
+  .timeDivRight {
+    justify-content: start !important;
+    margin-left: 37px;
   }
 }
 
@@ -190,6 +249,16 @@ mat-expansion-panel-header:hover{
     width: 100vw;
     height: 60vh;
   }
+  .mainDivUsers {
+    margin-left: 8vw;
+  }
+  .timeDivRight {
+    justify-content: start !important;
+    margin-left: 100px;
+  }
+  // .myMessageRight {
+  //   margin-right: 80px !important;
+  // }
 }
 
 @media screen and (min-width: 800px) and (max-width: 1250px) {
@@ -212,6 +281,12 @@ mat-expansion-panel-header:hover{
     width: 100vw;
     height: 60vh;
   }
+  .mainDivUsers {
+    margin-left: 8vw;
+  }
+  // .myMessageRight {
+  //   margin-right: 40px !important;
+  // }
 }
 
 @media screen and (min-width: 1250px) and (max-width: 1900px) {
@@ -234,6 +309,9 @@ mat-expansion-panel-header:hover{
   .messageCard {
     width: 100vw;
     height: 60vh;
+  }
+  .mainDivUsers {
+    margin-left: 8vw;
   }
 }
 
@@ -258,6 +336,9 @@ mat-expansion-panel-header:hover{
     width: 100vw;
     height: 30vh;
   }
+  .mainDivUsers {
+    margin-left: 10vw;
+  }
 }
 
 .deleteButton {
@@ -274,7 +355,7 @@ mat-expansion-panel-header:hover{
   padding-left: 20px;
 }
  .blue{
-  background-color: rgba(33, 33, 182, 0.7) !important;
+   background-color: rgba(8, 8, 156, 0.6) !important;
 }
 
 .sendMessageOpenButton{

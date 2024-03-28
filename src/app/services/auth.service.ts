@@ -45,7 +45,7 @@ export class AuthService {
   constructor(
     private aFireAuth: AngularFireAuth,
     private http: HttpClient,
-    private swPush: SwPush,
+    public swPush: SwPush,
     private fStoreServ: FirestoreService
   ) {
     this.isLoggedIn().subscribe((user: any) => {
@@ -79,7 +79,6 @@ export class AuthService {
       })
       .then((sub) => {
         this.notiSub = sub;
-        localStorage.setItem('notificationSubscription', this.notiSub);
       })
       .catch((err) =>
         console.error('Could not subscribe to notifications', err)

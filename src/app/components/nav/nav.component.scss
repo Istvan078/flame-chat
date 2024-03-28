@@ -1,80 +1,80 @@
-.active-link{
-    color: white;
-    background-color: rgba(131, 150, 131, 0.5);
-    height: fit-content;
+.active-link {
+  color: white;
+  background-color: rgba(131, 150, 131, 0.5);
+  height: fit-content;
 }
-.sign-out{
-    color: rgb(27, 27, 25);
-    background-color: rgba(56, 61, 60, 0.3);
-    box-shadow: 5px 5px 5px rgba(32, 30, 30, 0.5);
+.sign-out {
+  color: rgb(27, 27, 25);
+  background-color: rgba(56, 61, 60, 0.3);
+  box-shadow: 5px 5px 5px rgba(32, 30, 30, 0.5);
 }
-.nav-item{
-    height: fit-content;
+.nav-item {
+  height: fit-content;
 }
 
 .noti {
-    right: 0;
-    top: 0;
-    position: absolute;
-    z-index: 1;
-    width: fit-content;
-    margin-right: 16px;
-    margin-top: 18px;
+  right: 0;
+  top: 0;
+  position: absolute;
+  z-index: 1;
+  width: fit-content;
+  margin-right: 16px;
+  margin-top: 18px;
 }
 
 .noNoti {
-    color: grey
+  color: grey;
 }
 
 span {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .spacer {
-    flex: 1 1 auto;
+  flex: 1 1 auto;
 }
 
 .inh {
-    display: inline-block;
+  display: inline-block;
 }
 
-
 .columnDisp {
-    display: none;
+  display: none;
 }
 
 .notiFlex {
-    margin-left: 10px;
-    margin-top: 7px;
-    position: absolute;
+  margin-left: 10px;
+  margin-top: 7px;
+  position: absolute;
+}
+.notiFlexDiv {
+  position: absolute;
+  left: 95%;
 }
 
 .matToolbarHeight {
-    height: fit-content;
-    display: grid;
-}
-
-@media screen and (max-width: 750px){
-    .columnDisp {
-        display: grid;
-        
-    }
+  height: fit-content;
+  display: grid;
 }
 
 .flexDisp {
-    display: flex;
+  display: flex;
 }
 
-@media screen and (max-width: 750px){
-    .flexDisp {
-        display: none;
-    }
-    
+@media screen and (max-width: 987px) {
+  .flexDisp {
+    display: none;
+  }
+  .columnDisp {
+    display: grid;
+  }
 }
 
-@media screen and (min-width: 750px){
-    .noti {
-        display: none;
-    }
-    
+@media screen and (min-width: 987px) {
+  .noti {
+    display: none;
+  }
+  .signedInAs {
+    font-size: medium !important;
+  }
 }

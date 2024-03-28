@@ -1,6 +1,9 @@
 {
   "rules": {
-    ".read": "now < 1701990000000",  // 2023-12-8
-    ".write": "now < 1701990000000",  // 2023-12-8
+    ".read": "auth.uid !== null",
+    ".write": "auth.uid !== null",
+    "chats": {
+      ".indexOn": ["message/timeStamp"]
+    }
   }
 }

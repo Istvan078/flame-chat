@@ -3,17 +3,9 @@ import {
   AngularFirestore,
   AngularFirestoreCollection,
   DocumentData,
-  Reference,
 } from '@angular/fire/compat/firestore';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  catchError,
-  finalize,
-  of,
-} from 'rxjs';
+import { BehaviorSubject, Observable, Subject, finalize } from 'rxjs';
 import { Post } from '../models/post.model';
 
 @Injectable({
@@ -68,7 +60,7 @@ export class FirestoreService {
     this.filesFromChat = this.fireStore.collection(
       `users/private/chats/${userKey}/files`
     );
-    return this.filesFromChat.valueChanges();
+    return this.filesFromChat.snapshotChanges(['added']);
   }
 
   addPublicPictures(file: any) {
@@ -93,14 +85,80 @@ export class FirestoreService {
     return upload.percentageChanges();
   }
 
+  deleteFilesFromStorage(path: string, fileName: any) {
+    const howManySlash = path.split('/');
+    let mainPath: string = '';
+    let filePath: string = '';
+    if (howManySlash.length === 1 || !howManySlash.length)
+      filePath = `${path}/${fileName}`;
+    if (howManySlash.length === 2) {
+      mainPath = howManySlash.join('/');
+      filePath = `${mainPath}/${fileName}`;
+    }
+    if (howManySlash.length === 3) {
+      mainPath = howManySlash.join('/');
+      filePath = `${mainPath}/${fileName}`;
+    }
+
+    console.log(filePath);
+    const storageRef = this.fireStorage.ref(filePath);
+    console.log(storageRef);
+    return storageRef.delete();
+  }
+
+  deleteFilesFromFirestore(docId: string, userKey: string) {
+    const collectionPath = this.fireStore.collection(
+      `users/private/chats/${userKey}/files`
+    );
+    return collectionPath.doc(docId).delete();
+  }
+
   saveUserNotiSubscription(userKey: string, sub: any) {
-    const notiSubPath = this.fireStore.collection(`users/profiles/pushSubscription/${userKey}/subscription`)
-    return notiSubPath.add(sub)
+    const notiSubPath = this.fireStore.collection(
+      `users/profiles/pushSubscription/${userKey}/subscription`
+    );
+    return notiSubPath.add(sub);
   }
 
   getUserNotiSubscription(userKey: string) {
-    const notiSubPath = this.fireStore.collection(`users/profiles/pushSubscription/${userKey}/subscription`)
-    return notiSubPath.valueChanges()
+    const notiSubPath = this.fireStore.collection(
+      `users/profiles/pushSubscription/${userKey}/subscription`
+    );
+    return notiSubPath.valueChanges();
+  }
+
+  getUserNotiSubscriptionReformed(userKey: string, endpoint: string) {
+    const notiSubPath = this.fireStore.collection(
+      `users/profiles/pushSubscription/${userKey}/subscription`
+    );
+    return notiSubPath.ref.where('endpoint', '==', endpoint).get();
+  }
+
+  deleteUserNotiSubscription(userKey: string, endpoint: string) {
+    const notiSubPath = this.fireStore.collection(
+      `users/profiles/pushSubscription/${userKey}/subscription`
+    );
+    return new Promise((res, rej) => {
+      notiSubPath.ref
+        .where('endpoint', '==', endpoint)
+        .get()
+        .then(docs => {
+          if (docs.empty) {
+            rej('Nincs feliratkozás');
+          } else {
+            docs.forEach(doc => {
+              console.log(doc.id, doc.data());
+              const deletedDoc = notiSubPath
+                .doc(doc.id)
+                .delete()
+                .then(() => {
+                  console.log('törlés');
+                  res('');
+                });
+            });
+          }
+        });
+    });
   }
 
   addFilesFromMessages(user: any, file: any) {
@@ -111,18 +169,16 @@ export class FirestoreService {
     const upload = this.fireStorage.upload(filesPath, file);
 
     storageRef.getMetadata().subscribe({
-      next: (mD) => {
+      next: mD => {
         if (mD.name === file.name) {
           upload.cancel();
           console.log(mD.name, 'Már létezik ilyen fájl, feltöltés megszakítva');
-          storageRef.getDownloadURL().subscribe(
-            (url) => {
-              const urlObj = { url, fileName: file.name };
-              this.filesSubject.next(urlObj);
-              console.log('url átadva');
-            }
-          )
-        } 
+          storageRef.getDownloadURL().subscribe(url => {
+            const urlObj = { url, fileName: file.name };
+            this.filesSubject.next(urlObj);
+            console.log('url átadva');
+          });
+        }
       },
       error: () => {
         console.log('Fájl nem létezik az adatbázisban');
@@ -141,9 +197,9 @@ export class FirestoreService {
       },
     });
 
-    return new Promise((res,rej) => {
-      res(upload)
-      rej('Már van ilyen nevű fájl feltöltve az adatbázisban')
-    }) ;
+    return new Promise((res, rej) => {
+      res(upload);
+      rej('Már van ilyen nevű fájl feltöltve az adatbázisban');
+    });
   }
 }
