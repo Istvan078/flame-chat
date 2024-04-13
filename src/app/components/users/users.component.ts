@@ -47,7 +47,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.authService.getUsersSubject().subscribe((users: UserClass[]) => {
-      users.map((user) => {
+      users.map(user => {
         user['isRenderOn'] = false;
       });
       this.users = users;
@@ -70,7 +70,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   getLoggedInUser() {
     this.authService
       .getUserLoggedInSubject()
-      .subscribe((u) => (this.loggedInUser = u));
+      .subscribe(u => (this.loggedInUser = u));
   }
 
   getIndexOfUser(index: number) {
@@ -78,13 +78,20 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   getUserProfiles() {
-    this.base.getUserProfiles().subscribe((uPfs) => (this.userProfiles = uPfs));
+    this.base.getUserProfiles().subscribe(uPfs => (this.userProfiles = uPfs));
+    this.userProfiles.forEach(uP => {
+      if (!uP.age && uP.birthDate) {
+        const uProf = new UserClass(uP.birthDate);
+        uProf.ageCalc();
+        const updatedAge = { age: uProf.age };
+        this.base.updateUserData(updatedAge, uP.key);
+        console.log(uProf);
+      }
+    });
   }
 
   removeUserProfile() {
-    const selectedUser = this.userProfiles.find(
-      (uP) => uP.uid === this.user.uid
-    );
+    const selectedUser = this.userProfiles.find(uP => uP.uid === this.user.uid);
     if (selectedUser) this.base.removeUserProfile(selectedUser.key);
   }
 
@@ -93,13 +100,13 @@ export class UsersComponent implements OnInit, OnDestroy {
       .get<UserClass[]>(this.usersApiUrl + 'users', {
         headers: this.authService.httpHeaders,
       })
-      .subscribe((users) => (this.users = users));
+      .subscribe(users => (this.users = users));
   }
 
   setUserProfile() {
     this.http
       .post(this.usersApiUrl + 'setUserProfile', this.user)
-      .subscribe((res) => {
+      .subscribe(res => {
         this.getUsers();
       });
   }
@@ -108,15 +115,13 @@ export class UsersComponent implements OnInit, OnDestroy {
     const actModal = this.modalRef.open(ModalComponent, {
       centered: true,
     });
-    if(this.user.displayName) {
+    if (this.user.displayName) {
       actModal.componentInstance.userName = this.user.displayName;
     } else {
-      actModal.componentInstance.userName = "Névtelen felhasználó";
+      actModal.componentInstance.userName = 'Névtelen felhasználó';
     }
     actModal.componentInstance.uid = this.user.uid;
-    actModal.result
-      .then(() => this.getUsers())
-      .catch((err) => console.log(err));
+    actModal.result.then(() => this.getUsers()).catch(err => console.log(err));
   }
 
   ngOnDestroy(): void {

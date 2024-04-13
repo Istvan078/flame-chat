@@ -121,11 +121,9 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
       obj => {
-        console.log(obj.allChatsArray);
         if (obj.allChatsArray) {
           this.allChatsArray = obj.allChatsArray;
         }
-        console.log(obj.showFriendsMess);
         if (obj.showFriendsMess) {
           this.showFriendsMess = obj.showFriendsMess;
         }
@@ -150,7 +148,6 @@ export class ChatComponent implements OnInit, OnDestroy {
               this.userProfile = userProfiles.find(
                 (userProfile: any) => userProfile.uid === user.uid
               );
-              console.log(this.userProfile);
               if (this.userProfile && !this.userProfile.birthDate) {
                 this.router.navigate(['profile/' + user.uid]);
               }
@@ -202,7 +199,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.base.getFriends()?.subscribe(frs => {
         this.friendsOn = true;
         this.userProfile.friends = frs;
-        console.log(frs);
         let friendProfile: any = {};
         const seenMeArr = this.userProfile.friends
           ?.filter(f => {
@@ -239,9 +235,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           //   fr => fr.friendId
           // )
           userProfileCopy.friends?.forEach(f => {
-            console.log('-----LEFUTOTT-----');
             const prof = this.userProfiles.find(uP => {
-              console.log('FIND LEFUTOTT');
               return f.friendId === uP.uid;
             });
             if (f.seenMe === undefined) {
@@ -442,14 +436,14 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
       res('Baráttól származó üzenetek beállítása megtörtént.');
     }).then(res => {
-      console.log(res);
       /////////////////// LEÍRÁS ////////////////////////
       // Mikor írta az üzenetet beállítása a calcMinutesPassed() //
       // metódus segítségével(formázva)) //
       this.allChatsArray = this.allChatsArray.map(mess => {
         if (!mess.message.viewTimeStamp || mess.message.viewTimeStamp == '') {
-          const msgDate = new Date(mess.message.timeStamp);
-          mess.message.viewTimeStamp = this.calcMinutesPassed(msgDate);
+          mess.message.viewTimeStamp = this.calcMinutesPassed(
+            mess.message.timeStamp
+          );
         }
         // az iteráció végén visszaad minden üzenetet(módosítva)
         return mess;
@@ -459,8 +453,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   getVisibleMessagesForSelectedFriend(): any[] {
     // Kiszűröm a kiválasztott felhasználóhoz tartozó üzeneteket
-    console.log(this.allChatsArray);
-    console.log(this.visibleMessages);
     const selectedFriendMessages = this.allChatsArray.filter((message: any) => {
       return (
         (message.message.senderId === this.selectedFriend.friendId &&
@@ -472,7 +464,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     selectedFriendMessages.map(mess => {
       mess.message.viewTimeStamp = this.calcMinutesPassed(
-        new Date(mess.message.timeStamp)
+        mess.message.timeStamp
       );
       mess.message.timeStamp = new Date(mess.message.timeStamp).getTime();
     });
@@ -601,7 +593,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       );
       this.runMessagesSubjectValueTransfer();
       this.getVisibleMessagesForSelectedFriend();
-      console.log(this.allChatsArray);
     });
   }
 
@@ -784,19 +775,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   calcMinutesPassed(sentMessDate: any) {
-    const newDate = new Date();
-    const currPassedMinutesInMonth =
-      newDate.getDate() * 24 * 60 +
-      newDate.getHours() * 60 +
-      newDate.getMinutes() -
-      1440;
-    sentMessDate =
-      sentMessDate.getDate() * 24 * 60 +
-      sentMessDate.getHours() * 60 +
-      sentMessDate.getMinutes() -
-      1440;
-    const passedMinsSMessSent = currPassedMinutesInMonth - sentMessDate;
-
+    const newDate = new Date().getTime();
+    sentMessDate = new Date(sentMessDate).getTime();
+    // A különbség milliszekundumokban
+    const diffMilliseconds = newDate - sentMessDate;
+    // A különbség percekben
+    const passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
     let hours: number = 0;
     for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
       hours += 1;

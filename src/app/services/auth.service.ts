@@ -100,7 +100,6 @@ export class AuthService {
           this.userLoggedInSubject.next(this.user);
           this.isSuperAdmin.next(this.user.claims?.superAdmin);
           this.userClaimsSubj.next(claims);
-
           this.getUsers().subscribe((users: any) => {
             this.usersSubject.next(users);
           });

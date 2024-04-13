@@ -51,18 +51,26 @@ export class UserClass {
   // }
 
   ageCalc() {
-    const date = new Date().toLocaleDateString().split(' ');
-    const birthDate = this.birthDate.split('-');
+    const date = new Date().toLocaleDateString().split('/').reverse();
+    let birthDate;
+    if(this.birthDate.includes("-")){
+      birthDate = this.birthDate.trim().split('-');
+    } 
+    // else if(this.birthDate.includes(".")){
+    //   birthDate = this.birthDate.trim().split('.');
+    // } else if(this.birthDate.includes("/")){
+    //   birthDate = this.birthDate.trim().split('/');
+    // }
+    
     const actDateObj = {
       year: Number(date[0].substring(0, 4)),
-      month: Number(date[1].substring(0, 2)),
-      day: Number(date[2].substring(0, 2)),
+      month: Number(date[2].substring(0, 2)),
+      day: Number(date[1].substring(0, 2)),
     };
-
     const birthDateObj = {
-      year: Number(birthDate[0]),
-      month: Number(birthDate[1]),
-      day: Number(birthDate[2]),
+      year: Number(birthDate![0]),
+      month: Number(birthDate![1]),
+      day: Number(birthDate![2]),
     };
 
     this.age =
@@ -71,4 +79,6 @@ export class UserClass {
       (birthDateObj.month * 30 - actDateObj.month * 30) / 360;
     this.age = Math.floor(this.age);
   }
+
+
 }

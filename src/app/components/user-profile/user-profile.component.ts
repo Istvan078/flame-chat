@@ -115,9 +115,11 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           let userProfile = userProfiles.filter(
             (userProfile: any) => userProfile.uid === user.uid
           );
-          this.userProf.ageCalc();
+           
           this.userProf.uid = user.uid;
           this.userProf.key = userProfile[0].key;
+          console.log(this.userProf.birthDate)
+          // this.userProf.ageCalc();
           if (
             this.userProf.profilePicture == '' ||
             this.userProf.profilePicture == undefined

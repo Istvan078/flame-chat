@@ -38,9 +38,7 @@ export class NavComponent implements OnInit, OnDestroy {
     this.userLoggedInSubjSub = this.authService.userLoggedInSubject.subscribe(
       (usr) => {
         if (usr.uid || usr.claims.basic) {
-          console.log(usr);
           this.user = usr;
-          console.log(this.user);
         }
         this.base.getUserProfiles().subscribe((uProfs) => {
           this.userProfile = uProfs.find((uP: any) => uP.uid === this.user.uid);

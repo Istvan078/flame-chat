@@ -38,7 +38,7 @@
         </span>
 
         <span
-          *ngIf="isSuperAdmin || user.claims.admin"
+          *ngIf="isSuperAdmin || user.claims?.admin"
           (click)="navDisappear()"
           routerLink="users"
           class="nav-link me-3"
@@ -128,7 +128,7 @@
         (click)="rOutletOn()"
         ><mat-icon>notifications</mat-icon></span
       >
-      <div *ngIf="user.uid" class="ms-1 mt-1 d-flex">
+      <div *ngIf="user.uid && userProfile" class="ms-1 mt-1 d-flex">
         <img
           class="rounded-circle"
           width="50px"
