@@ -12,13 +12,11 @@ import {
 import { AppComponent } from './app.component';
 import { HomeComponent } from './components/home/home.component';
 import { NavComponent } from './components/nav/nav.component';
-import { NotesComponent } from './components/notes/notes.component';
 import { SignupComponent } from './components/signup/signup.component';
 import { ClassPipe } from './pipes/class.pipe';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LoginComponent } from './components/login/login.component';
 import { UsersComponent } from './components/users/users.component';
-import { WeatherComponent } from './components/weather/weather.component';
 import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
 
 import { SharedModule } from './components/shared/shared.module';
@@ -33,12 +31,10 @@ import { ServiceWorkerModule } from '@angular/service-worker';
     AppComponent,
     HomeComponent,
     NavComponent,
-    NotesComponent,
     SignupComponent,
     ClassPipe,
     LoginComponent,
     UsersComponent,
-    WeatherComponent,
     LoadingSpinnerComponent,
     ModalComponent,
     NotificationsComponent,

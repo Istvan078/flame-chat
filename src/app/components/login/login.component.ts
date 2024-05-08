@@ -40,14 +40,11 @@ export class LoginComponent {
         user
           ?.sendEmailVerification()
           .then(() => {
-            console.log(this.modalRef.hasOpenModals())
             this.modalRef.dismissAll()
-            console.log(this.modalRef.hasOpenModals())
            const actModal = this.modalRef.open(ModalComponent, {
               centered: true,
             });
             actModal.componentInstance.userEmail = user.email;
-            console.log(this.modalRef.hasOpenModals())
             
           })
           .then(() => {             

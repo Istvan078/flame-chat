@@ -173,9 +173,9 @@ export class ChatComponent implements OnInit, OnDestroy {
                   ...doc.payload.doc.data(),
                 });
               }
-              console.log('fájlok lekérve forEachben', this.sentFilesArr);
+              console.log('fájlok lekérve forEachben');
             });
-            console.log('fájlok lekérve', this.sentFilesArr);
+            console.log('fájlok lekérve');
             this.firestore.filesBehSubject.next(this.sentFilesArr);
           });
       }
@@ -349,6 +349,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
     new Promise((res, rej) => {
+      if(this.userProfile.uid)
       this.base
         .getUserMessagesRefactored(
           this.userProfile.uid,
@@ -654,6 +655,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   addMessage() {
     new Promise((res, rej) => {
       const actualTime = new Date().toLocaleString();
+      if(this.userProfile.uid)
       this.message.message.senderId = this.userProfile.uid;
       this.message.message.timeStamp = actualTime;
       this.message.participants[0] =

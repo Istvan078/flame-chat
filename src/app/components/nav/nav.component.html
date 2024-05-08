@@ -51,32 +51,8 @@
           *ngIf="user.uid"
           class="nav-link me-3"
           routerLinkActive="active-link"
-          routerLink="weather"
-        >
-          Időjárás
-        </span>
-
-        <span
-          *ngIf="user.uid"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
           routerLink="chat"
           >Chat
-        </span>
-
-        <span
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-          [routerLink]="['recipes']"
-          >Receptek
-        </span>
-
-        <span
-          *ngIf="user.uid"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-          routerLink="notes"
-          >Jegyzetek
         </span>
 
         <span

@@ -4,7 +4,6 @@ import {
   AngularFireDatabase,
   AngularFireList,
 } from '@angular/fire/compat/database';
-import { Notes } from '../models/notes.model';
 import {
   BehaviorSubject,
   Observable,
@@ -17,7 +16,6 @@ import {
   throwError,
 } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { Recipe } from '../models/recipe.model';
 import { Chat } from '../models/chat.model';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { UserClass } from '../models/user.model';
@@ -35,8 +33,6 @@ interface Friend {
 export class BaseService implements OnDestroy {
   profilePicUrlSubject: Subject<string> = new Subject();
   picturesSubject: Subject<string[]> = new Subject();
-  refNotes: AngularFireList<Partial<Notes>>;
-  refRecipeList!: AngularFireList<Recipe>;
   refChats!: AngularFireList<Chat>;
   refUsers: AngularFireList<UserClass>;
   refUser!: AngularFireList<UserClass>;
@@ -69,8 +65,6 @@ export class BaseService implements OnDestroy {
     private http: HttpClient
   ) {
     this.refChats = realTimeDatabase.list(`/chats`);
-    this.refNotes = realTimeDatabase.list('/notes');
-    this.refRecipeList = realTimeDatabase.list<Recipe>('/recipes');
     this.refUsers = realTimeDatabase.list('/users');
     this.dbRef = realTimeDatabase.list(this.basePath);
 
@@ -134,7 +128,6 @@ export class BaseService implements OnDestroy {
             .limitToLast(10);
         });
         ref2.valueChanges(['child_added']).subscribe(val => {
-          console.log(val);
           return res(val);
         });
       });
@@ -144,7 +137,6 @@ export class BaseService implements OnDestroy {
           ref3.orderByChild('message/senderId').equalTo(userUid as string)
         );
         ref3.valueChanges(['child_added']).subscribe(val => {
-          console.log(val);
           res(val);
         });
       });
@@ -293,28 +285,13 @@ export class BaseService implements OnDestroy {
       );
   }
 
-  getNotes(): Observable<Notes[]> {
-    return this.refNotes.snapshotChanges().pipe(
-      map(changes =>
-        changes.map(c => <Notes>{ key: c.payload.key, ...c.payload.val() })
-      ),
-      catchError(errorRes => {
-        return throwError(errorRes);
-      })
-    );
-  }
-
   getWeather(location: string) {
     return this.http.get(this.apiUrl + `weather?address=${location}`);
   }
 
-  createNote(body: Partial<Notes>): void {
-    this.refNotes.push(body);
-  }
 
-  deleteNote(item: Pick<Notes, 'key'>): void {
-    this.refNotes.remove(item.key);
-  }
+
+
 
   deleteAllNotes() {
     return this.http.delete(
@@ -322,29 +299,7 @@ export class BaseService implements OnDestroy {
     );
   }
 
-  updateNote(item: string, body: Pick<Notes, 'title' | 'body'>): void {
-    this.refNotes.update(item, body);
-  }
 
-  getRecipes(): Observable<any> {
-    return this.refRecipeList
-      .snapshotChanges()
-      .pipe(
-        map(changes =>
-          changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
-        )
-      );
-  }
 
-  addRecipe(body: Recipe) {
-    this.refRecipeList.push(body);
-  }
 
-  updateRecipe(key: string, body: Recipe) {
-    this.refRecipeList.update(key, body);
-  }
-
-  deleteRecipe(key: string) {
-    this.refRecipeList.remove(key);
-  }
 }
