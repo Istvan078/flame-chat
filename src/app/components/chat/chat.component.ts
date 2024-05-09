@@ -349,18 +349,18 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
     new Promise((res, rej) => {
-      if(this.userProfile.uid)
-      this.base
-        .getUserMessagesRefactored(
-          this.userProfile.uid,
-          this.selectedFriend.friendId
-        )
-        ?.then(msgs => {
-          this.allChatsArray = msgs;
-          this.runMessagesSubjectValueTransfer();
-          this.getVisibleMessagesForSelectedFriend();
-          res('-----ÜZENETEK LEKÉRVE-----');
-        });
+      if (this.userProfile.uid)
+        this.base
+          .getUserMessagesRefactored(
+            this.userProfile.uid,
+            this.selectedFriend.friendId
+          )
+          ?.then(msgs => {
+            this.allChatsArray = msgs;
+            this.runMessagesSubjectValueTransfer();
+            this.getVisibleMessagesForSelectedFriend();
+            res('-----ÜZENETEK LEKÉRVE-----');
+          });
     }).then(res => {
       console.log(res);
       this.updateSeenMessagesAndViewTime(user);
@@ -655,8 +655,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   addMessage() {
     new Promise((res, rej) => {
       const actualTime = new Date().toLocaleString();
-      if(this.userProfile.uid)
-      this.message.message.senderId = this.userProfile.uid;
+      if (this.userProfile.uid)
+        this.message.message.senderId = this.userProfile.uid;
       this.message.message.timeStamp = actualTime;
       this.message.participants[0] =
         this.userProfile.uid + '-' + new Date().getTime();
@@ -772,7 +772,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.firestore.filesSubject.unsubscribe();
     this.filesArr = [];
     this.firestore.filesSubject = new Subject();
-    console.log(this.filesArr);
     this.urlText = [];
   }
 

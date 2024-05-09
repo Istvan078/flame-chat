@@ -1,12 +1,10 @@
-import { getLocaleFirstDayOfWeek } from '@angular/common';
-import { Component, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { MatSidenav } from '@angular/material/sidenav';
+
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subscription } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
-import { ModalComponent } from '../modals/modal/modal.component';
 import { FirestoreService } from 'src/app/services/firestore.service';
 
 @Component({
@@ -36,17 +34,17 @@ export class NavComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userLoggedInSubjSub = this.authService.userLoggedInSubject.subscribe(
-      (usr) => {
+      usr => {
         if (usr.uid || usr.claims.basic) {
           this.user = usr;
         }
-        this.base.getUserProfiles().subscribe((uProfs) => {
+        this.base.getUserProfiles().subscribe(uProfs => {
           this.userProfile = uProfs.find((uP: any) => uP.uid === this.user.uid);
         });
       }
     );
     this.isSuperAdminSub = this.authService.isSuperAdmin.subscribe(
-      (booleanSA) => {
+      booleanSA => {
         this.isSuperAdmin = booleanSA;
       }
     );
@@ -55,27 +53,28 @@ export class NavComponent implements OnInit, OnDestroy {
   signOut() {
     this.authService.authNullSubject.next(null);
     this.isSuperAdmin = false;
-      // jelenlegi feliratkozás a push értesítésekre
+    // jelenlegi feliratkozás a push értesítésekre
     const myPushSubscription: PushSubscription = this.authService.swPushh();
-      // törölni a firestore-ból a push notifications-t az adott eszközről
-        if (myPushSubscription && this.userProfile.displayName) {
-          let JSONed = myPushSubscription.toJSON();
-          console.log(JSONed);
-          console.log(this.userProfile);
-          if(this.userProfile)
-          this.fireStoreService.deleteUserNotiSubscription(
-            this.userProfile['key'],
-            JSONed.endpoint!
-          ).then((res:any) => {
-            this.authService.signOut()
-          }).catch((err) => {
-            console.log(err)
-            this.authService.signOut()
-          });     
-        } 
-     
+    // törölni a firestore-ból a push notifications-t az adott eszközről
+    if (myPushSubscription && this.userProfile.displayName) {
+      let JSONed = myPushSubscription.toJSON();
+      console.log(JSONed);
+      console.log(this.userProfile);
+      if (this.userProfile)
+        this.fireStoreService
+          .deleteUserNotiSubscription(this.userProfile['key'], JSONed.endpoint!)
+          .then((res: any) => {
+            this.authService.signOut();
+          })
+          .catch(err => {
+            console.log(err);
+            this.authService.signOut();
+          });
+    }
 
-      if (!myPushSubscription) {this.authService.signOut()}
+    if (!myPushSubscription) {
+      this.authService.signOut();
+    }
   }
 
   rOutletOn() {

@@ -1,5 +1,5 @@
 import {
-AnimationEvent,
+  AnimationEvent,
   animate,
   group,
   keyframes,
@@ -8,9 +8,10 @@ AnimationEvent,
   transition,
   trigger,
 } from '@angular/animations';
-import { OnInit, ViewEncapsulation } from '@angular/core';
+import { OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Component } from '@angular/core';
 import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
+import { Subscription, interval } from 'rxjs';
 import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
@@ -19,8 +20,10 @@ import { AuthService } from 'src/app/services/auth.service';
   styleUrls: ['./home.component.scss'],
   encapsulation: ViewEncapsulation.None,
 })
-export class HomeComponent implements OnInit {
-  userLoggedIn: {} = {};
+export class HomeComponent implements OnInit, OnDestroy {
+  @ViewChild('toast') toast: any;
+  userLoggedIn: any = {};
+  userLoggedInSub!: Subscription;
 
   constructor(private ngbTConfig: NgbTooltipConfig, private auth: AuthService) {
     ngbTConfig.placement = 'bottom';
@@ -30,6 +33,43 @@ export class HomeComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.auth.isLoggedIn().subscribe((user: any) => (this.userLoggedIn = user));
+    this.userLoggedInSub = this.auth.isLoggedIn().subscribe((user: any) => {
+      this.userLoggedIn = {};
+      this.userLoggedIn = user;
+      if (this.userLoggedIn?.uid && user) {
+        this.toastStyler('add');
+      }
+      if (!user) {
+        this.toastStyler('remove');
+      }
+    });
+  }
+
+  toastStyler(removeOrAdd: string) {
+    const interval = setInterval(() => {
+      const strong = document.querySelector('.me-auto');
+      const toastHeader = document.querySelector('.toast-header');
+      if (removeOrAdd === 'add') {
+        strong?.classList.add('toast-strong');
+        toastHeader?.classList.add('toast-header-manual');
+        if (strong !== null && toastHeader !== null) clearInterval(interval);
+      }
+      if (removeOrAdd === 'remove') {
+        strong?.classList.remove('toast-strong');
+        toastHeader?.classList.remove('toast-header-manual');
+        if (strong === null && toastHeader === null) clearInterval(interval);
+      }
+    }, 200);
+  }
+
+  ngOnDestroy(): void {
+    this.userLoggedIn = {};
+    if (this.userLoggedInSub) {
+      this.userLoggedInSub.unsubscribe();
+    }
+    const strong = document.querySelector('.me-auto');
+    strong?.classList.remove('toast-strong');
+    const toastHeader = document.querySelector('.toast-header');
+    toastHeader?.classList.remove('toast-header-manual');
   }
 }
