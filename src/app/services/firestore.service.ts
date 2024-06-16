@@ -18,6 +18,7 @@ export class FirestoreService {
   picturesSubject: Subject<any> = new Subject();
   filesSubject: Subject<any> = new Subject();
   filesBehSubject: BehaviorSubject<any> = new BehaviorSubject([]);
+  postsNotiSubject: Subject<any> = new Subject();
 
   constructor(
     private fireStore: AngularFirestore,
@@ -39,7 +40,33 @@ export class FirestoreService {
   }
 
   getSharedPosts() {
-    return this.sharedPostRef.valueChanges();
+    return this.sharedPostRef.ref
+      .where('notSeen', '!=', [])
+      .get()
+      .then(querySnapshot => {
+        const posts: any[] = [];
+        querySnapshot.forEach((doc: any = {}) => {
+          posts.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(posts);
+        return posts;
+      });
+  }
+
+  refreshSharedPosts() {
+    return this.sharedPostRef.valueChanges('child_added');
+  }
+
+  updateDocument(docId: string, updatedData: any) {
+    return this.sharedPostRef
+      .doc(docId)
+      .update(updatedData)
+      .then(() => {
+        console.log('Document successfully updated!');
+      })
+      .catch(error => {
+        console.error('Error updating document: ', error);
+      });
   }
 
   getPrivatePosts(userKey: string): Observable<DocumentData> {

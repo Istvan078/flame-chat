@@ -1,4 +1,20 @@
-<form class="mt-3 d-grid" (ngSubmit)="onSubmit()" [formGroup]="publishForm">
+<div class="text-center mt-1">
+  <button
+    *ngIf="!isNewPost"
+    (click)="isNewPost = !isNewPost"
+    color="primary"
+    mat-raised-button
+    type="button"
+  >
+    Új bejegyzés
+  </button>
+</div>
+<form
+  *ngIf="isNewPost"
+  class="mt-3 d-grid"
+  (ngSubmit)="onSubmit()"
+  [formGroup]="publishForm"
+>
   <mat-form-field>
     <mat-label>Név</mat-label>
     <mat-icon matSuffix>person</mat-icon>
@@ -9,7 +25,7 @@
   </mat-form-field>
 
   <mat-form-field>
-    <mat-label>Üzenet szövege</mat-label>
+    <mat-label>Bejegyzés szövege</mat-label>
     <textarea formControlName="message" matInput rows="5"></textarea>
   </mat-form-field>
 
@@ -51,7 +67,7 @@
     </mat-select>
   </mat-form-field>
   <button class="shareButton" color="accent" mat-raised-button type="submit">
-    Megosztás
+    Új bejegyzés megosztása
   </button>
 </form>
 
@@ -62,7 +78,7 @@
     mat-raised-button
     type="button"
   >
-    Privát Posztjaim
+    Privát bejegyzéseim
   </button>
 </div>
 <ng-container *ngIf="showNotSharedPosts">

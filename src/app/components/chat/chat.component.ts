@@ -62,6 +62,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   sendPrivateMessageOn: boolean = false;
   messageButtonClicked: boolean = false;
   userMessages: boolean = false;
+  arePostsOn: boolean = false;
+
+  // POSZTOKKAL KAPCSOLATOS //
+  postsNotificationNumber: number = 0;
 
   // FÁJLOKKAL KAPCSOLATOS //
   selectedFiles: any[] = [];
@@ -88,6 +92,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   filesBehSubjectSub!: Subscription;
   haventSeenMsgsArrSubjSub!: Subscription;
   messSubscription!: Subscription;
+  postsNotiSub!: Subscription;
 
   constructor(
     private auth: AuthService,
@@ -158,6 +163,8 @@ export class ChatComponent implements OnInit, OnDestroy {
                 this.base.userKeySubject.next(this.userProfile?.key);
                 res('Sikeres felhasználói profil lekérés');
               }
+              this.refreshSharedPosts();
+              this.getNewPostsNotification();
             });
         });
     }).then(res => {
@@ -936,6 +943,23 @@ export class ChatComponent implements OnInit, OnDestroy {
     console.log(this.showFriendsMess);
   }
 
+  getNewPostsNotification() {
+    // this.firestore.getSharedPosts().then(posts => {
+    //   posts.map(post => {
+    //     if (post.notSeen.includes(this.userProfile.uid)) {
+    //       this.postsNotificationNumber += 1;
+    //       console.log(this.postsNotificationNumber);
+    //     }
+    //   });
+    // });
+    this.postsNotiSub = this.firestore.postsNotiSubject.subscribe(num => {
+      if (num === 0) this.postsNotificationNumber = num;
+      if (num > 0) {
+        this.postsNotificationNumber = num;
+      }
+    });
+  }
+
   toFriendProfile(friendId: string) {
     const promise = new Promise((res, rej) => {
       const friendProfile = this.userProfiles.find(uP => {
@@ -985,22 +1009,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     const onlineUser = {
       online: true,
     };
-    // document.addEventListener('visibilitychange', () => {
-    //   if (!document.hidden) {
-    //     this.base.updateUserData(onlineUser, this.userProfile.key);
-    //     this.userFriends?.map(fr => {
-    //       return this.userProfiles.map(uP => {
-    //         if (uP.uid === fr.friendId) {
-    //           fr.online = uP.online;
-    //           console.log(fr);
-    //         }
-    //       });
-    //     });
-    //   }
-    //   if (document.hidden)
-    //     this.base.updateUserData({ online: false }, this.userProfile.key);
-    //   // this.base.updateFriend(this.selec);
-    // });
     window.addEventListener('focus', e => {
       this.base.updateUserData(onlineUser, this.userProfile.key);
     });
@@ -1019,29 +1027,26 @@ export class ChatComponent implements OnInit, OnDestroy {
         return this.userProfiles.map(uP => {
           if (uP.uid === fr.friendId) {
             fr.online = uP.online;
-            // fr.lastTimeOnline = uP.lastTimeOnline;
-            // const lastTimeOnline = new Date(uP.lastTimeOnline as any);
             fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
-            console.log(this.showFriendsMess);
           }
         });
       });
       clearInterval(interval);
     }, 1000);
-
-    // setInterval(() => {
-    //   this.userFriends?.map(fr => {
-    //     return this.userProfiles.map(uP => {
-    //       if (uP.uid === fr.friendId) {
-    //         fr.online = uP.online;
-    //         // fr.lastTimeOnline = uP.lastTimeOnline;
-    //         // const lastTimeOnline = new Date(uP.lastTimeOnline as any);
-    //         fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
-    //         console.log(this.showFriendsMess);
-    //       }
-    //     });
-    //   });
-    // }, 30000);
+  }
+  seenPosts: any[] = [];
+  refreshSharedPosts() {
+    this.firestore.refreshSharedPosts().subscribe((sPosts: any[]) => {
+      sPosts.map(sPost => {
+        if (
+          sPost.notSeen.includes(this.userProfile.uid) &&
+          !this.seenPosts.includes(sPost.timeStamp)
+        ) {
+          this.seenPosts.push(sPost.timeStamp);
+          this.firestore.postsNotiSubject.next(this.seenPosts.length);
+        }
+      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -1069,6 +1074,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.messSubscription) {
       this.messSubscription.unsubscribe();
     }
-    // this.base.updateUserData({ online: false }, this.userProfile.key);
+    if (this.postsNotiSub) {
+      this.postsNotiSub.unsubscribe();
+    }
   }
 }

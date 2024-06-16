@@ -17,89 +17,29 @@
   <div class="col">
     <mat-accordion>
       <mat-expansion-panel class="mb-2">
-        <mat-expansion-panel-header class="d-grid justify-content-center">
-          <mat-panel-title class="pt-2">
-            Ismerősök
+        <mat-expansion-panel-header
+          (click)="arePostsOn = !arePostsOn"
+          class="d-grid justify-content-center"
+        >
+          <mat-panel-title class="pt-2"
+            >Nyilvános bejegyzések
             <mat-icon
               matBadgeSize="small"
-              [matBadgeDisabled]="!userFriends?.length"
-              [matBadge]="userFriends?.length"
+              [matBadgeDisabled]="!postsNotificationNumber"
+              matBadge="{{ postsNotificationNumber }}"
               matBadgeColor="primary"
               class="ms-2"
-              aria-hidden="false"
-              >groups</mat-icon
-            ></mat-panel-title
-          >
+              >feed</mat-icon
+            >
+          </mat-panel-title>
         </mat-expansion-panel-header>
-
-        <div class="row justify-content-center">
-          <div
-            class="col-12 col-md-4 col-lg-3 col-xl-2"
-            *ngFor="let friend of userFriends; let i = index"
-          >
-            <ng-container>
-              <ng-container>
-                <mat-card
-                  class="mb-2 mt-3 d-grid justify-content-center matCardBg"
-                >
-                  <mat-card-header class="d-grid justify-content-center">
-                    <mat-card-title>
-                      {{ friend.displayName }}
-                    </mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content class="d-flex justify-content-center"
-                    ><img
-                      [src]="friend.profilePicture"
-                      alt=""
-                      width="50px"
-                      height="50px"
-                      class="rounded"
-                  /></mat-card-content>
-                  <mat-card-footer>
-                    <mat-card-content
-                      class="d-flex flex-column justify-content-center flex-wrap"
-                    >
-                      <mat-card-subtitle class="text-center">
-                        {{ friend.email }}
-                      </mat-card-subtitle>
-                      <div class="text-center">
-                        <button
-                          style="width: max-content"
-                          matIconSuffix
-                          (click)="toFriendProfile(friend.friendId)"
-                          class="btn btn-sm btn-primary me-2 mb-1"
-                          type="button"
-                        >
-                          <span class="text-center align-middle"
-                            >Profil megtekintése
-                          </span>
-
-                          <mat-icon class="text-center align-middle"
-                            >person</mat-icon
-                          >
-                        </button>
-                        <button
-                          matIconSuffix
-                          (click)="removeFriend(friend.friendKey)"
-                          class="btn btn-sm btn-danger"
-                          type="button"
-                        >
-                          <span class="align-middle">Törlés</span>
-
-                          <mat-icon class="align-middle"
-                            >person_remove</mat-icon
-                          >
-                        </button>
-                      </div>
-                    </mat-card-content>
-                  </mat-card-footer>
-                </mat-card>
-              </ng-container>
-            </ng-container>
+        <div class="row">
+          <div class="col">
+            <app-news *ngIf="arePostsOn"></app-news>
           </div>
         </div>
       </mat-expansion-panel>
-      <mat-expansion-panel>
+      <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
           (click)="areFriendsOnline()"
           class="d-grid justify-content-center"
@@ -248,6 +188,89 @@
           </ng-container>
         </div>
       </mat-expansion-panel>
+      <mat-expansion-panel class="mb-2">
+        <mat-expansion-panel-header class="d-grid justify-content-center">
+          <mat-panel-title class="pt-2">
+            Ismerősök
+            <mat-icon
+              matBadgeSize="small"
+              [matBadgeDisabled]="!userFriends?.length"
+              [matBadge]="userFriends?.length"
+              matBadgeColor="primary"
+              class="ms-2"
+              aria-hidden="false"
+              >groups</mat-icon
+            ></mat-panel-title
+          >
+        </mat-expansion-panel-header>
+
+        <div class="row justify-content-center">
+          <div
+            class="col-12 col-md-4 col-lg-3 col-xl-2"
+            *ngFor="let friend of userFriends; let i = index"
+          >
+            <ng-container>
+              <ng-container>
+                <mat-card
+                  class="mb-2 mt-3 d-grid justify-content-center matCardBg"
+                >
+                  <mat-card-header class="d-grid justify-content-center">
+                    <mat-card-title>
+                      {{ friend.displayName }}
+                    </mat-card-title>
+                  </mat-card-header>
+                  <mat-card-content class="d-flex justify-content-center"
+                    ><img
+                      [src]="friend.profilePicture"
+                      alt=""
+                      width="50px"
+                      height="50px"
+                      class="rounded"
+                  /></mat-card-content>
+                  <mat-card-footer>
+                    <mat-card-content
+                      class="d-flex flex-column justify-content-center flex-wrap"
+                    >
+                      <mat-card-subtitle class="text-center">
+                        {{ friend.email }}
+                      </mat-card-subtitle>
+                      <div class="text-center">
+                        <button
+                          style="width: max-content"
+                          matIconSuffix
+                          (click)="toFriendProfile(friend.friendId)"
+                          class="btn btn-sm btn-primary me-2 mb-1"
+                          type="button"
+                        >
+                          <span class="text-center align-middle"
+                            >Profil megtekintése
+                          </span>
+
+                          <mat-icon class="text-center align-middle"
+                            >person</mat-icon
+                          >
+                        </button>
+                        <button
+                          matIconSuffix
+                          (click)="removeFriend(friend.friendKey)"
+                          class="btn btn-sm btn-danger"
+                          type="button"
+                        >
+                          <span class="align-middle">Törlés</span>
+
+                          <mat-icon class="align-middle"
+                            >person_remove</mat-icon
+                          >
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card-footer>
+                </mat-card>
+              </ng-container>
+            </ng-container>
+          </div>
+        </div>
+      </mat-expansion-panel>
 
       <mat-expansion-panel class="mt-2">
         <mat-expansion-panel-header
@@ -262,20 +285,6 @@
         <div class="row">
           <div class="col">
             <app-user-profile *ngIf="isUserProfileOn"></app-user-profile>
-          </div>
-        </div>
-      </mat-expansion-panel>
-
-      <mat-expansion-panel class="mt-2">
-        <mat-expansion-panel-header class="d-grid justify-content-center">
-          <mat-panel-title
-            >Üzenőfal
-            <mat-icon class="ms-2">feed</mat-icon>
-          </mat-panel-title>
-        </mat-expansion-panel-header>
-        <div class="row">
-          <div class="col">
-            <app-news></app-news>
           </div>
         </div>
       </mat-expansion-panel>

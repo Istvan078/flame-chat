@@ -20,6 +20,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   publishForm!: FormGroup;
   chosenFiles: any;
   userProfile: UserClass = new UserClass();
+  userProfilesUidsArr: Partial<UserClass[]> | any[] = [];
   uploadedPictures: any[] = [];
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
@@ -28,6 +29,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   uploadCompleted: boolean = false;
   notShared: boolean = false;
   showNotSharedPosts: boolean = false;
+  isNewPost: boolean = false;
 
   constructor(
     private fBuilder: FormBuilder,
@@ -39,7 +41,9 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.auth.getUser().then((user: UserClass) => {
       this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
-        let userProfile = userProfiles.filter((uP) => uP.uid === user.uid);
+        this.userProfilesUidsArr = userProfiles.map(uP => uP.uid);
+        console.log(this.userProfilesUidsArr);
+        let userProfile = userProfiles.filter(uP => uP.uid === user.uid);
         Object.assign(this.userProfile, ...userProfile);
       });
     });
@@ -48,13 +52,14 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       name: [{ value: this.userProfile.displayName, disabled: true }],
       message: ['', [Validators.required, Validators.minLength(5)]],
       pictures: this.fBuilder.array([]),
+      notSeen: [...this.userProfilesUidsArr],
       sharing: ['yes'],
       timeStamp: [''],
       displayName: [this.userProfile.displayName],
     });
 
     this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
-      (picture) => {
+      picture => {
         this.picturesArray.push(picture);
       }
     );
@@ -62,7 +67,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.picturesSubscription.unsubscribe();
 
     this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
-      (picture) => {
+      picture => {
         this.picturesArray.push(picture);
       }
     );
@@ -73,13 +78,26 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.firestoreService
         .getPrivatePosts(this.userProfile.key as string)
         .subscribe((privatePosts: any) => (this.privatePosts = privatePosts));
-
-      this.firestoreService.getSharedPosts().subscribe((res: any[]) => {
-        this.sharedPosts = res;
-      });
       this.publishForm.patchValue({
         name: this.userProfile.displayName,
         displayName: this.userProfile.displayName,
+      });
+
+      this.firestoreService.getSharedPosts().then((res: any[]) => {
+        this.sharedPosts = res;
+        console.log(this.sharedPosts);
+        this.sharedPosts.map((sP: any) => {
+          if (sP.notSeen.includes(this.userProfile.uid)) {
+            const filteredArr = sP.notSeen.filter(
+              (uid: any) => uid !== this.userProfile.uid
+            );
+            console.log(filteredArr);
+            this.firestoreService.updateDocument(sP.id, {
+              notSeen: filteredArr,
+            })
+            .then(() => this.firestoreService.postsNotiSubject.next(0));
+          }
+        });
       });
     }, 1000);
   }
@@ -92,10 +110,12 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.chosenFiles) {
       this.uploadFiles();
     }
+    this.isNewPost = false;
     setTimeout(() => {
       const date: Date = new Date();
       this.publishForm.patchValue({
         timeStamp: date.toLocaleDateString() + ' ' + date.toLocaleTimeString(),
+        notSeen: [...this.userProfilesUidsArr],
       });
       this.privatePost = this.publishForm.value;
       this.privatePost.pictures = this.picturesArray;
@@ -108,6 +128,13 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.notShared) this.showNotSharedPosts = true;
     }, 3000);
   }
+
+  // isPostSeen() {
+  //   this.base.getUserProfiles().subscribe((uProfs: any[]) => {
+  //     this.userProfiles = uProfs.map(uP => uP.uid);
+  //     console.log(this.userProfiles);
+  //   });
+  // }
 
   addPictures() {
     const arrayControl = this.fBuilder.control(null);
@@ -126,10 +153,10 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   uploadFiles() {
     let proba = Array.from(this.publishForm.get('pictures')?.value[0]);
-    proba.map((file) =>
+    proba.map(file =>
       this.firestoreService
         .addPublicPictures(file)
-        .subscribe((percent) => console.log(percent))
+        .subscribe(percent => console.log(percent))
     );
   }
 }
