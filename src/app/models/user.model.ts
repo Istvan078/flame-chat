@@ -11,6 +11,8 @@ export interface Friends {
   seenMe?: boolean;
   friendKey?: string;
   profilePicture?: string;
+  online?: boolean;
+  lastTimeOnline?: any;
 }
 
 export class UserClass {
@@ -26,6 +28,8 @@ export class UserClass {
   public email?: string;
   public claims: Claims;
   public idToken?: string;
+  public online?: boolean;
+  public lastTimeOnline?: number;
   public key: string = '';
   public uid: string = '';
   constructor(
@@ -53,15 +57,15 @@ export class UserClass {
   ageCalc() {
     const date = new Date().toLocaleDateString().split('/').reverse();
     let birthDate;
-    if(this.birthDate.includes("-")){
+    if (this.birthDate.includes('-')) {
       birthDate = this.birthDate.trim().split('-');
-    } 
+    }
     // else if(this.birthDate.includes(".")){
     //   birthDate = this.birthDate.trim().split('.');
     // } else if(this.birthDate.includes("/")){
     //   birthDate = this.birthDate.trim().split('/');
     // }
-    
+
     const actDateObj = {
       year: Number(date[0].substring(0, 4)),
       month: Number(date[2].substring(0, 2)),
@@ -79,6 +83,4 @@ export class UserClass {
       (birthDateObj.month * 30 - actDateObj.month * 30) / 360;
     this.age = Math.floor(this.age);
   }
-
-
 }

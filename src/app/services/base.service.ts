@@ -150,7 +150,7 @@ export class BaseService implements OnDestroy {
 
   getNewMessages() {
     const ref = this.realTimeDatabase.list('chats', ref2 =>
-      ref2.orderByChild('message/timeStamp').limitToLast(5)
+      ref2.orderByChild('message/timeStamp').limitToLast(10)
     );
     return ref
       .snapshotChanges(['child_added'])
@@ -289,17 +289,9 @@ export class BaseService implements OnDestroy {
     return this.http.get(this.apiUrl + `weather?address=${location}`);
   }
 
-
-
-
-
   deleteAllNotes() {
     return this.http.delete(
       'https://project0781-default-rtdb.europe-west1.firebasedatabase.app/notes.json'
     );
   }
-
-
-
-
 }

@@ -101,6 +101,7 @@
       </mat-expansion-panel>
       <mat-expansion-panel>
         <mat-expansion-panel-header
+          (click)="areFriendsOnline()"
           class="d-grid justify-content-center"
           [ngClass]="haventSeenMessagesArr!.length > 0 ? 'newMessage' : ''"
         >
@@ -125,7 +126,7 @@
               type="button"
             >
               <mat-icon class="align-middle">message</mat-icon>
-              Új üzenet
+              Új üzenet (ismerős kiválasztása)
             </button>
             <!-- MEGCSINÁLNI -->
             <ng-container *ngIf="showFriendsToChoose">
@@ -140,11 +141,44 @@
                   {{ mess.displayName }}
                   <a
                     (click)="firstMessageToFriend(mess)"
-                    class="btn btn-primary"
+                    class="btn btn-success text-white fs-5 mx-2"
+                    ><span>Üzenet írása </span
                     ><mat-icon class="align-middle"> message </mat-icon>
                   </a>
                 </h2>
               </h4>
+            </ng-container>
+            <button
+              (click)="showAllFriends = !showAllFriends"
+              class="btn btn-success my-2 mx-2"
+              type="button"
+            >
+              <mat-icon class="align-middle">message</mat-icon>
+              Új üzenet (összes ismerős listázása)
+            </button>
+            <ng-container *ngIf="showAllFriends">
+              <div class="row justify-content-center">
+                <div
+                  class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2"
+                  *ngFor="let mess of showFriendsMess"
+                >
+                  <h4 class="mb-0 mt-2">{{ mess.displayName }}</h4>
+                  <img
+                    class="rounded-circle"
+                    width="50px"
+                    height="50px"
+                    [src]="mess.profilePicture"
+                    alt=""
+                  />
+                  <button
+                    (click)="firstMessageToFriend(mess)"
+                    class="btn btn-success fs-5 ms-2"
+                    type="button"
+                  >
+                    Új üzenet
+                  </button>
+                </div>
+              </div>
             </ng-container>
           </div>
           <ng-container *ngFor="let mess of showFriendsMess; let i = index">
@@ -177,13 +211,30 @@
                         height="50px"
                         class="rounded-circle"
                       />
-                      <p class="card-text"></p>
+                      <div
+                        *ngIf="mess.online"
+                        class="card-text online-dot-container"
+                      >
+                        <div class="online-dot"></div>
+                        <div class="online-text">Elérhető</div>
+                      </div>
+                      <div
+                        *ngIf="!mess.online"
+                        class="card-text last-time-online-container"
+                      >
+                        <p class="mt-1 text-dark mb-0">
+                          <b>Utoljára elérhető:</b>
+                        </p>
+                        <p class="mb-0 my-0 text-success">
+                          {{ mess.lastTimeOnline }}
+                        </p>
+                      </div>
                     </div>
                     <div class="card-footer">
                       <button
                         (click)="getMessageUser(mess, i)"
                         mat-raised-button
-                        class="btn btn-sm ms-2 blue"
+                        class="btn btn-sm ms-2 blue msg-button"
                         type="button"
                       >
                         Üzenetek

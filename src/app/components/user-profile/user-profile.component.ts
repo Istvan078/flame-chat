@@ -34,7 +34,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   userProf: UserClass = new UserClass();
   userPictures: any[] = [];
   userBirthDate: string = '';
-  newDate: string = new Date().toLocaleString()
+  newDate: string = new Date().toLocaleString();
 
   registeredSuccessfully: boolean = false;
   registeredWithPhone!: boolean;
@@ -59,20 +59,20 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
       (url: string) => {
         this.profilePhotoUrl = url;
-        console.log(this.profilePhotoUrl)
+        console.log(this.profilePhotoUrl);
       }
     );
-    this.picturesSubscription = this.base.picturesSubject.subscribe((url) => {
+    this.picturesSubscription = this.base.picturesSubject.subscribe(url => {
       this.picturesUrl.push(url);
     });
   }
 
   ngAfterViewInit(): void {
-    new Promise((res) => {
+    new Promise(res => {
       this.router.params.subscribe((param: Params) => {
         this.base.getUserProfiles().subscribe((userProfiles: UserClass[]) => {
           const userProfil = userProfiles.filter(
-            (userProfile) => userProfile['uid'] === param['uid']
+            userProfile => userProfile['uid'] === param['uid']
           );
           this.userProf = Object.assign(this.userProf, ...userProfil);
           if (!this.userProf.birthDate) {
@@ -87,16 +87,16 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           res('Sikeres profillekérés');
         });
       });
-    }).then((res) => {
+    }).then(res => {
       this.base
         .getData(this.userProf)
         .snapshotChanges()
         .pipe(
-          map((changes) =>
-            changes.map((c) => ({ key: c.payload.key, ...c.payload.val() }))
+          map(changes =>
+            changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
           )
         )
-        .subscribe((pictures) => (this.userPictures = pictures));
+        .subscribe(pictures => (this.userPictures = pictures));
     });
   }
 
@@ -109,22 +109,22 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   saveProfile() {
-    new Promise((res) => {
+    new Promise(res => {
       this.auth.isLoggedIn().subscribe((user: any) => {
-        this.base.getUserProfiles().subscribe((userProfiles) => {
+        this.base.getUserProfiles().subscribe(userProfiles => {
           let userProfile = userProfiles.filter(
             (userProfile: any) => userProfile.uid === user.uid
           );
-           
+
           this.userProf.uid = user.uid;
           this.userProf.key = userProfile[0].key;
-          console.log(this.userProf.birthDate)
+          console.log(this.userProf.birthDate);
           // this.userProf.ageCalc();
-          if (
-            this.userProf.profilePicture == '' ||
-            this.userProf.profilePicture == undefined
-          ) {
+          if (this.profilePhotoUrl) {
             this.userProf.profilePicture = this.profilePhotoUrl;
+          } else if (!this.userProf.profilePicture) {
+            this.userProf.profilePicture =
+              'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
           } else {
             this.userProf.profilePicture = userProfile[0].profilePicture;
           }
@@ -132,15 +132,15 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
         });
       });
     })
-      .then((res) => {
+      .then(res => {
         this.base.updateUserData(this.userProf, this.userProf.key);
       })
       .then(() => this.route.navigate(['chat']));
   }
 
   addPictures() {
-    Array.from(this.pictures).forEach((file) => {
-      this.base.addPictures(this.userProf, file).subscribe((percent) => {
+    Array.from(this.pictures).forEach(file => {
+      this.base.addPictures(this.userProf, file).subscribe(percent => {
         this.percent = percent!;
       });
     });
@@ -153,22 +153,22 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   addProfilePic() {
     this.base
       .addProfilePicture(this.profilePhoto)
-      .subscribe((percent) => (this.percent = percent!));
+      .subscribe(percent => (this.percent = percent!));
   }
 
   changeProfilePic() {
     this.userProf.profilePicture = '';
     this.base
       .addProfilePicture(this.profilePhoto)
-      .subscribe((percent) => (this.percent = percent!));
+      .subscribe(percent => (this.percent = percent!));
   }
 
   viewPic(i: number) {
     const actModal = this.modalRef.open(FilesModalComponent, {
-      centered: true
-    })
-    actModal.componentInstance.picturesArr = this.userPictures
-    actModal.componentInstance.viewIndex = i
+      centered: true,
+    });
+    actModal.componentInstance.picturesArr = this.userPictures;
+    actModal.componentInstance.viewIndex = i;
   }
 
   deleteUserPicture(file: any, i: number) {

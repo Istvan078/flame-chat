@@ -39,6 +39,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   isSAdmin: boolean = false;
   isUserProfileOn: boolean = false;
   showFriendsToChoose: boolean = false;
+  showAllFriends: boolean = false;
   friendsOn: boolean = false;
 
   // ISMERŐS KERESÉSE //
@@ -104,6 +105,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     //     console.log(this.friendPushSub)
     //   });
     // }
+    this.test();
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
     });
@@ -254,6 +256,7 @@ export class ChatComponent implements OnInit, OnDestroy {
                 displayName: prof?.displayName,
                 profilePicture: prof?.profilePicture,
                 email: prof?.email,
+                online: prof?.online,
               });
             }
           });
@@ -292,6 +295,10 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.base.userFriendsSubject
           );
           this.subjectValueTransfer(2, this.auth.authNullSubject);
+          setTimeout(() => {
+            this.setDefaultProfilePic();
+          }, 200000);
+          this.isOnline();
         }
         res('Sikeres barátok listája lekérés');
       });
@@ -337,6 +344,28 @@ export class ChatComponent implements OnInit, OnDestroy {
         });
       });
     });
+  }
+
+  setDefaultProfilePic() {
+    this.userProfiles.map(uP => {
+      if (!uP.profilePicture) {
+        uP.profilePicture =
+          'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
+        this.base.updateUserData({ profilePicture: uP.profilePicture }, uP.key);
+      }
+    });
+  }
+
+  changeTimeStampFormatForAllMessages() {
+    // this.base.getMessages().subscribe((mess: any) => {
+    //   mess.map((msg: Chat) => {
+    //     if (msg.message)
+    //       (msg.message.timeStamp as any) = new Date(
+    //         msg.message?.timeStamp as any
+    //       ).getTime();
+    //     this.base.updateMessage(msg.key, msg);
+    //   });
+    // });
   }
 
   toUserProfile() {
@@ -509,8 +538,6 @@ export class ChatComponent implements OnInit, OnDestroy {
             mess.message.message.indexOf(transformedUrl)
           )
         );
-        console.log('if ág lefutott', formattedText1stHalf);
-        console.log('if ág lefutott', formattedText2ndHalf);
         this.urlText.push(
           {
             url: transformedUrl,
@@ -524,20 +551,30 @@ export class ChatComponent implements OnInit, OnDestroy {
         !mess.message.message.includes(' ') &&
         !this.urlText.includes(mess.key)
       ) {
-        console.log('else if ág lefutott', i);
         this.urlText.push(
           { url: mess.message.message, chatId: mess.key },
           mess.key
         );
       }
     });
+    // this.visibleMessages.map(mess => {
+    //   if (
+    //     !mess.message.seen &&
+    //     mess.message.senderId === this.selectedFriend.friendId
+    //   ) {
+    //     mess.message.seen = true;
+    //     this.base.updateMessage(mess.key, mess);
+    //   }
+    // });
     return this.visibleMessages;
   }
 
   updateSeenMessages() {
     // látott üzenetek kiszűrése a tömbből
+    console.log(this.haventSeenMessagesArr);
     this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
       if (mess.message.senderId === this.selectedFriend.friendId) {
+        console.log(mess);
         mess.message.seen = true;
         this.base.updateMessage(mess.key, mess);
         return undefined;
@@ -574,6 +611,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             msg.message.senderId != this.userProfile.uid &&
             msg.participants[1] === this.userProfile.uid
         );
+        console.log(mess);
       }
 
       for (let msg of msgArr) {
@@ -652,12 +690,15 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  test() {}
+
   addMessage() {
     new Promise((res, rej) => {
-      const actualTime = new Date().toLocaleString();
+      const actualTime = new Date().getTime();
+      console.log(actualTime);
       if (this.userProfile.uid)
         this.message.message.senderId = this.userProfile.uid;
-      this.message.message.timeStamp = actualTime;
+      this.message.message.timeStamp = actualTime as any;
       this.message.participants[0] =
         this.userProfile.uid + '-' + new Date().getTime();
       this.message.participants[1] = this.selectedFriend.friendId;
@@ -892,6 +933,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     this.showFriendsMess = filteredFriendsArr;
+    console.log(this.showFriendsMess);
   }
 
   toFriendProfile(friendId: string) {
@@ -939,6 +981,69 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
+  isOnline() {
+    const onlineUser = {
+      online: true,
+    };
+    // document.addEventListener('visibilitychange', () => {
+    //   if (!document.hidden) {
+    //     this.base.updateUserData(onlineUser, this.userProfile.key);
+    //     this.userFriends?.map(fr => {
+    //       return this.userProfiles.map(uP => {
+    //         if (uP.uid === fr.friendId) {
+    //           fr.online = uP.online;
+    //           console.log(fr);
+    //         }
+    //       });
+    //     });
+    //   }
+    //   if (document.hidden)
+    //     this.base.updateUserData({ online: false }, this.userProfile.key);
+    //   // this.base.updateFriend(this.selec);
+    // });
+    window.addEventListener('focus', e => {
+      this.base.updateUserData(onlineUser, this.userProfile.key);
+    });
+    window.addEventListener('blur', e => {
+      this.base.updateUserData({ online: false }, this.userProfile.key);
+      this.base.updateUserData(
+        { lastTimeOnline: new Date().getTime() },
+        this.userProfile.key
+      );
+    });
+  }
+
+  areFriendsOnline() {
+    const interval = setInterval(() => {
+      this.userFriends?.map(fr => {
+        return this.userProfiles.map(uP => {
+          if (uP.uid === fr.friendId) {
+            fr.online = uP.online;
+            // fr.lastTimeOnline = uP.lastTimeOnline;
+            // const lastTimeOnline = new Date(uP.lastTimeOnline as any);
+            fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+            console.log(this.showFriendsMess);
+          }
+        });
+      });
+      clearInterval(interval);
+    }, 1000);
+
+    // setInterval(() => {
+    //   this.userFriends?.map(fr => {
+    //     return this.userProfiles.map(uP => {
+    //       if (uP.uid === fr.friendId) {
+    //         fr.online = uP.online;
+    //         // fr.lastTimeOnline = uP.lastTimeOnline;
+    //         // const lastTimeOnline = new Date(uP.lastTimeOnline as any);
+    //         fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+    //         console.log(this.showFriendsMess);
+    //       }
+    //     });
+    //   });
+    // }, 30000);
+  }
+
   ngOnDestroy(): void {
     if (this.userLoggedInSubscription) {
       this.userLoggedInSubscription.unsubscribe();
@@ -964,5 +1069,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.messSubscription) {
       this.messSubscription.unsubscribe();
     }
+    // this.base.updateUserData({ online: false }, this.userProfile.key);
   }
 }

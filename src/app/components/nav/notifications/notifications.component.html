@@ -5,40 +5,59 @@
 </mat-toolbar> -->
 
 <mat-sidenav-container *ngIf="sideNavToggle">
-  <mat-sidenav [opened]="sideNavToggle" #sidenav position="end">
-
-  </mat-sidenav>
-   <mat-sidenav-content>
+  <mat-sidenav [opened]="sideNavToggle" #sidenav position="end"> </mat-sidenav>
+  <mat-sidenav-content>
     <mat-card
-    style="padding-top: 10px;"
-    class="mt-1"
-    *ngIf="friendsSeenMe.length && lastFriendSeenMe.displayName !== ''"
-  >
-    <mat-card-content>
-      <mat-card-subtitle (click)="toVisitedMe()" [matBadge]="friendsSeenMe.length">
-        <b>{{ lastFriendSeenMe.displayName }}</b>
-        {{ friendsSeenMe.length > 1 ? 'és további ' + (friendsSeenMe.length - 1) + ' ember megtekintette a profilodat' : 'megtekintette a profilodat'}}
-      </mat-card-subtitle>
-    </mat-card-content>
-  </mat-card>
+      style="padding-top: 10px"
+      class="mt-1"
+      *ngIf="friendsSeenMe.length && lastFriendSeenMe.displayName !== ''"
+    >
+      <mat-card-content>
+        <mat-card-subtitle
+          (click)="toVisitedMe()"
+          [matBadge]="friendsSeenMe.length"
+        >
+          <b>{{ lastFriendSeenMe.displayName }}</b>
+          {{
+            friendsSeenMe.length > 1
+              ? 'és további ' +
+                (friendsSeenMe.length - 1) +
+                ' ember megtekintette a profilodat'
+              : 'megtekintette a profilodat'
+          }}
+        </mat-card-subtitle>
+      </mat-card-content>
+    </mat-card>
 
-  <mat-card
-  style="padding-top: 10px;"
-  class="mt-1"
-  *ngIf="newMessages.length && lastNewMessage.message.displayName !== ''"
->
-  <mat-card-content>
-    <mat-card-subtitle (click)="toVisitedMe()" [matBadge]="newMessages.length">
-      <b>{{ lastNewMessage.message.displayName }}</b>
-      {{ newMessages.length > 1 ? 'és további ' + (newMessages.length - 1) + ' ember írt neked új üzenetet' : 'írt neked új üzenetet'}}
-    </mat-card-subtitle>
-  </mat-card-content>
-</mat-card>
-   </mat-sidenav-content> 
+    <mat-card
+      style="padding-top: 10px"
+      class="mt-1"
+      *ngIf="newMessages.length && lastNewMessage.message.displayName !== ''"
+    >
+      <mat-card-content>
+        <mat-card-subtitle
+          (click)="toVisitedMe()"
+          [matBadge]="newMessages.length"
+        >
+          <b>{{ lastNewMessage.message.displayName }}</b>
+          {{
+            newMessages.length > 1
+              ? 'írt neked és további ' +
+                (newMessages.length - 1) +
+                ' új üzenet érkezett'
+              : 'írt neked új üzenetet'
+          }}
+        </mat-card-subtitle>
+      </mat-card-content>
+    </mat-card>
+  </mat-sidenav-content>
 </mat-sidenav-container>
 
 <div *ngIf="!backToChats" class="container">
-<app-visited-me [newMessages]="newMessages" (backToChats)="backToChats = $event" [friendsSeenMe]="friendsSeenMe" *ngIf="toVisitedMeOn"></app-visited-me>
+  <app-visited-me
+    [newMessages]="newMessages"
+    (backToChats)="backToChats = $event"
+    [friendsSeenMe]="friendsSeenMe"
+    *ngIf="toVisitedMeOn"
+  ></app-visited-me>
 </div>
-
-

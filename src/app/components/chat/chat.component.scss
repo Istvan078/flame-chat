@@ -22,7 +22,6 @@
   height: 40vh;
 }
 
-
 .seenDiv {
   width: 100%;
   display: flex;
@@ -37,14 +36,13 @@
   width: fit-content;
 }
 
-mat-expansion-panel-header{
+mat-expansion-panel-header {
   grid-template-columns: auto auto;
   background-color: rgba(209, 230, 18, 0.4) !important;
 }
-mat-expansion-panel-header:hover{
+mat-expansion-panel-header:hover {
   background-color: rgba(209, 230, 18, 0.7) !important;
 }
-
 
 .icons {
   position: relative;
@@ -75,16 +73,16 @@ mat-expansion-panel-header:hover{
   height: 30vh;
 }
 
-.searchContainer{
+.searchContainer {
   width: 100%;
   display: flex;
   justify-content: center;
-  div input{
+  div input {
     background-color: rgba(125, 32, 212, 0.3);
     overflow: auto;
   }
-  div input:focus{
-    background-color: rgba(125, 32, 212, 0.5);;
+  div input:focus {
+    background-color: rgba(125, 32, 212, 0.5);
   }
 }
 
@@ -99,6 +97,24 @@ mat-expansion-panel-header:hover{
   background-color: rgba(255, 255, 255, 0.952);
   padding: 5px;
   border-radius: 5px;
+}
+
+.online-dot-container {
+  margin-top: 5px;
+  display: flex;
+  justify-content: center;
+  .online-dot {
+    margin-top: 2.5px;
+    height: 13px;
+    width: 13px;
+    border-radius: 50%;
+    background-color: green;
+    margin-right: 5px;
+  }
+  .online-text {
+    color: blue;
+    font-weight: bold;
+  }
 }
 
 .buttonCont {
@@ -148,8 +164,8 @@ mat-expansion-panel-header:hover{
 }
 
 .allMessagesContainer {
-  overflow-x:hidden;
-  overflow-y:auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   max-height: 60vh !important;
 }
 
@@ -176,7 +192,6 @@ mat-expansion-panel-header:hover{
 .mainDivUsers {
   margin-bottom: 10px;
   width: 70vw !important;
-
 }
 
 @media screen and (max-width: 400px) {
@@ -203,6 +218,9 @@ mat-expansion-panel-header:hover{
   .timeDivRight {
     justify-content: start !important;
     margin-left: 37px;
+  }
+  .card-footer {
+    height: 8vh !important;
   }
 }
 
@@ -354,11 +372,32 @@ mat-expansion-panel-header:hover{
   margin-left: 100px;
   padding-left: 20px;
 }
- .blue{
-   background-color: rgba(8, 8, 156, 0.6) !important;
+.blue {
+  background-color: rgba(8, 8, 156, 0.6) !important;
 }
 
-.sendMessageOpenButton{
+.card {
+  position: relative;
+}
+
+.card-footer {
+  position: relative;
+  height: 4vh;
+  mat-icon {
+    font-size: 1.2rem;
+  }
+}
+
+.msg-button {
+  color: white !important;
+  font-size: 1.2rem;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-55%, -50%);
+}
+
+.sendMessageOpenButton {
   margin-bottom: 0 !important;
   position: fixed;
   bottom: 0;
@@ -370,6 +409,6 @@ mat-expansion-panel-header:hover{
 
 .fileButton {
   label {
-    cursor: pointer !important
+    cursor: pointer !important;
   }
 }

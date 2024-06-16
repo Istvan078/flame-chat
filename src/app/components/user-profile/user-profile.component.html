@@ -1,16 +1,17 @@
 <!-- <div class="row justify-content-center">
   <div class="col-12 col-md-7 col-lg-8 col-xl-8"> -->
-    <div   class="d-flex flex-wrap justify-content-center">
-      <form
-      
-      class="d-flex flex-column flex-wrap justify-content-center"
-      (ngSubmit)="saveProfile()"
-      #f="ngForm"
-        >
-      <mat-vertical-stepper [animationDuration]="'2000'" style="width: 90vw;" linear>
-        <mat-step [stepControl]="f.form.value" label="Alapadatok">
-      
-      
+<div class="d-flex flex-wrap justify-content-center">
+  <form
+    class="d-flex flex-column flex-wrap justify-content-center"
+    (ngSubmit)="saveProfile()"
+    #f="ngForm"
+  >
+    <mat-vertical-stepper
+      [animationDuration]="'2000'"
+      style="width: 90vw"
+      linear
+    >
+      <mat-step [stepControl]="f.form.value" label="Alapadatok">
         <mat-form-field class="me-2">
           <mat-label for="email">Email</mat-label>
           <input
@@ -59,9 +60,10 @@
           </label>
         </div>
         <div class="d-flex justify-content-end">
-          <button color="primary" mat-flat-button matStepperNext type="button">Következő</button>
+          <button color="primary" mat-flat-button matStepperNext type="button">
+            Következő
+          </button>
         </div>
-      
       </mat-step>
       <mat-step [stepControl]="f.form.value" label="Töltsd fel a profilképed">
         <div class="mt-2">
@@ -77,9 +79,9 @@
             [(ngModel)]="profilePhoto"
             type="file"
             name="profilePicture"
-            [required]="!userProf.profilePicture"
           />
-          <button [disabled]="!profilePhoto"
+          <button
+            [disabled]="!profilePhoto"
             (click)="
               userProf.profilePicture ? changeProfilePic() : addProfilePic()
             "
@@ -109,12 +111,11 @@
           <div
             *ngIf="percent === 0 || pictures; else newPic"
             class="col-12 d-flex justify-content-center align-items-center"
-            style="height: 40vh;"
-      
+            style="height: 40vh"
           >
             <img
-            width="100%"
-            height="100%"
+              width="100%"
+              height="100%"
               class="rounded"
               [src]="userProf.profilePicture"
               [alt]="userProf.profilePicture"
@@ -129,12 +130,20 @@
           </div>
         </ng-template>
         <div class="d-flex mt-2 justify-content-between">
-          <button mat-flat-button color="accent" matStepperPrevious type="button">Vissza</button>
-          <button mat-flat-button color="primary" matStepperNext type="button">Következő</button>
+          <button
+            mat-flat-button
+            color="accent"
+            matStepperPrevious
+            type="button"
+          >
+            Vissza
+          </button>
+          <button mat-flat-button color="primary" matStepperNext type="button">
+            Következő
+          </button>
         </div>
-         
-        </mat-step>
-        <mat-step [stepControl]="f.form.value" label="Albumod">
+      </mat-step>
+      <mat-step [stepControl]="f.form.value" label="Albumod">
         <div *ngIf="userBirthDate" class="mb-2">
           <h2 class="text-center">
             <label id="profilePicture" class="form-label" for="profilePicture"
@@ -149,7 +158,7 @@
             multiple
           />
           <button
-          [disabled]="!pictures"
+            [disabled]="!pictures"
             (click)="addPictures()"
             type="button"
             class="btn btn-primary mt-1"
@@ -175,20 +184,27 @@
         </div>
         <div>
           <mat-list>
-            <div mat-subheader>
-              Mappa
-            </div>
+            <div mat-subheader>Mappa</div>
             <mat-list-item (click)="showPics = !showPics">
-              <mat-icon [ngClass]="[showPics ? 'folderOpened' : 'folder']" matListItemIcon>{{!showPics ? 'folder' : 'folder_open'}}</mat-icon>
+              <mat-icon
+                [ngClass]="[showPics ? 'folderOpened' : 'folder']"
+                matListItemIcon
+                >{{ !showPics ? 'folder' : 'folder_open' }}</mat-icon
+              >
               <mat-icon *ngIf="showPics" matListItemIcon>expand_more</mat-icon>
-              <div class="d-inline" matListItemTitle>Képeim - </div>
-              <div class="d-inline" matListItemLine>{{newDate}}</div>
+              <div class="d-inline" matListItemTitle>Képeim -</div>
+              <div class="d-inline" matListItemLine>{{ newDate }}</div>
             </mat-list-item>
-
           </mat-list>
         </div>
-        <div *ngIf="showPics" class="d-flex m-0 justify-content-start flex-wrap">
-          <div *ngFor="let pic of userPictures; let i = index" class="mb-2 mx-2">
+        <div
+          *ngIf="showPics"
+          class="d-flex m-0 justify-content-start flex-wrap"
+        >
+          <div
+            *ngFor="let pic of userPictures; let i = index"
+            class="mb-2 mx-2"
+          >
             <a (click)="viewPic(i)">
               <img
                 [src]="pic.url"
@@ -202,26 +218,49 @@
         </div>
         <mat-divider></mat-divider>
         <div class="d-flex mt-2 justify-content-between">
-          <button mat-flat-button color="accent" matStepperPrevious type="button">Vissza</button>
-          <button mat-flat-button color="primary" matStepperNext type="button">Következő</button>
+          <button
+            mat-flat-button
+            color="accent"
+            matStepperPrevious
+            type="button"
+          >
+            Vissza
+          </button>
+          <button mat-flat-button color="primary" matStepperNext type="button">
+            Következő
+          </button>
         </div>
-      
-        </mat-step>
-        <mat-step>
-      <ng-template matStepLabel>Kész</ng-template>
-      <h3>Már készen is vagyunk. Kattints a profil mentése gombra és megkezdheted a csevegést.</h3>
-      <div class="d-flex justify-content-between">
-        <button class="me-2" mat-flat-button color="accent" matStepperPrevious type="button">Vissza</button>
-        <button [disabled]="!f.valid" color="primary" mat-raised-button type="submit">
-          Profil mentése
-        </button>
-      </div>
-      
-        </mat-step>
-      </mat-vertical-stepper>
-      </form>
-    </div>
-          <!-- <div  *ngIf="userPictures.length > 0" [attr.data-bs-interval]="false" id="picturesCarousel" class="carousel slide" data-bs-ride="carousel">
+      </mat-step>
+      <mat-step>
+        <ng-template matStepLabel>Kész</ng-template>
+        <h3>
+          Már készen is vagyunk. Kattints a profil mentése gombra és
+          megkezdheted a csevegést.
+        </h3>
+        <div class="d-flex justify-content-between">
+          <button
+            class="me-2"
+            mat-flat-button
+            color="accent"
+            matStepperPrevious
+            type="button"
+          >
+            Vissza
+          </button>
+          <button
+            [disabled]="!f.valid"
+            color="primary"
+            mat-raised-button
+            type="submit"
+          >
+            Profil mentése
+          </button>
+        </div>
+      </mat-step>
+    </mat-vertical-stepper>
+  </form>
+</div>
+<!-- <div  *ngIf="userPictures.length > 0" [attr.data-bs-interval]="false" id="picturesCarousel" class="carousel slide" data-bs-ride="carousel">
             <div  class="carousel-indicators">
               <button *ngFor="let pic of userPictures; let i = index" type="button" [attr.data-bs-target]="'#picturesCarousel'" [attr.data-bs-slide-to]="i" [class.active]="i === 0" attr.aria-label="Slide {{i + 1}}"></button>
             </div>
@@ -251,6 +290,6 @@
       <button [disabled]="!userBirthDate" routerLink="/chat" class="greenButton mt-1" mat-raised-button type="button">
         Vissza
       </button> -->
-    <!-- </form> -->
-  <!-- </div>
+<!-- </form> -->
+<!-- </div>
 </div> -->
