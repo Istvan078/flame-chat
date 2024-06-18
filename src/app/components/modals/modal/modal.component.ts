@@ -14,6 +14,8 @@ export class ModalComponent {
   @Input() userName: string = '';
   @Input() uid: string = '';
   @Input() userEmail: string = '';
+  @Input() post: any;
+  @Input() likedPeople: any[] = [];
 
   usersApiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
 
@@ -22,6 +24,6 @@ export class ModalComponent {
   deleteUser() {
     this.http
       .post(this.usersApiUrl + 'deleteUser', { uid: this.uid })
-      .subscribe((res) => console.log(res));
+      .subscribe(res => console.log(res));
   }
 }

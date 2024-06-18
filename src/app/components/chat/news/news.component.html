@@ -114,10 +114,10 @@
   </div>
 </ng-container>
 
-<div *ngFor="let post of sharedPosts | sort" class="row mt-3">
+<div *ngFor="let post of sharedPosts | sort; let i = index" class="row mt-3">
   <div class="col text-center">
     <mat-card>
-      <mat-card-header>
+      <mat-card-header class="d-flex justify-content-center">
         <mat-card-title>{{ post.displayName }}</mat-card-title>
       </mat-card-header>
 
@@ -142,7 +142,46 @@
 
       <mat-card-footer>
         <small>{{ post.timeStamp }}</small>
+        <ng-container *ngFor="let person of peopleLikedPost">
+          <div
+            *ngIf="person[0].displayName && post.id === person[0].postId"
+            class="d-flex align-items-center justify-content-center w-100"
+          >
+            <p
+              (click)="showWhoLikedPost(person)"
+              class="d-flex align-items-center"
+            >
+              <mat-icon class="text-primary mx-2">thumb_up</mat-icon>
+              <span class="text-start"
+                >{{ person[0].displayName }} és további
+                {{ post.liked?.length - 1 }} ember kedveli</span
+              >
+            </p>
+          </div>
+        </ng-container>
       </mat-card-footer>
+      <mat-card-actions class="w-100 justify-content-center pt-0">
+        <div class="d-flex text-center">
+          <button
+            (click)="like(post)"
+            class="me-2"
+            color="accent"
+            mat-raised-button
+            type="button"
+          >
+            Tetszik
+            <mat-icon matPrefix class="text-primary align-middle"
+              >thumb_up</mat-icon
+            >
+          </button>
+          <button color="primary" mat-raised-button type="button">
+            Hozzászólás
+            <mat-icon matPrefix class="text-warning align-middle"
+              >edit_note</mat-icon
+            >
+          </button>
+        </div>
+      </mat-card-actions>
     </mat-card>
   </div>
 </div>

@@ -1,4 +1,5 @@
 export interface Post {
+  id: string;
   pictures: {
     url: string;
     name: string;
@@ -8,4 +9,5 @@ export interface Post {
   shared: boolean;
   displayName: string;
   notSeen: string[];
+  liked: string[];
 }

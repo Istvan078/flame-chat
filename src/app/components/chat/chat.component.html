@@ -1,4 +1,9 @@
-<h1 class="text-center">Flame Chat</h1>
+<h1 *ngIf="!isMessageOn" class="text-center">Flame Chat</h1>
+<div class="text-center friend-name-container">
+  <h1 *ngIf="isMessageOn" class="friend-name">
+    {{ selectedFriend.displayName }}
+  </h1>
+</div>
 
 <div *ngIf="sendPrivateMessageOn" class="text-center searchContainer">
   <div class="mb-2 w-50">
@@ -129,21 +134,23 @@
               <ng-container>
                 <ng-container>
                   <div
-                    class="mt-2 text-center fw-b text-danger"
+                    class="mt-2 text-center text-danger mb-0 pb-0"
                     *ngIf="mess.seen === false"
                   >
-                    <h3>Új üzenet érkezett</h3>
+                    <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
                   </div>
                   <div
-                    class="card mt-2 text-white text-center"
+                    class="card text-white text-center mb-2"
                     [ngClass]="
-                      mess.seen === false ? 'bg-primary' : 'messageCardBg'
+                      mess.seen === false
+                        ? 'newMessageColorOnCard'
+                        : 'messageCardBg'
                     "
                   >
                     <!-- <h5 class="card-header">
                           <h2>{{ mess.displayName }}</h2>
                         </h5> -->
-                    <div class="card-body">
+                    <div class="card-body mt-0">
                       <h2>{{ mess.displayName }}</h2>
                       <img
                         [src]="mess.profilePicture"
@@ -162,12 +169,14 @@
                         *ngIf="!mess.online"
                         class="card-text last-time-online-container"
                       >
-                        <p class="mt-1 text-dark mb-0">
-                          <b>Utoljára elérhető:</b>
-                        </p>
-                        <p class="mb-0 my-0 text-success">
-                          {{ mess.lastTimeOnline }}
-                        </p>
+                        <ng-container *ngIf="mess.seen !== false">
+                          <p class="mt-1 text-dark mb-0">
+                            <b>Utoljára elérhető:</b>
+                          </p>
+                          <p class="mb-0 my-0 text-success">
+                            {{ mess.lastTimeOnline }}
+                          </p>
+                        </ng-container>
                       </div>
                     </div>
                     <div class="card-footer">

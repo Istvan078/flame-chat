@@ -63,6 +63,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonClicked: boolean = false;
   userMessages: boolean = false;
   arePostsOn: boolean = false;
+  isMessageOn: boolean = false;
 
   // POSZTOKKAL KAPCSOLATOS //
   postsNotificationNumber: number = 0;
@@ -384,6 +385,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.selectedFriend = user; // objektum
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
+    this.isMessageOn = true;
     new Promise((res, rej) => {
       if (this.userProfile.uid)
         this.base
@@ -817,6 +819,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   backToUsers() {
     this.sendPrivateMessageOn = false;
     this.userMessages = false;
+    this.isMessageOn = false;
     this.firestore.filesSubject.unsubscribe();
     this.filesArr = [];
     this.firestore.filesSubject = new Subject();
@@ -944,14 +947,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   getNewPostsNotification() {
-    // this.firestore.getSharedPosts().then(posts => {
-    //   posts.map(post => {
-    //     if (post.notSeen.includes(this.userProfile.uid)) {
-    //       this.postsNotificationNumber += 1;
-    //       console.log(this.postsNotificationNumber);
-    //     }
-    //   });
-    // });
     this.postsNotiSub = this.firestore.postsNotiSubject.subscribe(num => {
       if (num === 0) this.postsNotificationNumber = num;
       if (num > 0) {
@@ -1034,12 +1029,13 @@ export class ChatComponent implements OnInit, OnDestroy {
       clearInterval(interval);
     }, 1000);
   }
+
   seenPosts: any[] = [];
   refreshSharedPosts() {
     this.firestore.refreshSharedPosts().subscribe((sPosts: any[]) => {
       sPosts.map(sPost => {
         if (
-          sPost.notSeen.includes(this.userProfile.uid) &&
+          sPost.notSeen.includes(this.userProfile?.uid) &&
           !this.seenPosts.includes(sPost.timeStamp)
         ) {
           this.seenPosts.push(sPost.timeStamp);

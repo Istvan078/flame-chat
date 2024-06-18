@@ -1,7 +1,7 @@
 <ng-container *ngIf="name">
   <div class="modal-header">
     <h5 class="modal-title">
-      {{friendName}}
+      {{ friendName }}
     </h5>
     <button
       (click)="activeModal.dismiss('Cross-click')"
@@ -12,7 +12,7 @@
     ></button>
   </div>
   <div class="modal-body">
-    <p>{{name}}</p>
+    <p>{{ name }}</p>
   </div>
   <div class="modal-footer">
     <button
@@ -23,7 +23,7 @@
     >
       <span class="icons"
         ><mat-icon>
-          {{ "done" }}
+          {{ 'done' }}
         </mat-icon></span
       >
     </button>
@@ -33,11 +33,11 @@
 <ng-container *ngIf="userName">
   <div class="modal-header">
     <h5 class="modal-title">
-      {{userName}}
+      {{ userName }}
     </h5>
   </div>
   <div class="modal-body">
-    <h3>Biztos, hogy törölni akarod {{userName}}-t?</h3>
+    <h3>Biztos, hogy törölni akarod {{ userName }}-t?</h3>
   </div>
   <div class="modal-footer">
     <button
@@ -47,8 +47,9 @@
       data-bs-dismiss="modal"
     >
       <span class="text-white align-middle"
-        >Igen <mat-icon class="text-white align-middle">
-           {{ "done" }}
+        >Igen
+        <mat-icon class="text-white align-middle">
+          {{ 'done' }}
         </mat-icon></span
       >
     </button>
@@ -57,15 +58,21 @@
       type="button"
       class="btn btn-secondary green"
       data-bs-dismiss="modal"
-    > Nem <mat-icon class="align-middle">cancel</mat-icon>
+    >
+      Nem <mat-icon class="align-middle">cancel</mat-icon>
     </button>
   </div>
 </ng-container>
 
 <ng-container *ngIf="userEmail">
   <div class="modal-body">
-    <h3>Megerősítő e-mail sikeresen elküldve a megadott e-mail-címre: <span class="email">{{userEmail}}</span>, <b> kattints a benne levő linkre az e-mail címed megerősítéséhez. </b> 
-      Az e-mail címed megerősítése után tudsz sikeresen bejelentkezni.</h3>
+    <h3>
+      Megerősítő e-mail sikeresen elküldve a megadott e-mail-címre:
+      <span class="email">{{ userEmail }}</span
+      >,
+      <b> kattints a benne levő linkre az e-mail címed megerősítéséhez. </b> Az
+      e-mail címed megerősítése után tudsz sikeresen bejelentkezni.
+    </h3>
   </div>
   <div class="modal-footer">
     <button
@@ -73,7 +80,46 @@
       data-bs-dismiss="modal"
       type="button"
       class="btn btn-secondary green"
-    > Rendben <mat-icon class="align-middle">done</mat-icon>
+    >
+      Rendben <mat-icon class="align-middle">done</mat-icon>
     </button>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="likedPeople.length">
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <mat-icon class="text-secondary align-middle me-2">people</mat-icon
+      ><b>Emberek, akiknek tetszik a bejegyzés</b>
+    </h4>
+  </div>
+  <div class="modal-body">
+    <h3 *ngFor="let person of likedPeople">
+      <mat-icon class="text-primary align-middle me-2">thumb_up</mat-icon
+      >{{ person.displayName }}
+    </h3>
+  </div>
+  <div class="modal-footer">
+    <button
+      (click)="activeModal.close()"
+      type="button"
+      class="btn btn-success"
+      data-bs-dismiss="modal"
+    >
+      <span class="text-white align-middle"
+        >Oké
+        <mat-icon class="text-white align-middle">
+          {{ 'done' }}
+        </mat-icon></span
+      >
+    </button>
+    <!-- <button
+      (click)="activeModal.dismiss('Modal bezárva')"
+      type="button"
+      class="btn btn-secondary green"
+      data-bs-dismiss="modal"
+    >
+      Nem <mat-icon class="align-middle">cancel</mat-icon>
+    </button> -->
   </div>
 </ng-container>
