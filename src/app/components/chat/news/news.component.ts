@@ -21,6 +21,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   privatePost!: Post;
   publishForm!: FormGroup;
   chosenFiles: any;
+  comment: any = {};
   userProfile: UserClass = new UserClass();
   userProfilesUidsArr: Partial<UserClass[]> | any[] = [];
   userProfiles: UserClass[] = [];
@@ -34,6 +35,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   notShared: boolean = false;
   showNotSharedPosts: boolean = false;
   isNewPost: boolean = false;
+  isCommentOn: boolean = false;
 
   constructor(
     private fBuilder: FormBuilder,
@@ -214,5 +216,25 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     modalRef.componentInstance.post = this.peopleLikedPost;
     modalRef.componentInstance.likedPeople = people;
+  }
+
+  prepareComment(postId: string) {
+    this.comment.postId = postId;
+  }
+
+  commentPost(post: Post) {
+    this.comment.uid = this.userProfile.uid;
+    if (post.comments?.length) {
+      post.comments.push(this.comment);
+      this.firestoreService
+        .updateDocument(post.id, { comments: post.comments })
+        .then(() => (this.comment = {}));
+    }
+    if (!post.comments?.length) {
+      post.comments = [this.comment];
+      this.firestoreService
+        .updateDocument(post.id, { comments: post.comments })
+        .then(() => (this.comment = {}));
+    }
   }
 }

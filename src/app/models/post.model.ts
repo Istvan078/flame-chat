@@ -10,4 +10,5 @@ export interface Post {
   displayName: string;
   notSeen: string[];
   liked: string[];
+  comments: {}[];
 }

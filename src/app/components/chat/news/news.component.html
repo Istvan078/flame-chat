@@ -174,7 +174,12 @@
               >thumb_up</mat-icon
             >
           </button>
-          <button color="primary" mat-raised-button type="button">
+          <button
+            (click)="prepareComment(post.id)"
+            color="primary"
+            mat-raised-button
+            type="button"
+          >
             Hozzászólás
             <mat-icon matPrefix class="text-warning align-middle"
               >edit_note</mat-icon
@@ -182,6 +187,44 @@
           </button>
         </div>
       </mat-card-actions>
+      <mat-card-content>
+        <div *ngFor="let uP of userProfiles">
+          <div
+            class="d-flex align-items-center"
+            *ngFor="let comment of post.comments"
+          >
+            <ng-container *ngIf="uP.uid === comment.uid">
+              <img
+                width="25px"
+                height="25px"
+                class="rounded-circle mt-1"
+                [src]="uP.profilePicture"
+                alt="Profilkép"
+              />
+              <p class="m-0 mt-1 ms-2 d-flex align-items-center">
+                <b>{{ uP.displayName }}</b>
+              </p>
+              <p class="m-0 mt-1 ms-2 d-flex align-items-center">
+                {{ comment.text }}
+              </p>
+            </ng-container>
+          </div>
+        </div>
+      </mat-card-content>
+      <mat-form-field *ngIf="post.id === comment.postId">
+        <mat-label>Hozzászólás szövege</mat-label>
+        <input matInput [(ngModel)]="comment.text" type="text" />
+      </mat-form-field>
+      <button
+        *ngIf="post.id === comment.postId"
+        (click)="commentPost(post)"
+        class="bg-primary"
+        mat-raised-button
+        type="button"
+      >
+        Hozzászólás küldése
+        <mat-icon matPrefix class="text-warning align-middle">send</mat-icon>
+      </button>
     </mat-card>
   </div>
 </div>
