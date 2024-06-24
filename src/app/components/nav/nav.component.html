@@ -28,6 +28,7 @@
         [ngClass]="[isMenuClicked ? 'columnDisp' : 'flexDisp']"
       >
         <span
+          (click)="isMenuClicked = false"
           [routerLinkActiveOptions]="{ exact: true }"
           routerLink=""
           routerLinkActive="active-link"
@@ -48,6 +49,7 @@
         </span>
 
         <span
+          (click)="isMenuClicked = false"
           *ngIf="user.uid"
           class="nav-link me-3"
           routerLinkActive="active-link"

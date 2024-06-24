@@ -33,6 +33,7 @@
               [matBadgeDisabled]="!postsNotificationNumber"
               matBadge="{{ postsNotificationNumber }}"
               matBadgeColor="primary"
+              aria-hidden="false"
               class="ms-2"
               >feed</mat-icon
             >
@@ -196,6 +197,17 @@
             </div>
           </ng-container>
         </div>
+      </mat-expansion-panel>
+      <mat-expansion-panel class="mb-2">
+        <mat-expansion-panel-header
+          (click)="toAlbum()"
+          class="d-grid justify-content-center"
+        >
+          <mat-panel-title class="pt-2">
+            Fényképeim
+            <mat-icon class="ms-2">photos</mat-icon>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
       </mat-expansion-panel>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header class="d-grid justify-content-center">

@@ -38,7 +38,7 @@ export class BaseService implements OnDestroy {
   refUser!: AngularFireList<UserClass>;
   refFriends!: AngularFireList<UserClass>;
   apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
-  userProfileSubject: Subject<any> = new Subject();
+  userProfileSubject: BehaviorSubject<any> = new BehaviorSubject({});
   userProfilesSubject: BehaviorSubject<UserClass[]> = new BehaviorSubject<
     UserClass[]
   >([]);

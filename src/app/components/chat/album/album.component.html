@@ -1,0 +1,78 @@
+<div *ngIf="userProf.uid" class="row">
+  <div class="col">
+    <p class="text-center mb-0 text-success fw-bold">Képek feltöltése</p>
+    <div class="text-center">
+      <button
+        (click)="!uploadFinished ? addPictures() : ''"
+        class="me-2 mb-1 fileButton"
+        [ngClass]="[uploadFinished ? 'bg-primary' : 'bg-success']"
+        mat-raised-button
+        type="button"
+      >
+        <mat-icon class="align-middle">photos</mat-icon>
+        <label *ngIf="!uploadFinished" for="fileUpload">Képek feltöltése</label>
+        <label *ngIf="uploadFinished" for="picUploadInput"
+          >Képek kiválasztása</label
+        >
+        <input
+          *ngIf="uploadFinished"
+          (change)="uploadFinished ? selectedFs($event) : ''"
+          id="picUploadInput"
+          multiple
+          type="file"
+        />
+      </button>
+      <div *ngIf="percent && percent < 100" class="progress">
+        <div
+          class="progress-bar progress-bar-striped progress-bar-animated"
+          role="progressbar"
+          [attr.aria-valuenow]="percent"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [ngStyle]="{ width: percent + '%' }"
+        >
+          {{ percent }}%
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    *ngIf="userPictures.length"
+    class="col-12 d-flex flex-column justify-content-center align-items-center"
+  >
+    <mat-list>
+      <mat-list-item>
+        <div class="align-items-center justify-content-center" matListItemIcon>
+          <mat-icon class="folder text-success">folder_open</mat-icon>
+        </div>
+        <div class="fs-3 mt-2 fw-bold" matListItemTitle>Feltöltött képek</div>
+        <div class="fs-4 text-primary" matListItemLine>2024</div>
+      </mat-list-item>
+    </mat-list>
+    <mat-card class="bg-dark" *ngIf="userPictures.length">
+      <div class="d-flex justify-content-center flex-wrap">
+        <div *ngFor="let pic of userPictures; let i = index" class="my-2 mx-2">
+          <a (click)="viewPic(i)">
+            <img
+              [src]="pic.url"
+              alt=""
+              width="100px"
+              height="100px"
+              class="rounded"
+            />
+          </a>
+          <div class="d-flex justify-content-center">
+            <button
+              (click)="deleteUserPicture(pic)"
+              class="btn btn-danger mt-1"
+              type="button"
+            >
+              Törlés
+              <mat-icon class="align-middle text-warning">delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>

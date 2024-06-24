@@ -162,7 +162,7 @@ export class ChatComponent implements OnInit, OnDestroy {
               // userKey átadása base service-nek
               if (this.userProfile?.key) {
                 this.base.userKeySubject.next(this.userProfile?.key);
-                res('Sikeres felhasználói profil lekérés');
+                res('**** SIKERES FELHASZNÁLÓI PROFIL LEKÉRÉS ****');
               }
               this.refreshSharedPosts();
               this.getNewPostsNotification();
@@ -183,9 +183,8 @@ export class ChatComponent implements OnInit, OnDestroy {
                   ...doc.payload.doc.data(),
                 });
               }
-              console.log('fájlok lekérve forEachben');
             });
-            console.log('fájlok lekérve');
+            console.log('**** FÁJLOK LEKÉRVE ****');
             this.firestore.filesBehSubject.next(this.sentFilesArr);
           });
       }
@@ -308,7 +307,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           }, 200000);
           this.isOnline();
         }
-        res('Sikeres barátok listája lekérés');
+        res('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
       });
     });
   }
@@ -620,7 +619,6 @@ export class ChatComponent implements OnInit, OnDestroy {
             msg.message.senderId != this.userProfile.uid &&
             msg.participants[1] === this.userProfile.uid
         );
-        console.log(mess);
       }
 
       for (let msg of msgArr) {
@@ -943,7 +941,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     this.showFriendsMess = filteredFriendsArr;
-    console.log(this.showFriendsMess);
   }
 
   getNewPostsNotification() {
@@ -1031,6 +1028,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   seenPosts: any[] = [];
+
   refreshSharedPosts() {
     this.firestore.refreshSharedPosts().subscribe((sPosts: any[]) => {
       sPosts.map(sPost => {
@@ -1043,6 +1041,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  toAlbum() {
+    this.base.userProfileSubject.next(this.userProfile);
+    this.router.navigate(['chat/album/' + this.userProfile.uid]);
   }
 
   ngOnDestroy(): void {

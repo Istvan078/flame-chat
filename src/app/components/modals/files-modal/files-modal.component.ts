@@ -10,6 +10,7 @@ export class FilesModalComponent {
   activeModal = inject(NgbActiveModal);
   @Input() img: string = '';
   @Input() uploadTrue: boolean = false;
+  @Input() picturesUploaded: boolean = false;
   @Input() viewIndex: number = 0;
   @Input() picturesArr: any[] = [];
   fadeIn: boolean = false;
