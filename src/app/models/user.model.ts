@@ -47,24 +47,12 @@ export class UserClass {
     this.age = 0;
   }
 
-  // get token() {
-  //   if (!this._tokenExpirationDate || new Date() > this._tokenExpirationDate) {
-  //     return undefined
-  //   }
-  //   return this._token
-  // }
-
   ageCalc() {
     const date = new Date().toLocaleDateString().split('/').reverse();
     let birthDate;
     if (this.birthDate.includes('-')) {
       birthDate = this.birthDate.trim().split('-');
     }
-    // else if(this.birthDate.includes(".")){
-    //   birthDate = this.birthDate.trim().split('.');
-    // } else if(this.birthDate.includes("/")){
-    //   birthDate = this.birthDate.trim().split('/');
-    // }
 
     const actDateObj = {
       year: Number(date[0].substring(0, 4)),

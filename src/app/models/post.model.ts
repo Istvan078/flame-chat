@@ -11,4 +11,5 @@ export interface Post {
   notSeen: string[];
   liked: string[];
   comments: {}[];
+  iFrame: string;
 }

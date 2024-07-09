@@ -16,6 +16,7 @@ export class ModalComponent {
   @Input() userEmail: string = '';
   @Input() post: any;
   @Input() likedPeople: any[] = [];
+  @Input() error: any;
 
   usersApiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
 

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -63,6 +63,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   messageButtonClicked: boolean = false;
   userMessages: boolean = false;
   arePostsOn: boolean = false;
+  areMyPostsOn: boolean = false;
   isMessageOn: boolean = false;
 
   // POSZTOKKAL KAPCSOLATOS //
@@ -95,6 +96,21 @@ export class ChatComponent implements OnInit, OnDestroy {
   messSubscription!: Subscription;
   postsNotiSub!: Subscription;
 
+  // OBSERVABLES //
+  customInterval$ = new Observable(subscriber => {
+    let timesExecuted = 0;
+    const interval = setInterval(() => {
+      // subscriber.error();
+      if (timesExecuted > 5) {
+        clearInterval(interval);
+        subscriber.complete(); // megtisztítja a subscription-t, nem lesz további érték azt is mondom vele
+        return;
+      }
+      console.log('új érték kisugárzása');
+      subscriber.next({ message: 'új érték' }); // itt azt állítjuk be MIKOR történjen meg a next esemény!!!
+    }, 2000);
+  });
+
   constructor(
     private auth: AuthService,
     private base: BaseService,
@@ -111,6 +127,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     //     console.log(this.friendPushSub)
     //   });
     // }
+    this.customInterval$.subscribe({
+      next: val => console.log(val),
+      complete: () => console.log('TELJESÍTVE'),
+      error: err => console.log(err),
+    });
     this.test();
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
@@ -189,12 +210,21 @@ export class ChatComponent implements OnInit, OnDestroy {
           });
       }
       // baratok listajanak lekerese
-      this.getFriendsAndNotFriends().then((res: any) => {
-        this.base.profileSeenSubject.next(this.userFriends);
-        console.log(res);
-        // új üzenetek lekérése
-        this.messSubscription = this.getNewMessages();
-      });
+      if (!this.userProfile?.uid) return;
+      if (this.userProfile?.uid) {
+        const getFriendsSub = this.getFriendsAndNotFriends().subscribe({
+          next: (res: any) => {
+            this.base.profileSeenSubject.next(this.userFriends);
+            console.log(res);
+            // új üzenetek lekérése
+            this.messSubscription = this.getNewMessages();
+          },
+          complete: () => {
+            console.log('***OBSERVABLE BEFEJEZŐDÖTT***');
+            getFriendsSub.unsubscribe();
+          },
+        });
+      }
     });
     this.isSuperAdminSubscription = this.auth.isSuperAdmin.subscribe(
       value => (this.isSAdmin = value)
@@ -204,111 +234,111 @@ export class ChatComponent implements OnInit, OnDestroy {
   ////////////////////// LEÍRÁS ///////////////////////////
   // Ismerősök és nem ismerősök lekérése, beállítása //
   getFriendsAndNotFriends() {
-    return new Promise(res => {
-      this.base.getFriends()?.subscribe(frs => {
-        this.friendsOn = true;
-        this.userProfile.friends = frs;
-        let friendProfile: any = {};
-        const seenMeArr = this.userProfile.friends
-          ?.filter(f => {
-            return f.seenMe === true;
-          })
-          ?.map((fr, i, arr) => {
-            friendProfile = this.userProfiles.find(
-              uP => uP.uid === fr.friendId
-            );
-            const friend = Object.assign({}, ...arr);
-            friend.displayName = friendProfile.displayName;
-            friend.profilePicture = friendProfile.profilePicture;
-            friend.email = friendProfile.email;
-            friend.friendKey = fr.key;
-            console.log('-----map lefutott----');
-            return friend;
-          });
-
-        this.subjectValueTransfer(seenMeArr, this.base.profileSeenSubject);
-        // barát Uid-k tömb
-        let friendsUids: any[] = [];
-        // barátok tömb
-        let friendsTomb: any[] = [];
-
-        const userProfilesCopy: any[] = [...this.userProfiles];
-        const userProfileCopy = { ...this.userProfile };
-
-        if (
-          Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
-          this.authNull === null
-        ) {
-          const userProfilesUids = userProfilesCopy.map(uProfs => uProfs.uid);
-          // const userFriendsIds = userProfileCopy.friends?.map(
-          //   fr => fr.friendId
-          // )
-          userProfileCopy.friends?.forEach(f => {
-            const prof = this.userProfiles.find(uP => {
-              return f.friendId === uP.uid;
+    return new Observable(observer => {
+      const userProfile = this.userProfile;
+      if (this.userProfile.uid && !this.userProfile.friends?.length)
+        this.base.getFriends()?.subscribe(frs => {
+          this.userProfile = userProfile;
+          this.friendsOn = true;
+          userProfile.friends = frs;
+          let friendProfile: any = {};
+          const seenMeArr = this.userProfile.friends
+            ?.filter(f => {
+              return f.seenMe === true;
+            })
+            ?.map((fr, i, arr) => {
+              friendProfile = this.userProfiles.find(
+                uP => uP.uid === fr.friendId
+              );
+              const friend = Object.assign({}, ...arr);
+              friend.displayName = friendProfile.displayName;
+              friend.profilePicture = friendProfile.profilePicture;
+              friend.email = friendProfile.email;
+              friend.friendKey = fr.key;
+              console.log('-----map lefutott----');
+              return friend;
             });
-            if (f.seenMe === undefined) {
-              f.seenMe = false;
-              this.base.updateFriend(f.key, {
-                seenMe: f.seenMe,
-              } as any);
-            }
-            friendsUids.push(f.friendId);
-            if (userProfilesUids.includes(f.friendId)) {
-              friendsTomb.push({
-                friendKey: f['key'],
-                friendId: f.friendId,
-                seenMe: f.seenMe,
-                messaging: f.messaging,
-                displayName: prof?.displayName,
-                profilePicture: prof?.profilePicture,
-                email: prof?.email,
-                online: prof?.online,
-              });
-            }
-          });
-        }
 
-        //////////////////// LEÍRÁS ///////////////////
-        // nem baratok kiszűrése //
-        if (
-          Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
-          this.authNull === null
-        ) {
-          const userNotFriendsProf: any[] = this.userProfiles.filter(
-            item =>
-              !friendsUids.includes(item.uid) &&
-              item.uid !== this.userProfile.uid
-          );
-          //  nem baratok tomb beállítása
-          this.userNotFriends = userNotFriendsProf;
-        }
-        if (
-          Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
-          this.authNull === null
-        ) {
-          this.userFriends = friendsTomb;
-          // subjecttel átküldi a userFriendst
-          this.subjectValueTransfer(
-            this.userFriends,
-            this.base.profileSeenSubject
-          );
-          const forFriendsSubject = {
-            userFriends: this.userFriends,
-            userNotFriends: this.userNotFriends,
-          };
-          this.subjectValueTransfer(
-            forFriendsSubject,
-            this.base.userFriendsSubject
-          );
-          this.subjectValueTransfer(2, this.auth.authNullSubject);
-          setTimeout(() => {
-            this.setDefaultProfilePic();
-          }, 200000);
-          this.isOnline();
-        }
-        res('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
-      });
+          this.subjectValueTransfer(seenMeArr, this.base.profileSeenSubject);
+          // barát Uid-k tömb
+          let friendsUids: any[] = [];
+          // barátok tömb
+          let friendsTomb: any[] = [];
+
+          const userProfilesCopy: any[] = [...this.userProfiles];
+          const userProfileCopy = { ...this.userProfile };
+
+          if (
+            Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
+            this.authNull === null
+          ) {
+            const userProfilesUids = userProfilesCopy.map(uProfs => uProfs.uid);
+            userProfileCopy.friends?.forEach(f => {
+              const prof = this.userProfiles.find(uP => {
+                return f.friendId === uP.uid;
+              });
+              if (f.seenMe === undefined) {
+                f.seenMe = false;
+                this.base.updateFriend(f.key, {
+                  seenMe: f.seenMe,
+                } as any);
+              }
+              friendsUids.push(f.friendId);
+              if (userProfilesUids.includes(f.friendId)) {
+                friendsTomb.push({
+                  friendKey: f['key'],
+                  friendId: f.friendId,
+                  seenMe: f.seenMe,
+                  messaging: f.messaging,
+                  displayName: prof?.displayName,
+                  profilePicture: prof?.profilePicture,
+                  email: prof?.email,
+                  online: prof?.online,
+                });
+              }
+            });
+          }
+
+          //////////////////// LEÍRÁS ///////////////////
+          // nem baratok kiszűrése //
+          if (
+            Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
+            this.authNull === null
+          ) {
+            const userNotFriendsProf: any[] = this.userProfiles.filter(
+              item =>
+                !friendsUids.includes(item.uid) && item.uid !== userProfile.uid
+            );
+            //  nem baratok tomb beállítása
+            this.userNotFriends = userNotFriendsProf;
+          }
+          if (
+            Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
+            this.authNull === null
+          ) {
+            this.userFriends = friendsTomb;
+            // subjecttel átküldi a userFriendst
+            this.subjectValueTransfer(
+              this.userFriends,
+              this.base.profileSeenSubject
+            );
+            const forFriendsSubject = {
+              userFriends: this.userFriends,
+              userNotFriends: this.userNotFriends,
+            };
+            this.subjectValueTransfer(
+              forFriendsSubject,
+              this.base.userFriendsSubject
+            );
+            this.subjectValueTransfer(2, this.auth.authNullSubject);
+            setTimeout(() => {
+              this.setDefaultProfilePic();
+            }, 200000);
+            if (this.userProfile?.uid) this.isOnline();
+          }
+          observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
+          observer.complete();
+        });
     });
   }
 
@@ -324,7 +354,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.toastVal = user;
       modalRef.componentInstance.name = 'Ismerősnek jelölve.';
       this.base.userFriendsSubject.next({});
-      this.getFriendsAndNotFriends().then(() => {
+      this.getFriendsAndNotFriends().subscribe(() => {
         this.filterShowFriendsMessArr();
         this.base.getAllMessagesSubject.next({
           showFriendsMess: this.showFriendsMess,
@@ -344,7 +374,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         modalRef.componentInstance.friendName = this.toastVal.displayName;
       }
       this.base.userFriendsSubject.next({});
-      this.getFriendsAndNotFriends().then(() => {
+      this.getFriendsAndNotFriends().subscribe(() => {
         this.filterShowFriendsMessArr();
         this.base.getAllMessagesSubject.next({
           showFriendsMess: this.showFriendsMess,
@@ -603,6 +633,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   getNewMessages() {
+    const userProfile = this.userProfile;
     return this.base.getNewMessages().subscribe(mess => {
       this.filterShowFriendsMessArr();
       let msgArr: any[] = [];
@@ -616,8 +647,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           msg =>
             !keyArr.includes(msg.key) &&
             msg.message.seen === false &&
-            msg.message.senderId != this.userProfile.uid &&
-            msg.participants[1] === this.userProfile.uid
+            msg.message.senderId != userProfile?.uid &&
+            msg.participants[1] === userProfile?.uid
         );
       }
 
@@ -626,7 +657,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           new Date(msg.message.timeStamp)
         );
         // const participants0Uid = msg.participants[0].split('-').shift();
-        if (msg.participants[1] === this.userProfile.uid) {
+        if (msg.participants[1] === userProfile?.uid) {
           this.haventSeenMessagesArr?.push(msg);
           this.allChatsArray.unshift(msg);
           this.filterShowFriendsMessArr();
@@ -657,17 +688,13 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   uploadFiles() {
-    let tomb: any = [];
-    const lastIndex = this.selectedFiles.length - 1;
-    console.log(this.selectedFiles.length);
-    this.selectedFiles.map((file: any, ind: number) => {
+    let arr: any = [];
+    this.selectedFiles.map((file: any) => {
       const promise = this.firestore
         .addFilesFromMessages(this.userProfile, file)
         ?.then((val: any) => {
-          tomb.push(val.metadata.name);
-          console.log(val.metadata.name);
-          if (tomb.length === this.selectedFiles.length) {
-            console.log(tomb, 'siker');
+          arr.push(val.metadata.name);
+          if (arr.length === this.selectedFiles.length) {
             this.selectedFiles = [];
             const fileModal = this.ngbModal.open(FilesModalComponent, {
               centered: true,
@@ -677,10 +704,10 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         })
         .catch(err => {
-          tomb.push('Meglévő fájl');
+          arr.push('Meglévő fájl');
           console.log('Már van ilyen fájl az adatbázisban');
 
-          if (tomb.length === this.selectedFiles.length) {
+          if (arr.length === this.selectedFiles.length) {
             this.selectedFiles = [];
             const fileModal = this.ngbModal.open(FilesModalComponent, {
               centered: true,
@@ -693,7 +720,15 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.firestore.filesSubject.subscribe((files: {}) => {
       this.filesArr.push(files);
-      console.log(this.filesArr);
+    });
+  }
+
+  deleteUserData(id: any) {
+    const toDeleteProfiles = this.userProfiles.filter(uP => {
+      return uP.uid === 'NRQ2kFyKrpN1rTSRJ0gcna1DzdK2';
+    });
+    toDeleteProfiles.map(prof => {
+      this.base.deleteUserData(prof.key);
     });
   }
 
@@ -953,6 +988,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   toFriendProfile(friendId: string) {
+    const userProfile = this.userProfile;
+    console.log(userProfile);
     const promise = new Promise((res, rej) => {
       const friendProfile = this.userProfiles.find(uP => {
         return uP.uid === friendId;
@@ -976,7 +1013,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
 
         const user: any = friendsArray.find(
-          (f: any) => f.friendId === this.userProfile.uid
+          (f: any) => f.friendId === userProfile.uid
         );
         if (user) user.seenMe = true;
         this.base
@@ -1002,13 +1039,13 @@ export class ChatComponent implements OnInit, OnDestroy {
       online: true,
     };
     window.addEventListener('focus', e => {
-      this.base.updateUserData(onlineUser, this.userProfile.key);
+      this.base.updateUserData(onlineUser, this.userProfile?.key);
     });
     window.addEventListener('blur', e => {
-      this.base.updateUserData({ online: false }, this.userProfile.key);
+      this.base.updateUserData({ online: false }, this.userProfile?.key);
       this.base.updateUserData(
         { lastTimeOnline: new Date().getTime() },
-        this.userProfile.key
+        this.userProfile?.key
       );
     });
   }

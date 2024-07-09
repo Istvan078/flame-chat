@@ -8,14 +8,16 @@ import { ModalComponent } from '../modals/modal/modal.component';
 import { loginGuardGuard } from 'src/app/guards/login-guard.guard';
 import { FriendProfileComponent } from '../user-profile/friend-profile/friend-profile.component';
 import { AlbumComponent } from './album/album.component';
+import { MyPostsComponent } from './my-posts/my-posts.component';
 
 @NgModule({
   declarations: [
     ChatComponent,
     UserProfileComponent,
-    NewsComponent,
     FriendProfileComponent,
     AlbumComponent,
+    MyPostsComponent,
+    NewsComponent,
   ],
   imports: [
     SharedModule,

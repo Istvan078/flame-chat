@@ -1,41 +1,41 @@
-.container-0{
-    display: flex;
-    justify-content: center;
-    h2{
-        margin-top: 50px;
-        width:max-content;
-        padding: 10px;
-        border: 2px solid rgb(128, 128, 128);
-        background-color: rgba(128, 128, 128,0.5);
-    }
-    h2:hover{
-        color:white;
-        background-color: rgba(71, 70, 70,0.5);
-        cursor:help;
-    }
+.container-0 {
+  display: flex;
+  justify-content: center;
+  h2 {
+    margin-top: 50px;
+    width: max-content;
+    padding: 10px;
+    border: 2px solid rgb(128, 128, 128);
+    background-color: rgba(128, 128, 128, 0.5);
+  }
+  h2:hover {
+    color: white;
+    background-color: rgba(71, 70, 70, 0.5);
+    cursor: help;
+  }
+  button {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
 }
 
-.container-1{
-    h2{
-        margin-top: 10px !important;
-        height: fit-content;
-        background-color: rgba(10, 126, 10, 0.7);
-        border-radius: 10px;
-    }
-}
-
-.container-2{
+.container-1 {
+  h2 {
+    margin-top: 10px !important;
     height: fit-content;
-    button {
-        height: fit-content;
-    }
+    background-color: rgba(10, 126, 10, 0.7);
+    border-radius: 10px;
+  }
 }
 
+.container-2 {
+  height: fit-content;
+}
 
 form {
-    display: grid;
+  display: grid;
 }
 
 .green {
-    background-color: rgba(21, 179, 21, 0.7) !important;
-  }
+  background-color: rgba(21, 179, 21, 0.7) !important;
+}

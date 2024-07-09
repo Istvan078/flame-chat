@@ -1,25 +1,23 @@
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Component } from '@angular/core';
 import { Post } from 'src/app/models/post.model';
-import { UserClass } from 'src/app/models/user.model';
-import { AuthService } from 'src/app/services/auth.service';
-import { BaseService } from 'src/app/services/base.service';
-import { FirestoreService } from 'src/app/services/firestore.service';
 import { ModalComponent } from '../../modals/modal/modal.component';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UserClass } from 'src/app/models/user.model';
+import { BaseService } from 'src/app/services/base.service';
+import { AuthService } from 'src/app/services/auth.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { tick } from '@angular/core/testing';
+import { FirestoreService } from 'src/app/services/firestore.service';
+import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-news',
-  templateUrl: './news.component.html',
-  styleUrls: ['./news.component.scss'],
+  selector: 'app-my-posts',
+  templateUrl: './my-posts.component.html',
+  styleUrls: ['./my-posts.component.scss'],
 })
-export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
-  recipeForm: any;
+export class MyPostsComponent {
   submitButtonValue: any;
   sharedPictures: any[] = [];
-  privatePost!: Post;
+  post!: Post;
   publishForm!: FormGroup;
   chosenFiles: any;
   comment: any = {};
@@ -29,6 +27,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   uploadedPictures: any[] = [];
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
+  myPostsArr: Post[] = [];
   privatePosts: Post[] = [];
   peopleLikedPost: any[] = [];
   picturesSubscription!: Subscription;
@@ -82,17 +81,17 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      this.firestoreService
-        .getPrivatePosts(this.userProfile.key as string)
-        .subscribe((privatePosts: any) => (this.privatePosts = privatePosts));
+      // this.firestoreService
+      //   .getPrivatePosts(this.userProfile.key as string)
+      //   .subscribe((privatePosts: any) => (this.privatePosts = privatePosts));
       this.publishForm.patchValue({
         name: this.userProfile.displayName,
         displayName: this.userProfile.displayName,
       });
 
-      this.firestoreService.getSharedPosts().then((res: any[]) => {
-        this.sharedPosts = res;
-        let proba: any[] = [];
+      this.firestoreService.getMyPosts().then((res: any[]) => {
+        this.myPostsArr = res;
+        console.log(this.myPostsArr);
         this.getPostsData();
       });
     }, 1000);
@@ -104,16 +103,29 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       const iFrames: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(
         '.iFrame'
       ) as NodeListOf<HTMLIFrameElement>;
+      console.log(iFrames);
 
-      this.sharedPosts
-        .filter(sp => sp.iFrame)
-        .map((sP, i) => {
-          if (sP.iFrame) {
-            iFrames[i].src = sP.iFrame;
+      this.myPostsArr.forEach((sP, i) => {
+        if (sP?.iFrame) {
+          const correspondingIframe = Array.from(iFrames).find(
+            iframe => iframe.getAttribute('data-post-id') === sP.id
+          );
+          if (correspondingIframe) {
+            correspondingIframe.src = sP.iFrame;
           }
-        });
+        }
+      });
 
-      this.sharedPosts.map((sP: any, i: number) => {
+      // this.myPostsArr
+      //   .filter(sp => sp.iFrame)
+      //   .map((sP, i) => {
+      //     console.log(sP);
+      //     if (sP?.iFrame && iFrames[i]) {
+      //       iFrames[i].src = sP.iFrame;
+      //     }
+      //   });
+
+      this.myPostsArr.map((sP: any, i: number) => {
         sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
         if (sP.liked?.length) {
           proba = this.userProfiles
@@ -128,20 +140,16 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
             .sort(() => Math.random() - 0.5);
           this.peopleLikedPost.push(proba as any);
         }
-        if (sP.notSeen.includes(this.userProfile.uid)) {
-          const filteredArr = sP.notSeen.filter(
-            (uid: any) => uid !== this.userProfile.uid
-          );
-          this.firestoreService
-            .updateDocument(
-              sP.id,
-              {
-                notSeen: filteredArr,
-              },
-              true
-            )
-            .then(() => this.firestoreService.postsNotiSubject.next(0));
-        }
+        // if (sP.notSeen.includes(this.userProfile.uid)) {
+        //   const filteredArr = sP.notSeen.filter(
+        //     (uid: any) => uid !== this.userProfile.uid
+        //   );
+        //   this.firestoreService
+        //     .updateDocument(sP.id, {
+        //       notSeen: filteredArr,
+        //     })
+        //     .then(() => this.firestoreService.postsNotiSubject.next(0));
+        // }
       });
     }, 500);
   }
@@ -208,15 +216,16 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (!iFrame) this.publishForm.removeControl('iFrame');
-    this.privatePost = this.publishForm.value;
-    this.privatePost.pictures = this.picturesArray;
+    this.post = this.publishForm.value;
+    this.post.pictures = this.picturesArray;
     this.firestoreService.createPost(
-      this.privatePost,
+      this.post,
       this.notShared,
-      this.userProfile.key
+      this.userProfile.key,
+      true
     );
     this.picturesArray = [];
-    if (this.notShared) this.showNotSharedPosts = true;
+    // if (this.notShared) this.showNotSharedPosts = true;
   }
 
   like(post: Post, i: number) {
@@ -228,10 +237,10 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
             {
               liked: [this.userProfile.uid],
             },
-            true
+            false
           )
           .then(() => {
-            this.firestoreService.getSharedPosts().then((shPosts: any[]) => {
+            this.firestoreService.getMyPosts().then((shPosts: any[]) => {
               this.refreshPost(shPosts, i, post);
             });
           });
@@ -243,31 +252,31 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
             {
               liked: [...post.liked, this.userProfile.uid],
             },
-            true
+            false
           )
           .then(() => {
-            this.firestoreService.getSharedPosts().then((shPosts: any[]) => {
+            this.firestoreService.getMyPosts().then((shPosts: any[]) => {
               this.refreshPost(shPosts, i, post);
             });
           });
     }
   }
 
-  refreshPost(sharedPosts: any[], i: number, post: Post) {
-    sharedPosts.sort((a: any, b: any) => {
+  refreshPost(myPosts: any[], i: number, post: Post) {
+    myPosts.sort((a: any, b: any) => {
       if (a.timeStamp > b.timeStamp) return -1;
       else return 1;
     });
-    this.sharedPosts[i].liked = sharedPosts[i].liked;
+    this.myPostsArr[i].liked = myPosts[i].liked;
     let filteredArr: any[] = [];
 
     this.userProfiles
-      .filter(uP => this.sharedPosts[i].liked?.includes(uP.uid))
+      .filter(uP => this.myPostsArr[i].liked?.includes(uP.uid))
       .map(user => {
         const obj = {
           displayName: user.displayName,
           uid: user.uid,
-          postId: this.sharedPosts[i].id,
+          postId: this.myPostsArr[i].id,
         };
         if (!this.peopleLikedPost[i]?.includes(user.uid)) filteredArr.push(obj);
       })
@@ -382,13 +391,13 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     if (post.comments?.length) {
       post.comments.push(this.comment);
       this.firestoreService
-        .updateDocument(post.id, { comments: post.comments }, true)
+        .updateDocument(post.id, { comments: post.comments }, false)
         .then(() => (this.comment = {}));
     }
     if (!post.comments?.length) {
       post.comments = [this.comment];
       this.firestoreService
-        .updateDocument(post.id, { comments: post.comments }, true)
+        .updateDocument(post.id, { comments: post.comments }, false)
         .then(() => (this.comment = {}));
     }
   }

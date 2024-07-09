@@ -34,59 +34,66 @@ export class LoginComponent {
   ) {}
 
   loginWithEmAndPa() {
-    this.authService.loginWithEmAndPa(this.email, this.password);
-    this.authService.isLoggedIn().subscribe((user) => {
+    this.authService.loginWithEmAndPa(this.email, this.password).catch(err => {
+      err.message = 'Hibás e-mail cím, vagy jelszó, kérlek próbáld újra!';
+      this.modalRef.open(ModalComponent, {
+        centered: true,
+      }).componentInstance.error = err;
+    });
+
+    this.authService.isLoggedIn().subscribe(user => {
       if (!user?.emailVerified) {
         user
           ?.sendEmailVerification()
           .then(() => {
-            this.modalRef.dismissAll()
-           const actModal = this.modalRef.open(ModalComponent, {
+            this.modalRef.dismissAll();
+            const actModal = this.modalRef.open(ModalComponent, {
               centered: true,
             });
             actModal.componentInstance.userEmail = user.email;
-            
           })
-          .then(() => {             
+          .then(() => {
             this.authService.signOut().then(() => {
               this.authService.userLoggedInSubject.next(new UserClass());
             });
-          });
+          })
+          .catch(err => console.log(err));
       }
 
-      if(user?.emailVerified) {
-      this.base.getUserProfiles().subscribe((userProfiles: any) => {
-        this.userProfiles = userProfiles;
+      if (user?.emailVerified) {
+        this.base.getUserProfiles().subscribe((userProfiles: any) => {
+          this.userProfiles = userProfiles;
 
-        let userProfile = this.userProfiles.filter(
-          (userProfile: any) => userProfile.uid === user?.uid
-        );
+          let userProfile = this.userProfiles.filter(
+            (userProfile: any) => userProfile.uid === user?.uid
+          );
 
-        this.base.userProfileSubject.next(userProfile);
+          this.base.userProfileSubject.next(userProfile);
 
-        if (userProfile.length === 0 && user?.emailVerified) {
-          userProfile.push(user);
-          for (let i = 0; i < 1; i++) {
-            this.base.addUserData({
-              uid: userProfile[0].uid,
-              email: user?.email,
-            });
+          if (userProfile.length === 0 && user?.emailVerified) {
+            userProfile.push(user);
+            for (let i = 0; i < 1; i++) {
+              this.base.addUserData({
+                uid: userProfile[0].uid,
+                email: user?.email,
+              });
+            }
           }
-        }
-        if (user?.emailVerified) {
-          if (
-            userProfile[0].birthDate === undefined ||
-            (userProfile[0].birthDate === '' && user?.emailVerified === true)
-          ) {
-            this.router.navigate(['profile/' + user?.uid]);
-          } else if (userProfile[0].birthDate && user?.emailVerified === true) {
-            this.authService.userLoggedInSubject.next(user)
-            this.router.navigate(['chat']);
+          if (user?.emailVerified) {
+            if (
+              userProfile[0].birthDate === undefined ||
+              (userProfile[0].birthDate === '' && user?.emailVerified === true)
+            ) {
+              this.router.navigate(['profile/' + user?.uid]);
+            } else if (
+              (userProfile[0].birthDate && user?.emailVerified === true)
+            ) {
+              this.authService.userLoggedInSubject.next(user);
+              this.router.navigate(['chat']);
+            }
           }
-        }
-
-      });
-    }
+        });
+      }
     });
   }
 
@@ -137,7 +144,7 @@ export class LoginComponent {
   startLoginWithPhoneNumber() {
     this.authService
       .signInWithPhoneNumber('+36' + this.phoneNumber)
-      .then((result) => {
+      .then(result => {
         this.verificationId = result.verificationId;
         this.reCapthcaOff = true;
       });

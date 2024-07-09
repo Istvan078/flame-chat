@@ -21,6 +21,31 @@
 <div class="row" *ngIf="!sendPrivateMessageOn">
   <div class="col">
     <mat-accordion>
+      @if (userProfile.displayName) {
+
+      <mat-expansion-panel class="mb-2">
+        <mat-expansion-panel-header
+          (click)="areMyPostsOn = !areMyPostsOn"
+          class="d-grid justify-content-center"
+        >
+          <mat-panel-title class="pt-2"
+            >{{ userProfile?.displayName }}
+            <img
+              width="25px"
+              height="25px"
+              class="rounded-circle ms-1"
+              [src]="userProfile?.profilePicture"
+              alt="Profilkép"
+            />
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div *ngIf="areMyPostsOn" class="row">
+          <div class="col">
+            <app-my-posts></app-my-posts>
+          </div>
+        </div>
+      </mat-expansion-panel>
+      }
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
           (click)="arePostsOn = !arePostsOn"

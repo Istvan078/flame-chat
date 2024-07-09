@@ -65,34 +65,40 @@
           </button>
         </div>
       </mat-step>
-      <mat-step [stepControl]="f.form.value" label="Töltsd fel a profilképed">
+      <mat-step
+        [stepControl]="f.form.value"
+        label="Töltsd fel a profilképed (Opcionális)"
+      >
         <div class="mt-2">
-          <h2 class="text-center">
-            <label id="profilePicture" class="form-label" for="profilePicture"
-              >Profilkép kiválasztása:</label
-            >
-          </h2>
-          <input
-            id="profilePicture"
-            (change)="selectFile($event)"
-            class="form-control"
-            [(ngModel)]="profilePhoto"
-            type="file"
-            name="profilePicture"
-          />
+          <button class="btn btn-warning fileButton" type="button">
+            <mat-icon class="align-middle">attach_file</mat-icon>
+            <label for="profilePicture">Profilkép kiválasztása</label>
+            <input
+              id="profilePicture"
+              (change)="selectFile($event)"
+              class="form-control picUploadInput"
+              [(ngModel)]="profilePhoto"
+              type="file"
+              name="profilePicture"
+            />
+          </button>
           <button
             [disabled]="!profilePhoto"
             (click)="
               userProf.profilePicture ? changeProfilePic() : addProfilePic()
             "
             type="button"
-            class="btn btn-primary mt-1"
+            class="btn btn-success ms-1"
           >
+            <mat-icon class="align-middle">upload</mat-icon>
             Profilkép Feltöltése
           </button>
         </div>
+        <div class="text-primary mt-1" *ngIf="profilePhoto">
+          {{ profilePhoto.name }}
+        </div>
         <div
-          *ngIf="profilePhoto"
+          *ngIf="profilePhoto && percent && percent < 100"
           class="progress mt-2 progressC"
           style="height: 50px; width: 100%"
         >
@@ -129,94 +135,6 @@
             </div>
           </div>
         </ng-template>
-        <div class="d-flex mt-2 justify-content-between">
-          <button
-            mat-flat-button
-            color="accent"
-            matStepperPrevious
-            type="button"
-          >
-            Vissza
-          </button>
-          <button mat-flat-button color="primary" matStepperNext type="button">
-            Következő
-          </button>
-        </div>
-      </mat-step>
-      <mat-step [stepControl]="f.form.value" label="Albumod">
-        <div *ngIf="userBirthDate" class="mb-2">
-          <h2 class="text-center">
-            <label id="profilePicture" class="form-label" for="profilePicture"
-              >Képek feltöltése</label
-            >
-          </h2>
-          <input
-            name="pictures"
-            class="form-control"
-            (change)="selectFiles($event)"
-            type="file"
-            multiple
-          />
-          <button
-            [disabled]="!pictures"
-            (click)="addPictures()"
-            type="button"
-            class="btn btn-primary mt-1"
-          >
-            Képek Feltöltése
-          </button>
-        </div>
-        <div
-          *ngIf="pictures"
-          class="progress my-2 progressC"
-          style="height: 50px; width: 100%"
-        >
-          <div
-            [style]="{ width: percent + '%' }"
-            class="progress-bar progressC"
-            role="progressbar"
-            [attr.aria-valuenow]="percent"
-            [attr.aria-valuemin]="percent"
-            aria-valuemax="100"
-          >
-            <h4 class="pt-2">{{ percent }}%</h4>
-          </div>
-        </div>
-        <div>
-          <mat-list>
-            <div mat-subheader>Mappa</div>
-            <mat-list-item (click)="showPics = !showPics">
-              <mat-icon
-                [ngClass]="[showPics ? 'folderOpened' : 'folder']"
-                matListItemIcon
-                >{{ !showPics ? 'folder' : 'folder_open' }}</mat-icon
-              >
-              <mat-icon *ngIf="showPics" matListItemIcon>expand_more</mat-icon>
-              <div class="d-inline" matListItemTitle>Képeim -</div>
-              <div class="d-inline" matListItemLine>{{ newDate }}</div>
-            </mat-list-item>
-          </mat-list>
-        </div>
-        <div
-          *ngIf="showPics"
-          class="d-flex m-0 justify-content-start flex-wrap"
-        >
-          <div
-            *ngFor="let pic of userPictures; let i = index"
-            class="mb-2 mx-2"
-          >
-            <a (click)="viewPic(i)">
-              <img
-                [src]="pic.url"
-                alt=""
-                width="50px"
-                height="50px"
-                class="rounded"
-              />
-            </a>
-          </div>
-        </div>
-        <mat-divider></mat-divider>
         <div class="d-flex mt-2 justify-content-between">
           <button
             mat-flat-button

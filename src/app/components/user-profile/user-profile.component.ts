@@ -7,12 +7,11 @@ import {
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Subscription, map } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 
 @Component({
   selector: 'app-user-profile',
@@ -51,15 +50,13 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     private router: ActivatedRoute,
     private auth: AuthService,
     private base: BaseService,
-    private route: Router,
-    private modalRef: NgbModal
+    private route: Router
   ) {}
 
   ngOnInit(): void {
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
       (url: string) => {
         this.profilePhotoUrl = url;
-        console.log(this.profilePhotoUrl);
       }
     );
     this.picturesSubscription = this.base.picturesSubject.subscribe(url => {
@@ -75,6 +72,9 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
             userProfile => userProfile['uid'] === param['uid']
           );
           this.userProf = Object.assign(this.userProf, ...userProfil);
+          if (!this.userProf.profilePicture)
+            this.userProf.profilePicture =
+              'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
           if (!this.userProf.birthDate) {
             this.registeredSuccessfully = true;
           }
@@ -87,25 +87,11 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           res('Sikeres profillekérés');
         });
       });
-    }).then(res => {
-      this.base
-        .getData(this.userProf)
-        .snapshotChanges()
-        .pipe(
-          map(changes =>
-            changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
-          )
-        )
-        .subscribe(pictures => (this.userPictures = pictures));
     });
   }
 
   selectFile(event: any) {
     this.profilePhoto = event.target.files[0];
-  }
-
-  selectFiles(event: any) {
-    this.pictures = event.target.files;
   }
 
   saveProfile() {
@@ -118,7 +104,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
           this.userProf.uid = user.uid;
           this.userProf.key = userProfile[0].key;
-          console.log(this.userProf.birthDate);
           // this.userProf.ageCalc();
           if (this.profilePhotoUrl) {
             this.userProf.profilePicture = this.profilePhotoUrl;
@@ -138,18 +123,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
       .then(() => this.route.navigate(['chat']));
   }
 
-  addPictures() {
-    Array.from(this.pictures).forEach(file => {
-      this.base.addPictures(this.userProf, file).subscribe(percent => {
-        this.percent = percent!;
-      });
-    });
-  }
-
-  toArray() {
-    let tomb = [...this.userProf.pictures];
-  }
-
   addProfilePic() {
     this.base
       .addProfilePicture(this.profilePhoto)
@@ -158,24 +131,9 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
   changeProfilePic() {
     this.userProf.profilePicture = '';
-    this.base
-      .addProfilePicture(this.profilePhoto)
-      .subscribe(percent => (this.percent = percent!));
-  }
-
-  viewPic(i: number) {
-    const actModal = this.modalRef.open(FilesModalComponent, {
-      centered: true,
+    this.base.addProfilePicture(this.profilePhoto).subscribe(percent => {
+      this.percent = percent?.toFixed(0) as any;
+      this.percent = Number(this.percent);
     });
-    actModal.componentInstance.picturesArr = this.userPictures;
-    actModal.componentInstance.viewIndex = i;
-  }
-
-  deleteUserPicture(file: any, i: number) {
-    this.base.deleteUserPicture(this.userProf, file);
-  }
-
-  deletePicture(pic: any) {
-    this.base.deleteUserPicture(this.userProf, pic);
   }
 }

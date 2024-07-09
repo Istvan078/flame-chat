@@ -61,10 +61,10 @@
   </div>
   <mat-form-field class="select-container mt-2">
     <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
-    <mat-label>Látható mások számára is</mat-label>
+    <mat-label>Láthatóság</mat-label>
     <mat-select formControlName="sharing" id="sharing">
       <mat-option (click)="notShared = false" ngClass="green" value="yes"
-        >Igen</mat-option
+        >Ismerősök</mat-option
       >
       <mat-option (click)="notShared = true" ngClass="yellow" value="no"
         >Csak nekem</mat-option
@@ -76,7 +76,7 @@
   </button>
 </form>
 
-<div class="text-center">
+<!-- <div class="text-center">
   <button
     class="blue mt-1 mb-3"
     (click)="showNotSharedPosts = !showNotSharedPosts"
@@ -85,8 +85,8 @@
   >
     Privát bejegyzéseim
   </button>
-</div>
-<ng-container *ngIf="showNotSharedPosts">
+</div> -->
+<!-- <ng-container *ngIf="showNotSharedPosts">
   <div *ngFor="let privatePost of privatePosts | sort" class="row">
     <div class="col text-center">
       <mat-card class="bgCard my-2">
@@ -117,26 +117,27 @@
       </mat-card>
     </div>
   </div>
-</ng-container>
+</ng-container> -->
 
-<div *ngFor="let post of sharedPosts | sort; let i = index" class="row mt-3">
+<div *ngFor="let myPost of myPostsArr | sort; let i = index" class="row mt-3">
   <div class="col text-center">
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
-        <mat-card-title>{{ post.displayName }}</mat-card-title>
+        <mat-card-title>{{ myPost.displayName }}</mat-card-title>
       </mat-card-header>
 
-      <mat-card-content>{{ post.message }}</mat-card-content>
+      <mat-card-content>{{ myPost.message }}</mat-card-content>
       <mat-card-content
-        *ngIf="post.iFrame"
+        *ngIf="myPost.iFrame"
         style="height: 50vh; width: 100%"
         class="mb-2"
       >
         <iframe
           class="mb-2 rounded iFrame"
+          [attr.data-post-id]="myPost.id"
           width="100%"
           height="100%"
-          title="Tibeti Fuvola, Stressz, Szorongás És Depressziós Állapotok Gyógyítása • A Test Helyreállítása"
+          title=""
           frameborder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerpolicy="strict-origin-when-cross-origin"
@@ -146,7 +147,7 @@
 
       <mat-card-content>
         <div
-          *ngFor="let pic of post.pictures"
+          *ngFor="let pic of myPost.pictures"
           class="col-12 d-flex justify-content-center mb-2"
         >
           <img
@@ -160,10 +161,10 @@
       </mat-card-content>
 
       <mat-card-footer>
-        <small>{{ post.timeStamp }}</small>
+        <small>{{ myPost.timeStamp }}</small>
         <ng-container *ngFor="let person of peopleLikedPost">
           <div
-            *ngIf="person[0].displayName && post.id === person[0].postId"
+            *ngIf="person[0].displayName && myPost.id === person[0].postId"
             class="d-flex align-items-center justify-content-center w-100"
           >
             <p
@@ -173,10 +174,10 @@
               <mat-icon class="text-primary mx-2">thumb_up</mat-icon>
               <span class="text-start"
                 >{{
-                  post.liked?.length > 1
+                  myPost.liked?.length > 1
                     ? person[0].displayName +
                       ' és további ' +
-                      (post.liked?.length - 1) +
+                      (myPost.liked?.length - 1) +
                       ' ember kedveli'
                     : person[0].displayName + ' kedveli'
                 }}
@@ -199,7 +200,7 @@
               matPrefix
               class="align-middle"
               [ngClass]="
-                post.liked?.includes(userProfile.uid)
+                myPost.liked?.includes(userProfile.uid)
                   ? 'text-primary'
                   : 'text-secondary'
               "
@@ -207,7 +208,7 @@
             >
           </button>
           <button
-            (click)="prepareComment(post.id)"
+            (click)="prepareComment(myPost.id)"
             color="primary"
             mat-raised-button
             type="button"
@@ -223,7 +224,7 @@
         <div *ngFor="let uP of userProfiles">
           <div
             class="d-flex align-items-center"
-            *ngFor="let comment of post.comments"
+            *ngFor="let comment of myPost.comments"
           >
             <ng-container *ngIf="uP.uid === comment.uid">
               <img
@@ -243,12 +244,12 @@
           </div>
         </div>
       </mat-card-content>
-      <mat-form-field *ngIf="post.id === comment.postId">
+      <mat-form-field *ngIf="myPost.id === comment.postId">
         <mat-label>Hozzászólás szövege</mat-label>
         <input matInput [(ngModel)]="comment.text" type="text" />
       </mat-form-field>
       <button
-        *ngIf="post.id === comment.postId"
+        *ngIf="myPost.id === comment.postId"
         (click)="commentPost(post)"
         class="bg-primary"
         mat-raised-button

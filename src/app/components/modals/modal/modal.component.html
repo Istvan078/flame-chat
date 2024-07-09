@@ -113,13 +113,29 @@
         </mat-icon></span
       >
     </button>
-    <!-- <button
-      (click)="activeModal.dismiss('Modal bezárva')"
+  </div>
+</ng-container>
+
+<ng-container *ngIf="error?.message">
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <mat-icon class="text-warning align-middle me-2">error</mat-icon
+      ><b>{{ error.message }}</b>
+    </h4>
+  </div>
+  <div class="modal-footer">
+    <button
+      (click)="activeModal.close()"
       type="button"
-      class="btn btn-secondary green"
+      class="btn btn-success"
       data-bs-dismiss="modal"
     >
-      Nem <mat-icon class="align-middle">cancel</mat-icon>
-    </button> -->
+      <span class="text-white align-middle"
+        >Oké
+        <mat-icon class="text-white align-middle">
+          {{ 'done' }}
+        </mat-icon></span
+      >
+    </button>
   </div>
 </ng-container>

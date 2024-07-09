@@ -60,9 +60,9 @@ export class AuthService {
       }
     });
     this.subscribeToNotifications();
-    this.swPush.messages.subscribe((val) => console.log(val));
+    this.swPush.messages.subscribe(val => console.log(val));
 
-    this.swPush.notificationClicks.subscribe((event) =>
+    this.swPush.notificationClicks.subscribe(event =>
       console.log('rákattoltál a gombra', event)
     );
   }
@@ -72,19 +72,18 @@ export class AuthService {
   }
 
   subscribeToNotifications() {
-    if(this.swPush.isEnabled) {
+    if (this.swPush.isEnabled) {
       this.swPush
-      .requestSubscription({
-        serverPublicKey: this.VAPID_PUBLIC_KEY,
-      })
-      .then((sub) => {
-        this.notiSub = sub;
-      })
-      .catch((err) =>
-        console.error('Could not subscribe to notifications', err)
-      );
+        .requestSubscription({
+          serverPublicKey: this.VAPID_PUBLIC_KEY,
+        })
+        .then(sub => {
+          this.notiSub = sub;
+        })
+        .catch(err =>
+          console.error('Could not subscribe to notifications', err)
+        );
     }
-
   }
 
   getIdToken(user: any) {
@@ -166,7 +165,7 @@ export class AuthService {
   }
 
   loginWithEmAndPa(email: string, password: string) {
-    this.aFireAuth.signInWithEmailAndPassword(email, password);
+    return this.aFireAuth.signInWithEmailAndPassword(email, password);
   }
 
   setCustomClaims(uid: string, claims: any) {

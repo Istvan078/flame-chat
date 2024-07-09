@@ -222,7 +222,11 @@ export class BaseService implements OnDestroy {
   }
 
   updateUserData(body: any, key: string) {
-    this.refUsers.update(key, body);
+    if (key) this.refUsers.update(key, body);
+  }
+
+  deleteUserData(id: string) {
+    return this.refUsers.remove(id);
   }
 
   addProfilePicture(file: any) {

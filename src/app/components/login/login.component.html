@@ -6,20 +6,41 @@
     Bejelentkezés Email címmel
   </h2>
 </div>
-<form #loginForm="ngForm" *ngIf="!emailOrGoogle" (ngSubmit)="loginWithEmAndPa()">
+<form
+  #loginForm="ngForm"
+  *ngIf="!emailOrGoogle"
+  (ngSubmit)="loginWithEmAndPa()"
+>
   <mat-form-field>
     <mat-label for="email">Email</mat-label>
     <input matInput [(ngModel)]="email" type="email" name="email" />
   </mat-form-field>
   <mat-form-field>
     <mat-label for="password">Jelszó</mat-label>
-    <input matInput [(ngModel)]="password" type="password" name="password" />
+    <input
+      #passRef
+      matInput
+      [(ngModel)]="password"
+      type="password"
+      name="password"
+    />
+    <mat-icon
+      (click)="
+        passRef.type === 'password'
+          ? (passRef.type = 'text')
+          : (passRef.type = 'password')
+      "
+      matIconSuffix
+      >{{
+        passRef.type === 'password' ? 'visibility_off' : 'visibility'
+      }}</mat-icon
+    >
   </mat-form-field>
 
   <button color="accent" mat-raised-button type="submit">Bejelentkezés</button>
 
   <h4 class="text-center mt-3 fs-5">
-    {{'Regisztráció egyszerűen -->'}}
+    {{ 'Regisztráció egyszerűen -->' }}
     <a
       (click)="facebookOrGoogle = true; booleanFunction()"
       type="button"
@@ -32,32 +53,34 @@
       class="btn btn-primary mx-2"
       ><i class="bi bi-facebook h4"></i
     ></a> -->
-    <button (click)="booleanFunction(); isPhone=!isPhone" class="btn btn-secondary" type="button">
+    <button
+      (click)="booleanFunction(); isPhone = !isPhone"
+      class="btn btn-secondary"
+      type="button"
+    >
       <span class="bi bi-telephone h4"></span>
     </button>
   </h4>
 </form>
 
+<div class="google-container-main" *ngIf="emailOrGoogle && !isPhone">
+  <div
+    *ngIf="emailOrGoogle"
+    class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
+  >
+    <button
+      [disabled]="!facebookOrGoogle"
+      class="btn btn-lg"
+      (click)="loginWithGoogle()"
+      color="warn"
+      mat-raised-button
+      type="button"
+    >
+      <i class="bi bi-google"></i> Bejelentkezés
+    </button>
+  </div>
 
-<div class="google-container-main" *ngIf="emailOrGoogle && !isPhone">   
-        <div
-          *ngIf="emailOrGoogle"
-          class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
-        >
-          <button
-            [disabled]="!facebookOrGoogle"
-            class="btn btn-lg"
-            (click)="loginWithGoogle()"
-            color="warn"
-            mat-raised-button
-            type="button"
-          >
-            <i class="bi bi-google"></i> Bejelentkezés
-          </button>
-        </div>
-
-
-<!-- <div
+  <!-- <div
   *ngIf="emailOrGoogle"
   class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
 >
@@ -75,58 +98,59 @@
 </div>
 
 <ng-container *ngIf="emailOrGoogle && !reCapthcaOff">
-     
-      <div id="reCaptchaContainer" class="flexToMiddleContainer"></div>
-    
-      <div class="row no-padding justify-content-center align-items-center" [ngClass]="isPhone?'d-flex':'d-none'">
-        <div class="form-floating mt-4 col-6 no-padding">
-          <input
-            class="form-control"
-            [(ngModel)]="phoneNumber"
-            id="phoneNumber"
-            name="phoneNumber"
-            type="text"
-            placeholder="Telefonszám"
-          />
-          <label for="phoneNumber">+36</label>
-        </div>
-        <div class="col-6 mt-4 ms-2 no-padding text-center span-div">
-          <span
-            class="p-2 bi bi-telephone-fill h2 text-dark bg-success rounded"
-          ></span>
-        </div>
-    
-        <div class="col-12 text-center mt-1">
-          <button
-            (click)="startLoginWithPhoneNumber()"
-            type="button"
-            class="btn btn-success"
-          >
-            <i class="bi bi-telephone"></i> Bejelentkezés
-          </button>
-        </div>
+  <div id="reCaptchaContainer" class="flexToMiddleContainer"></div>
+
+  <div
+    class="row no-padding justify-content-center align-items-center"
+    [ngClass]="isPhone ? 'd-flex' : 'd-none'"
+  >
+    <div class="form-floating mt-4 col-6 no-padding">
+      <input
+        class="form-control"
+        [(ngModel)]="phoneNumber"
+        id="phoneNumber"
+        name="phoneNumber"
+        type="text"
+        placeholder="Telefonszám"
+      />
+      <label for="phoneNumber">+36</label>
     </div>
-    </ng-container>
+    <div class="col-6 mt-4 ms-2 no-padding text-center span-div">
+      <span
+        class="p-2 bi bi-telephone-fill h2 text-dark bg-success rounded"
+      ></span>
+    </div>
 
-    <ng-container *ngIf="verificationId">
-        <div class="col-12 text-center flexToMiddleContainer">
-          <input
-            class="form-control"
-            [(ngModel)]="verificationCode"
-            id="verify-code"
-            name="verify-code"
-            type="text"
-            placeholder="Megerősítő kód"
-          />
-        </div>
-          <div class="col-12 text-center">
-          <button
-            (click)="verifyPhoneNumberAndLogin()"
-            type="button"
-            class="btn btn-dark mt-1"
-          >
-            Kód megerősítése
-          </button>
-           </div>
-    </ng-container>
+    <div class="col-12 text-center mt-1">
+      <button
+        (click)="startLoginWithPhoneNumber()"
+        type="button"
+        class="btn btn-success"
+      >
+        <i class="bi bi-telephone"></i> Bejelentkezés
+      </button>
+    </div>
+  </div>
+</ng-container>
 
+<ng-container *ngIf="verificationId">
+  <div class="col-12 text-center flexToMiddleContainer">
+    <input
+      class="form-control"
+      [(ngModel)]="verificationCode"
+      id="verify-code"
+      name="verify-code"
+      type="text"
+      placeholder="Megerősítő kód"
+    />
+  </div>
+  <div class="col-12 text-center">
+    <button
+      (click)="verifyPhoneNumberAndLogin()"
+      type="button"
+      class="btn btn-dark mt-1"
+    >
+      Kód megerősítése
+    </button>
+  </div>
+</ng-container>
