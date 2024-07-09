@@ -1,7 +1,7 @@
 import { NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { AppRoutingModule } from './app-routing.module';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 import {
   NgbModalModule,
@@ -26,40 +26,30 @@ import { VisitedMeComponent } from './components/nav/notifications/visited-me/vi
 import { FilesModalComponent } from './components/modals/files-modal/files-modal.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    HomeComponent,
-    NavComponent,
-    SignupComponent,
-    ClassPipe,
-    LoginComponent,
-    UsersComponent,
-    LoadingSpinnerComponent,
-    ModalComponent,
-    NotificationsComponent,
-    VisitedMeComponent,
-    FilesModalComponent,
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    BrowserAnimationsModule,
-
-    SharedModule,
-
-    NgbTooltipModule,
-    NgbModalModule,
-    ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: !isDevMode(),
-      // Register the ServiceWorker as soon as the application is stable
-      // or after 30 seconds (whichever comes first).
-      registrationStrategy: 'registerWhenStable:10000',
-    }),
-  ],
-  providers: [NgbTooltipConfig],
-
-  bootstrap: [AppComponent],
-})
+@NgModule({ declarations: [
+        AppComponent,
+        HomeComponent,
+        NavComponent,
+        SignupComponent,
+        ClassPipe,
+        LoginComponent,
+        UsersComponent,
+        LoadingSpinnerComponent,
+        ModalComponent,
+        NotificationsComponent,
+        VisitedMeComponent,
+        FilesModalComponent,
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        SharedModule,
+        NgbTooltipModule,
+        NgbModalModule,
+        ServiceWorkerModule.register('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            // Register the ServiceWorker as soon as the application is stable
+            // or after 30 seconds (whichever comes first).
+            registrationStrategy: 'registerWhenStable:10000',
+        })], providers: [NgbTooltipConfig, provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule {}
