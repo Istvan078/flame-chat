@@ -84,12 +84,13 @@ export class LoginComponent {
               userProfile[0].birthDate === undefined ||
               (userProfile[0].birthDate === '' && user?.emailVerified === true)
             ) {
-              this.router.navigate(['profile/' + user?.uid]);
+              this.router.navigate(['/profile/' + user?.uid]);
             } else if (
-              (userProfile[0].birthDate && user?.emailVerified === true)
+              userProfile[0].birthDate &&
+              user?.emailVerified === true
             ) {
               this.authService.userLoggedInSubject.next(user);
-              this.router.navigate(['chat']);
+              this.router.navigate(['/chat']);
             }
           }
         });
@@ -121,9 +122,9 @@ export class LoginComponent {
               userProfile[0].birthDate === undefined ||
               userProfile[0].birthDate === ''
             ) {
-              this.router.navigate(['profile/' + user.uid]);
+              this.router.navigate(['/profile/' + user.uid]);
             } else {
-              this.router.navigate(['chat']);
+              this.router.navigate(['/chat']);
             }
           });
         }
@@ -172,9 +173,9 @@ export class LoginComponent {
             userProfile[0]['birthDate'] === undefined ||
             userProfile[0]['birthDate'] === ''
           ) {
-            this.router.navigate(['profile/' + user.uid]);
+            this.router.navigate(['/profile/' + user.uid]);
           } else {
-            this.router.navigate(['chat']);
+            this.router.navigate(['/chat']);
           }
         });
       });

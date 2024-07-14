@@ -18,8 +18,10 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { Chat } from '../models/chat.model';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UserClass } from '../models/user.model';
+import { Friends, UserClass } from '../models/user.model';
 import firebase from 'firebase/compat/app';
+import emailjs from '@emailjs/browser';
+import { Environments } from '../environments';
 
 interface Friend {
   key: string;
@@ -49,7 +51,9 @@ export class BaseService implements OnDestroy {
 
   profileSeenSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   userFriendsSubject: BehaviorSubject<any> = new BehaviorSubject({});
+  selectedFriendSubject: BehaviorSubject<any> = new BehaviorSubject({});
   logicalSubject: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  isNavigatedToPostsSubject: Subject<boolean> = new Subject();
   getAllMessagesSubject: BehaviorSubject<any> = new BehaviorSubject({});
   newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([]);
@@ -97,9 +101,35 @@ export class BaseService implements OnDestroy {
   }
 
   // id: string,
-  addFriends(friend: any) {
-    return this.refFriends.push(friend);
+  addFriends(friend: any, friendKey: string) {
+    // return this.refFriends.push(friend);
+    return this.realTimeDatabase
+      .object(`users/${this.userKey}/friends/${friendKey}`)
+      .update(friend);
   }
+
+  // getFriendsForReset(userKey: string): Observable<any[]> {
+  //   return this.realTimeDatabase
+  //     .list(`users/${userKey}/friends`)
+  //     .snapshotChanges()
+  //     .pipe(
+  //       map(changes =>
+  //         changes.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
+  //       )
+  //     );
+  // }
+
+  // removeFriendsForReset(userKey: string, friendKey: string) {
+  //   return this.realTimeDatabase
+  //     .object(`users/${userKey}/friends/${friendKey}`)
+  //     .remove();
+  // }
+
+  // resetFriends(userKey: string, friendKey: string, friend: any) {
+  //   return this.realTimeDatabase
+  //     .object(`users/${userKey}/friends/${friendKey}`)
+  //     .update(friend);
+  // }
 
   updateFriend(friendKey: string, body: UserClass) {
     return firebase
@@ -161,9 +191,9 @@ export class BaseService implements OnDestroy {
       );
   }
 
-  removeFriend(id: string) {
+  removeFriend(friendKey: string) {
     // this.refFriends = this.realTimeDatabase.list('/friends')
-    return this.refFriends.remove(id);
+    return this.refFriends.remove(friendKey);
   }
 
   getFriends(): Observable<Friend[]> {
@@ -288,14 +318,49 @@ export class BaseService implements OnDestroy {
         )
       );
   }
-
-  getWeather(location: string) {
-    return this.http.get(this.apiUrl + `weather?address=${location}`);
+  async sendEmail(templateId: string, templateParams: {}) {
+    const res = await emailjs.send(
+      Environments.EMAILJS_SERVICE_ID,
+      templateId,
+      templateParams,
+      {
+        publicKey: 'fEZkI9mcDSDrrWEze',
+      }
+    );
+    return res;
+  }
+  async sendWelcomeEmail(email: string) {
+    let templateParams = {
+      fromEmail: 'noreply@flame-chat.hu',
+      replyTo: 'kalmaristvan078@gmail.com',
+      toEmail: email,
+      messageDate: new Date().toLocaleString(),
+    };
+    const res = await this.sendEmail(
+      Environments.EMAILJS_WELCOME_TEMPLATE_ID,
+      templateParams
+    );
+    console.log(res, 'E-mail sikeresen elküldve');
   }
 
-  deleteAllNotes() {
-    return this.http.delete(
-      'https://project0781-default-rtdb.europe-west1.firebasedatabase.app/notes.json'
+  async sendMessNotificationEmail(
+    friend: Friends,
+    message: Chat,
+    user: UserClass
+  ) {
+    let templateParams = {
+      username: friend.displayName,
+      message: message.message.message,
+      fromUserProfPic: user.profilePicture,
+      fromName: user.displayName,
+      appName: 'Flame Chat',
+      toEmail: friend.email,
+      timeStamp: new Date().toLocaleString(),
+    };
+    const res = await this.sendEmail(
+      Environments.EMAILJS_MESSAGED_ME_TEMPLATE_ID,
+      templateParams
     );
+    console.log(res, 'E-mail sikeresen elküldve');
   }
 }

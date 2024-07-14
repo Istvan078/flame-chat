@@ -1,6 +1,11 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  Subscription,
+} from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -12,6 +17,8 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 import { HttpClient } from '@angular/common/http';
 import * as deepMerge from 'deepmerge';
+import { ToastService } from 'src/app/services/toast.service';
+import { MatSlideToggle } from '@angular/material/slide-toggle';
 
 type Notification = {
   displayName: string;
@@ -27,6 +34,7 @@ type Notification = {
 })
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild(MatAccordion) accordion!: MatAccordion;
+  @ViewChild('slideToggle') slideToggle!: MatSlideToggle;
 
   // FELHASZNÁLÓVAL KAPCSOLATOS //
   userProfiles: UserClass[] = [];
@@ -65,9 +73,13 @@ export class ChatComponent implements OnInit, OnDestroy {
   arePostsOn: boolean = false;
   areMyPostsOn: boolean = false;
   isMessageOn: boolean = false;
+  subscribedForNotifications: boolean = false;
 
   // POSZTOKKAL KAPCSOLATOS //
   postsNotificationNumber: number = 0;
+  myPostsNotificationNumber: number = 0;
+  seenPosts: any[] = [];
+  seenMyPosts: any[] = [];
 
   // FÁJLOKKAL KAPCSOLATOS //
   selectedFiles: any[] = [];
@@ -77,7 +89,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // PUSH NOTIFICATIONS-EL KAPCSOLATOS //
   friendPushSub: any;
-  myPushSubscription: any;
+  myPushSubscription!: PushSubscription;
 
   // TOAST //
   toastVal: any = {};
@@ -117,7 +129,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     private router: Router,
     private ngbModal: NgbModal,
     private firestore: FirestoreService,
-    private http: HttpClient
+    private http: HttpClient,
+    private toastService: ToastService
   ) {}
 
   ngOnInit() {
@@ -127,12 +140,75 @@ export class ChatComponent implements OnInit, OnDestroy {
     //     console.log(this.friendPushSub)
     //   });
     // }
-    this.customInterval$.subscribe({
-      next: val => console.log(val),
-      complete: () => console.log('TELJESÍTVE'),
-      error: err => console.log(err),
-    });
+    // this.customInterval$.subscribe({
+    //   next: val => console.log(val),
+    //   complete: () => console.log('TELJESÍTVE'),
+    //   error: err => console.log(err),
+    // });
     this.test();
+    new Observable(observer => {
+      const interval = setInterval(async () => {
+        this.myPushSubscription = this.auth.swPushh();
+        if (this.myPushSubscription?.endpoint && this.userProfile?.key) {
+          let JSONed = this.myPushSubscription?.toJSON();
+          const querySnapShot =
+            await this.firestore.getUserNotiSubscriptionReformed(
+              this.userProfile?.key,
+              JSONed.endpoint!
+            );
+          if (querySnapShot.empty) this.subscribedForNotifications = false;
+          else this.subscribedForNotifications = true;
+          observer.next(this.myPushSubscription);
+          observer.complete();
+          clearInterval(interval);
+        }
+        console.log('FUT AZ INTERVAL');
+      }, 200);
+      setTimeout(async () => {
+        console.log(`TIMEOUT LEJÁRT`);
+        let JSONed = this.myPushSubscription?.toJSON();
+        if (JSONed?.endpoint) {
+          const querySnapShot =
+            await this.firestore.getUserNotiSubscriptionReformed(
+              this.userProfile?.key,
+              JSONed.endpoint
+            );
+          console.log(querySnapShot);
+          console.log(JSONed);
+          if (querySnapShot.empty) {
+            console.log('NINCS ILYEN FELIRATKOZÁS MÉG');
+            const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
+              animation: true,
+              fullscreen: true,
+            });
+            doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
+            const choiceResult = await doYouSubscribeModal.result;
+            console.log(choiceResult);
+            if (choiceResult === 'Igen') {
+              await this.updateUserNotifications({ checked: true });
+              this.subscribedForNotifications = true;
+            }
+          }
+          if (JSONed.endpoint) observer.complete();
+        } else {
+          console.log('LE VAN TILTVA AZ ÉRTESÍTÉSEK A BÖNGÉSZŐBEN');
+          const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
+            animation: true,
+            fullscreen: true,
+          });
+          doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
+          const choiceResult = await doYouSubscribeModal.result;
+          console.log(choiceResult);
+          if (choiceResult === 'Igen') {
+            await this.updateUserNotifications({ checked: true });
+            observer.complete();
+          }
+        }
+        clearInterval(interval);
+      }, 5000);
+    }).subscribe(val => console.log(val));
+    if (this.myPushSubscription?.endpoint)
+      this.subscribedForNotifications = true;
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
     });
@@ -186,7 +262,9 @@ export class ChatComponent implements OnInit, OnDestroy {
                 res('**** SIKERES FELHASZNÁLÓI PROFIL LEKÉRÉS ****');
               }
               this.refreshSharedPosts();
+              this.refreshMyPosts();
               this.getNewPostsNotification();
+              this.getNotSeenMyPostsNotification();
             });
         });
     }).then(res => {
@@ -342,11 +420,71 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  async updateUserNotifications(event: any) {
+    const isSubscribed = event.checked;
+    let wantsToUnsub = false;
+    if (!isSubscribed) {
+      const areUSureToUnsub = this.ngbModal.open(ModalComponent, {
+        animation: true,
+        fullscreen: true,
+      });
+      areUSureToUnsub.componentInstance.isWantToUnsub = true;
+      try {
+        const choiceResult = await areUSureToUnsub.result;
+        if (choiceResult === 'Igen') {
+          wantsToUnsub = true;
+        }
+      } catch (err) {
+        this.slideToggle.checked = true;
+        console.log(err);
+      }
+    }
+    if (isSubscribed) {
+      if (Notification.permission === 'default')
+        await Notification.requestPermission();
+      if (Notification.permission === 'denied') {
+        alert(
+          'Az értesítések jelenleg le vannak tiltva. Kérjük, engedélyezze azokat a böngésző beállításaiban és próbálja újra.'
+        );
+        this.slideToggle.checked = false;
+        return;
+      }
+    }
+    if (this.myPushSubscription) {
+      let JSONed = this.myPushSubscription.toJSON();
+      this.firestore
+        .getUserNotiSubscriptionReformed(this.userProfile.key, JSONed.endpoint!)
+        .then(docs => {
+          if (docs.empty && isSubscribed && !wantsToUnsub)
+            this.firestore.saveUserNotiSubscription(
+              this.userProfile.key,
+              JSONed
+            );
+          docs.forEach(async doc => {
+            if (doc.exists && !isSubscribed && wantsToUnsub) {
+              await this.firestore.deleteUserNotificationSub(
+                this.userProfile.key,
+                doc.id
+              );
+              this.myPushSubscription.unsubscribe();
+            }
+
+            if (!doc.exists && isSubscribed && !wantsToUnsub)
+              this.firestore.saveUserNotiSubscription(
+                this.userProfile.key,
+                JSONed
+              );
+          });
+        });
+    }
+  }
+
   signAsAFriend(user: UserClass) {
     const friend: {} = {
       friendId: user.uid,
+      friendKey: user.key,
     };
-    this.base.addFriends(friend)?.then(() => {
+    this.base.addFriends(friend, user.key)?.then(() => {
       const modalRef = this.ngbModal.open(ModalComponent, {
         centered: true,
       });
@@ -749,9 +887,15 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.selectedFriend.friendId +
         '-' +
         new Date().getTime();
-      this.message.message.displayName = this.userProfile.displayName;
+      this.message.message.displayName = this.userProfile.displayName!;
       this.message.message.email = this.userProfile.email as string;
       this.message.message.profilePhoto = this.userProfile.profilePicture;
+      if (this.message.message)
+        this.base.sendMessNotificationEmail(
+          this.selectedFriend,
+          this.message,
+          this.userProfile
+        );
       this.message._setKey = this.userProfile.uid + this.randomIdGenerator();
       const messageCopy = deepMerge.all([this.message]);
       this.allChatsArray.unshift(messageCopy);
@@ -808,26 +952,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     let friend = this.userProfiles.find(
       uP => uP.uid === this.selectedFriend.friendId
     );
-    let myPushSubscription: PushSubscription = this.auth.swPushh();
-    if (myPushSubscription) {
-      let JSONed = myPushSubscription.toJSON();
-      this.firestore
-        .getUserNotiSubscriptionReformed(this.userProfile.key, JSONed.endpoint!)
-        .then(docs => {
-          if (docs.empty)
-            this.firestore.saveUserNotiSubscription(
-              this.userProfile.key,
-              JSONed
-            );
-          docs.forEach(doc => {
-            if (!doc.exists)
-              this.firestore.saveUserNotiSubscription(
-                this.userProfile.key,
-                JSONed
-              );
-          });
-        });
-    }
+
     const msg: Notification = {
       displayName: this.message.message.displayName,
       message: this.message.message.message,
@@ -987,6 +1112,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  getNotSeenMyPostsNotification() {
+    this.firestore.getMyPostsNotiSubj().subscribe(num => {
+      this.myPostsNotificationNumber = num === 0 || num > 0 ? num : 0;
+    });
+  }
+
   toFriendProfile(friendId: string) {
     const userProfile = this.userProfile;
     console.log(userProfile);
@@ -1030,7 +1161,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     promise.then(() =>
-      this.router.navigate(['chat/' + friendId + '/friend-profile'])
+      this.router.navigate(['/' + friendId + '/friend-profile'])
     );
   }
 
@@ -1064,13 +1195,63 @@ export class ChatComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  seenPosts: any[] = [];
+  refreshMyPosts() {
+    this.firestore
+      .refreshMyPosts(this.userProfile?.key)
+      .subscribe((myPosts: any[]) => {
+        myPosts.map(myPost => {
+          if (
+            myPost.seen === false &&
+            !this.seenMyPosts.includes(myPost.fromPostId)
+          ) {
+            console.log(myPost);
+            this.seenMyPosts.push(myPost.fromPostId);
+            this.firestore.getMyPostsNotiSubj().next(this.seenMyPosts.length);
+          }
+        });
+      });
+  }
+
+  getMyPostsCounter = -1;
+  getSharedPostsCounter = -1;
+  getPosts: {
+    isGetMyPosts: boolean;
+    isGetSharedPosts: boolean;
+  } = {
+    isGetMyPosts: false,
+    isGetSharedPosts: false,
+  };
+  getMyPosts() {
+    if (this.getMyPostsCounter === -1) return this.getMyPostsCounter++;
+    if (!this.getMyPostsCounter) {
+      this.getPosts.isGetMyPosts = false;
+      this.firestore.getMyPostsSub().next(this.getPosts);
+      this.getMyPostsCounter = 1;
+    } else if (this.getMyPostsCounter) {
+      this.getPosts.isGetMyPosts = true;
+      this.firestore.getMyPostsSub().next(this.getPosts);
+      this.getMyPostsCounter = 0;
+    }
+  }
+
+  getSharedPosts() {
+    if (this.getSharedPostsCounter === -1) return this.getSharedPostsCounter++;
+    if (!this.getSharedPostsCounter) {
+      this.getPosts.isGetSharedPosts = false;
+      this.firestore.getMyPostsSub().next(this.getPosts);
+      this.getSharedPostsCounter = 1;
+    } else if (this.getSharedPostsCounter) {
+      this.getPosts.isGetSharedPosts = true;
+      this.firestore.getMyPostsSub().next(this.getPosts);
+      this.getSharedPostsCounter = 0;
+    }
+  }
 
   refreshSharedPosts() {
     this.firestore.refreshSharedPosts().subscribe((sPosts: any[]) => {
       sPosts.map(sPost => {
         if (
-          sPost.notSeen.includes(this.userProfile?.uid) &&
+          sPost.notSeen?.includes(this.userProfile?.uid) &&
           !this.seenPosts.includes(sPost.timeStamp)
         ) {
           this.seenPosts.push(sPost.timeStamp);
@@ -1082,7 +1263,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   toAlbum() {
     this.base.userProfileSubject.next(this.userProfile);
-    this.router.navigate(['chat/album/' + this.userProfile.uid]);
+    this.router.navigate(['/album/' + this.userProfile.uid]);
   }
 
   ngOnDestroy(): void {

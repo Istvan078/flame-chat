@@ -1,4 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { BaseService } from './services/base.service';
 import { Subscription } from 'rxjs';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
@@ -12,27 +18,17 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'Flame Chat';
   routerOutletOff: boolean = false;
   routerOutletOffSub!: Subscription;
-
-  apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
-
-  readonly VAPID_PUBLIC_KEY =
-    'BNDP_ZCBO61xD-DAXQiGkshAMJdemtl0-jSsRl6amjuD3RD--YFRMK-yt9ZTN92I8kbRI8krLihrFSXDs8QMM0k';
-  readonly PRIVATE_KEY = '1JBEK1YxrcorQiiqXaCznATmfHCmt9sET_s3XMbKpoI';
-  msg: any = {
-    displayName: 'Istvan',
-    message: 'Hello',
-    profilePhoto:
-      'https://firebasestorage.googleapis.com/v0/b/project0781.appspot.com/o/profilePictures%2FIMG_20210322_110404.jpg?alt=media&token=bd3a690e-53b6-4a6e-8aef-ba7e142b2171',
-    timeStamp: '123253252353654',
-  };
-  sub: any;
+  onDestroyRef = inject(DestroyRef);
 
   constructor(private base: BaseService, private swUpdate: SwUpdate) {}
   ngOnInit(): void {
-    setInterval(this.checkForVersionUpdate, 3600000);
+    const interval = setInterval(this.checkForVersionUpdate, 30000);
     this.routerOutletOffSub = this.base.logicalSubject.subscribe(
       logic => (this.routerOutletOff = logic)
     );
+    this.onDestroyRef.onDestroy(() => {
+      clearInterval(interval);
+    });
   }
 
   checkForVersionUpdate = () => {

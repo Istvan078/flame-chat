@@ -14,3 +14,40 @@
 .shareButton {
   background-color: rgba(0, 128, 0, 0.7) !important;
 }
+
+.green {
+  background-color: rgba(21, 179, 21, 0.7) !important;
+}
+
+.shared-with-me-by {
+  position: absolute;
+  font-size: 1.15rem;
+  left: 10px;
+  top: 5px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.post-text {
+  margin-bottom: 5px;
+  padding-top: 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.shared-with-me-time {
+  position: absolute;
+  font-size: 1.02rem;
+  right: 10px;
+  top: 5px;
+  font-style: italic;
+}
+
+@media screen and (max-width: 770px) {
+  .space-div {
+    height: 50px;
+  }
+  .shared-with-me-time {
+    top: 50px;
+    left: 10px;
+  }
+}

@@ -1,14 +1,20 @@
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  Input,
+  OnDestroy,
+  OnInit,
+} from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { Post } from 'src/app/models/post.model';
-import { UserClass } from 'src/app/models/user.model';
+import { Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { tick } from '@angular/core/testing';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-news',
@@ -16,10 +22,9 @@ import { tick } from '@angular/core/testing';
   styleUrls: ['./news.component.scss'],
 })
 export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
-  recipeForm: any;
-  submitButtonValue: any;
+  @Input() userFriends?: Friends[];
   sharedPictures: any[] = [];
-  privatePost!: Post;
+  post: Post = new Post();
   publishForm!: FormGroup;
   chosenFiles: any;
   comment: any = {};
@@ -29,25 +34,36 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   uploadedPictures: any[] = [];
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
-  privatePosts: Post[] = [];
   peopleLikedPost: any[] = [];
   picturesSubscription!: Subscription;
   userProfilesSub!: Subscription;
+  sharedPostsSub!: Subscription;
   uploadCompleted: boolean = false;
   notShared: boolean = false;
-  showNotSharedPosts: boolean = false;
   isNewPost: boolean = false;
   isCommentOn: boolean = false;
+  pipeRefresh: boolean = false;
+  postIndex: any;
+  selectedFriendSub!: Subscription;
 
   constructor(
     private fBuilder: FormBuilder,
     private firestoreService: FirestoreService,
     private base: BaseService,
     private auth: AuthService,
-    private ngbModal: NgbModal
+    private ngbModal: NgbModal,
+    private http: HttpClient
   ) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
+    this.selectedFriendSub = this.base.selectedFriendSubject.subscribe(
+      async fr => {
+        if (fr.friendKey) {
+          await this.sendPostNotification(fr);
+          console.log('**POSZTMEGOSZTÁS ÉRTESÍTÉS ELKÜLDVE**');
+        }
+      }
+    );
     this.auth.getUser().then((user: UserClass) => {
       this.userProfilesSub = this.base
         .getUserProfiles()
@@ -65,7 +81,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       message: ['', [Validators.required, Validators.minLength(5)]],
       pictures: this.fBuilder.array([]),
       notSeen: [...this.userProfilesUidsArr],
-      sharing: ['yes'],
+      isShared: ['yes'],
       timeStamp: [''],
       displayName: [this.userProfile.displayName],
       iFrame: [''],
@@ -81,37 +97,51 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.firestoreService
-        .getPrivatePosts(this.userProfile.key as string)
-        .subscribe((privatePosts: any) => (this.privatePosts = privatePosts));
+    setTimeout(async () => {
       this.publishForm.patchValue({
         name: this.userProfile.displayName,
         displayName: this.userProfile.displayName,
       });
-
-      this.firestoreService.getSharedPosts().then((res: any[]) => {
-        this.sharedPosts = res;
-        let proba: any[] = [];
-        this.getPostsData();
+      this.init();
+      this.firestoreService.getMyPostsSub().subscribe(async getPosts => {
+        if (getPosts.isGetSharedPosts) {
+          await this.init();
+          console.log(`***POSZTOK INICIALIZÁLVA***`);
+        }
+        // else this.firestoreService.getMyPostsSub().unsubscribe();
       });
     }, 1000);
+  }
+
+  async init() {
+    this.peopleLikedPost = [];
+    const posts = await this.firestoreService.getPosts(false);
+    if (posts) this.sharedPosts = posts;
+    this.getPostsData();
+  }
+
+  refreshTimeStamp() {
+    this.sharedPosts.map(sP => {
+      sP.timeStamp = new Date(sP.timeStamp).getTime();
+    });
+    this.pipeRefresh = true;
   }
 
   getPostsData() {
     let proba: any[] = [];
     setTimeout(() => {
-      const iFrames: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(
-        '.iFrame'
-      ) as NodeListOf<HTMLIFrameElement>;
-
-      this.sharedPosts
-        .filter(sp => sp.iFrame)
-        .map((sP, i) => {
-          if (sP.iFrame) {
-            iFrames[i].src = sP.iFrame;
-          }
-        });
+      const iFrames: HTMLCollectionOf<HTMLIFrameElement> =
+        document.getElementsByClassName(
+          'iFrames-for-shared-post'
+        ) as HTMLCollectionOf<HTMLIFrameElement>;
+      this.sharedPosts.map((sP, i, arr) => {
+        const correspondingIframe = Array.from(iFrames).find(
+          iframe => iframe.getAttribute('data-post-id') === sP.id
+        );
+        if (sP.iFrame) {
+          correspondingIframe!.src = sP.iFrame;
+        }
+      });
 
       this.sharedPosts.map((sP: any, i: number) => {
         sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
@@ -146,11 +176,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 500);
   }
 
-  ngOnDestroy(): void {
-    if (this.picturesSubscription) this.picturesSubscription.unsubscribe();
-    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
-  }
-
   filesArrivedForSubject() {
     let fileArr: any[] = [];
     return new Promise((res, rej) => {
@@ -183,7 +208,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isNewPost = false;
   }
 
-  postPost() {
+  async postPost() {
     const date: Date = new Date();
     const iFrame = this.publishForm.get('iFrame')?.value;
     let modifiedIFrame;
@@ -200,6 +225,9 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
           'www.youtube.com/embed'
         );
       }
+      if (iFrame?.includes('live')) {
+        modifiedIFrame = iFrame.replace('live', 'embed');
+      }
     }
     this.publishForm.patchValue({
       timeStamp: date.getTime(),
@@ -208,71 +236,71 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     if (!iFrame) this.publishForm.removeControl('iFrame');
-    this.privatePost = this.publishForm.value;
-    this.privatePost.pictures = this.picturesArray;
-    this.firestoreService.createPost(
-      this.privatePost,
-      this.notShared,
-      this.userProfile.key
-    );
+    this.post = this.publishForm.value;
+    this.post.pictures = this.picturesArray;
+    this.post.userKey = this.userProfile.key;
+    this.post.private = {
+      isPrivate: false,
+    };
+    const postRef = await this.firestoreService.createPost(this.post);
+    await this.firestoreService.updatePost(postRef.id, { id: postRef.id });
     this.picturesArray = [];
-    if (this.notShared) this.showNotSharedPosts = true;
   }
 
-  like(post: Post, i: number) {
-    if (!post?.liked?.includes(this.userProfile.uid)) {
-      if (!post.liked?.length)
-        this.firestoreService
-          .updateDocument(
-            post.id,
-            {
-              liked: [this.userProfile.uid],
-            },
-            true
-          )
-          .then(() => {
-            this.firestoreService.getSharedPosts().then((shPosts: any[]) => {
-              this.refreshPost(shPosts, i, post);
-            });
+  async like(post: Post, i: number) {
+    const posts = await this.firestoreService.getPosts(false);
+    if (posts)
+      posts.sort((a: any, b: any) => {
+        if (a.timeStamp > b.timeStamp) return -1;
+        else return 1;
+      });
+    if (posts)
+      if (!posts[i]?.liked?.includes(this.userProfile.uid)) {
+        if (!posts[i].liked?.length) {
+          await this.firestoreService.updatePost(post.id, {
+            liked: [this.userProfile.uid],
           });
+        }
 
-      if (post.liked?.length)
-        this.firestoreService
-          .updateDocument(
-            post.id,
-            {
-              liked: [...post.liked, this.userProfile.uid],
-            },
-            true
-          )
-          .then(() => {
-            this.firestoreService.getSharedPosts().then((shPosts: any[]) => {
-              this.refreshPost(shPosts, i, post);
-            });
+        if (posts[i].liked?.length) {
+          await this.firestoreService.updatePost(post.id, {
+            liked: [...(posts[i].liked as any), this.userProfile.uid],
           });
-    }
+        }
+        const postsAfterLike = await this.firestoreService.getPosts(false);
+        if (postsAfterLike) this.refreshPost(postsAfterLike, i);
+      }
   }
 
-  refreshPost(sharedPosts: any[], i: number, post: Post) {
+  refreshPost(sharedPosts: Post[], i: number) {
     sharedPosts.sort((a: any, b: any) => {
       if (a.timeStamp > b.timeStamp) return -1;
       else return 1;
     });
     this.sharedPosts[i].liked = sharedPosts[i].liked;
     let filteredArr: any[] = [];
-
     this.userProfiles
       .filter(uP => this.sharedPosts[i].liked?.includes(uP.uid))
-      .map(user => {
+      .map((user, ind) => {
         const obj = {
           displayName: user.displayName,
           uid: user.uid,
           postId: this.sharedPosts[i].id,
         };
-        if (!this.peopleLikedPost[i]?.includes(user.uid)) filteredArr.push(obj);
-      })
-      .sort(() => Math.random() - 0.5);
-    this.peopleLikedPost[i] = filteredArr;
+        filteredArr.push(obj);
+      });
+    this.peopleLikedPost.map((person, ind, arr) => {
+      if (person[0]?.postId === filteredArr[0].postId) {
+        arr.splice(ind, 1);
+        arr.push(['DUMMY TEXT']);
+      }
+      if (ind === arr.length - 1) {
+        if (person[0].postId !== filteredArr[0].postId) {
+          this.peopleLikedPost.push(filteredArr);
+          person.sort(() => Math.random() - 0.5);
+        }
+      }
+    });
   }
 
   addPictures() {
@@ -365,6 +393,28 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  async sendPostNotification(friend: any) {
+    const apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
+    const promise = new Promise((res, rej) => {
+      return this.firestoreService
+        .getUserNotiSubscription(friend!.friendKey)
+        .subscribe(sub => {
+          // this.friendPushSub = sub;
+          if (sub !== undefined) {
+            return res(sub);
+          }
+        });
+    });
+    const friendSubs = await promise;
+    console.log(friendSubs);
+    const body = {
+      post: 'Poszt',
+      user: this.userProfile,
+      subscriptions: friendSubs,
+    };
+    this.http.post(`${apiUrl}post`, body).subscribe(res => console.log(res));
+  }
+
   showWhoLikedPost(people: any) {
     const modalRef = this.ngbModal.open(ModalComponent, {
       centered: true,
@@ -377,19 +427,37 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.comment.postId = postId;
   }
 
-  commentPost(post: Post) {
+  async commentPost(post: Post) {
     this.comment.uid = this.userProfile.uid;
     if (post.comments?.length) {
       post.comments.push(this.comment);
-      this.firestoreService
-        .updateDocument(post.id, { comments: post.comments }, true)
-        .then(() => (this.comment = {}));
+      const postUpdated = await this.firestoreService.updatePost(post.id, {
+        comments: post.comments,
+      });
+      this.comment = {};
     }
     if (!post.comments?.length) {
       post.comments = [this.comment];
-      this.firestoreService
-        .updateDocument(post.id, { comments: post.comments }, true)
-        .then(() => (this.comment = {}));
+      const postUpdated = await this.firestoreService.updatePost(post.id, {
+        comments: post.comments,
+      });
+      this.comment = {};
     }
+  }
+
+  startPostSharing(post: Post) {
+    console.log(post);
+    const modalRef = this.ngbModal.open(ModalComponent, { centered: true });
+    modalRef.componentInstance.post = post;
+    modalRef.componentInstance.user = this.userProfile;
+    modalRef.componentInstance.userFriends = this.userFriends;
+  }
+
+  ngOnDestroy(): void {
+    if (this.picturesSubscription) this.picturesSubscription.unsubscribe();
+    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
+    if (this.sharedPostsSub) this.sharedPostsSub.unsubscribe();
+    if (this.selectedFriendSub) this.selectedFriendSub.unsubscribe();
+    this.peopleLikedPost = [];
   }
 }

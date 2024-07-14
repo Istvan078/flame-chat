@@ -1,8 +1,42 @@
 .green {
-    background-color: rgba(21, 179, 21, 0.7) !important;
-  }
+  background-color: rgba(21, 179, 21, 0.7) !important;
+}
 
-.email{
+.email {
   color: blue;
   text-decoration: underline;
+}
+
+.z-index {
+  z-index: 8 !important;
+  position: fixed;
+  top: 20px;
+}
+
+.select-friends-modal {
+  position: fixed;
+  width: 100vw !important;
+  background-color: white;
+  height: 100vh !important;
+  overflow: auto;
+  left: 0;
+  top: 0;
+}
+
+.notif-main-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.friend-h3:hover {
+  cursor: pointer;
+  background-color: rgb(201, 189, 189);
+}
+
+.notification {
+  width: fit-content;
+  padding: 20px;
 }

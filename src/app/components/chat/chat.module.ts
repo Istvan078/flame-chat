@@ -9,6 +9,7 @@ import { loginGuardGuard } from 'src/app/guards/login-guard.guard';
 import { FriendProfileComponent } from '../user-profile/friend-profile/friend-profile.component';
 import { AlbumComponent } from './album/album.component';
 import { MyPostsComponent } from './my-posts/my-posts.component';
+import { ToastComponent } from '../toast/toast.component';
 
 @NgModule({
   declarations: [
@@ -18,6 +19,7 @@ import { MyPostsComponent } from './my-posts/my-posts.component';
     AlbumComponent,
     MyPostsComponent,
     NewsComponent,
+    ToastComponent,
   ],
   imports: [
     SharedModule,

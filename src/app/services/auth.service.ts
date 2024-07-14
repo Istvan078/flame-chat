@@ -8,9 +8,11 @@ import {
 } from '@angular/fire/auth';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { UserClass } from '../models/user.model';
+import { FirebaseUser, UserClass } from '../models/user.model';
 import { SwPush } from '@angular/service-worker';
 import { FirestoreService } from './firestore.service';
+import { Router } from '@angular/router';
+import { Environments } from '../environments';
 
 // import  {NotificationsScript}  from '../utils/notifications';
 
@@ -18,7 +20,7 @@ import { FirestoreService } from './firestore.service';
   providedIn: 'root',
 })
 export class AuthService {
-  usersApiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
+  usersApiUrl = Environments.API_URL;
 
   defaultClaims: {} = { basic: true, admin: false, superAdmin: false };
   user: UserClass = new UserClass();
@@ -29,8 +31,7 @@ export class AuthService {
   navDisappear: BehaviorSubject<boolean> = new BehaviorSubject(false);
   userClaimsSubj: BehaviorSubject<{}> = new BehaviorSubject({});
 
-  readonly VAPID_PUBLIC_KEY =
-    'BNDP_ZCBO61xD-DAXQiGkshAMJdemtl0-jSsRl6amjuD3RD--YFRMK-yt9ZTN92I8kbRI8krLihrFSXDs8QMM0k';
+  readonly VAPID_PUBLIC_KEY = Environments.VAPID_PUBLIC_KEY;
 
   httpHeaders: HttpHeaders = new HttpHeaders();
   authHeader: any;
@@ -46,7 +47,8 @@ export class AuthService {
     private aFireAuth: AngularFireAuth,
     private http: HttpClient,
     public swPush: SwPush,
-    private fStoreServ: FirestoreService
+    private fStoreServ: FirestoreService,
+    private router: Router
   ) {
     this.isLoggedIn().subscribe((user: any) => {
       if (user) {
@@ -57,32 +59,34 @@ export class AuthService {
         this.user = new UserClass();
         console.log('Ön kijelentkezett');
         this.userLoggedInSubject.next(new UserClass());
+        this.router.navigate(['/home']);
       }
     });
     this.subscribeToNotifications();
-    this.swPush.messages.subscribe(val => console.log(val));
 
-    this.swPush.notificationClicks.subscribe(event =>
-      console.log('rákattoltál a gombra', event)
-    );
+    // this.swPush.notificationClicks.subscribe(event =>
+    //   console.log('rákattoltál a gombra', event)
+    // );
   }
 
   swPushh() {
     return this.notiSub;
   }
 
-  subscribeToNotifications() {
+  async subscribeToNotifications() {
     if (this.swPush.isEnabled) {
-      this.swPush
-        .requestSubscription({
-          serverPublicKey: this.VAPID_PUBLIC_KEY,
-        })
-        .then(sub => {
-          this.notiSub = sub;
-        })
-        .catch(err =>
-          console.error('Could not subscribe to notifications', err)
-        );
+      const myPushSub = await this.swPush.requestSubscription({
+        serverPublicKey: this.VAPID_PUBLIC_KEY,
+      });
+      this.notiSub = myPushSub;
+      console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
+      // .then(sub => {
+      //   console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
+      //   this.notiSub = sub;
+      // })
+      // .catch(err =>
+      //   console.error('NEM TUDTAM FELIRATKOZNI AZ ÉRTESÍTÉSEKRE', err)
+      // );
     }
   }
 
@@ -144,10 +148,10 @@ export class AuthService {
     });
   }
 
-  getUsers(): Observable<UserClass[]> {
+  getUsers(): Observable<FirebaseUser[]> {
     if (this.user.idToken) {
       // let headers = new HttpHeaders().set('Authorization', this.user.idToken);
-      return this.http.get<UserClass[]>(this.usersApiUrl + 'users', {
+      return this.http.get<FirebaseUser[]>(this.usersApiUrl + 'users', {
         headers: this.httpHeaders,
       });
     }

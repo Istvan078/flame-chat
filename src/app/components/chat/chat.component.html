@@ -1,4 +1,23 @@
+<app-toast aria-live="polite" aria-atomic="true"></app-toast>
 <h1 *ngIf="!isMessageOn" class="text-center">Flame Chat</h1>
+<mat-sidenav-container class="config-options-container">
+  <mat-sidenav> </mat-sidenav>
+  <mat-sidenav-content>
+    <ol>
+      <li>
+        <mat-slide-toggle
+          color="primary"
+          (change)="updateUserNotifications($event)"
+          #slideToggle
+          [(ngModel)]="subscribedForNotifications"
+        ></mat-slide-toggle>
+        <mat-icon class="align-middle">notifications</mat-icon>
+        <span class="align-middle">Értesítések</span>
+      </li>
+    </ol>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
 <div class="text-center friend-name-container">
   <h1 *ngIf="isMessageOn" class="friend-name">
     {{ selectedFriend.displayName }}
@@ -21,34 +40,44 @@
 <div class="row" *ngIf="!sendPrivateMessageOn">
   <div class="col">
     <mat-accordion>
-      @if (userProfile.displayName) {
-
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
-          (click)="areMyPostsOn = !areMyPostsOn"
+          (click)="getMyPosts()"
           class="d-grid justify-content-center"
         >
-          <mat-panel-title class="pt-2"
-            >{{ userProfile?.displayName }}
+          @if(userProfile?.displayName) {
+          <mat-panel-title class="pt-2 me-0"
+            >{{ userProfile.displayName }}
             <img
               width="25px"
               height="25px"
               class="rounded-circle ms-1"
-              [src]="userProfile?.profilePicture"
+              [src]="userProfile.profilePicture"
               alt="Profilkép"
             />
+            <mat-icon
+              [matBadgeDisabled]="!myPostsNotificationNumber"
+              [matBadge]="myPostsNotificationNumber"
+              matBadgeColor="primary"
+              matBadgeSize="small"
+              aria-hidden="false"
+              style="transform: translateX(-90%)"
+            >
+            </mat-icon>
           </mat-panel-title>
+          }
         </mat-expansion-panel-header>
-        <div *ngIf="areMyPostsOn" class="row">
-          <div class="col">
-            <app-my-posts></app-my-posts>
+        <ng-template matExpansionPanelContent>
+          <div class="row">
+            <div class="col">
+              <app-my-posts [userFriends]="userFriends!"></app-my-posts>
+            </div>
           </div>
-        </div>
+        </ng-template>
       </mat-expansion-panel>
-      }
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
-          (click)="arePostsOn = !arePostsOn"
+          (click)="getSharedPosts()"
           class="d-grid justify-content-center"
         >
           <mat-panel-title class="pt-2"
@@ -64,11 +93,13 @@
             >
           </mat-panel-title>
         </mat-expansion-panel-header>
-        <div class="row">
-          <div class="col">
-            <app-news *ngIf="arePostsOn"></app-news>
+        <ng-template matExpansionPanelContent>
+          <div class="row">
+            <div class="col">
+              <app-news [userFriends]="this.userFriends"></app-news>
+            </div>
           </div>
-        </div>
+        </ng-template>
       </mat-expansion-panel>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
@@ -174,8 +205,8 @@
                     "
                   >
                     <!-- <h5 class="card-header">
-                          <h2>{{ mess.displayName }}</h2>
-                        </h5> -->
+                            <h2>{{ mess.displayName }}</h2>
+                          </h5> -->
                     <div class="card-body mt-0">
                       <h2>{{ mess.displayName }}</h2>
                       <img
@@ -533,6 +564,7 @@
                           [src]="pic.url"
                           alt=""
                         />
+                        @if(file.senderId === userProfile.uid) {
                         <button
                           (click)="deleteFile(file.files, file.docId, ind)"
                           mat-raised-button
@@ -540,6 +572,7 @@
                         >
                           Kép törlése
                         </button>
+                        }
                       </div>
                     </ng-container>
                   </ng-container>
@@ -593,32 +626,32 @@
                     </mat-card-subtitle>
                   </div>
                   <!-- <mat-card-footer
-                    *ngIf="
-                      userProfile.claims.superAdmin &&
-                      userProfile.uid === msg.message.senderId
-                    "
-                  >
-                    <mat-card-content class="pad mt-0 pt-0">
-                      <div class="buttonCont">
-                        <mat-card-actions
-                          class="d-flex flex-wrap justify-content-end pe-0"
-                        >
-                          <button
-                            class="bg-warning text-center"
-                            mat-raised-button
-                            type="button"
-                            *ngIf="userProfile.uid === msg.message.senderId"
-                            (click)="deleteMessage(msg)"
+                      *ngIf="
+                        userProfile.claims.superAdmin &&
+                        userProfile.uid === msg.message.senderId
+                      "
+                    >
+                      <mat-card-content class="pad mt-0 pt-0">
+                        <div class="buttonCont">
+                          <mat-card-actions
+                            class="d-flex flex-wrap justify-content-end pe-0"
                           >
-                            <span class="align-middle">Törlés</span
-                            ><span
-                              class="ms-2 mt-2 bi bi-trash3-fill h3 text-danger rounded align-middle"
-                            ></span>
-                          </button>
-                        </mat-card-actions>
-                      </div>
-                    </mat-card-content>
-                  </mat-card-footer> -->
+                            <button
+                              class="bg-warning text-center"
+                              mat-raised-button
+                              type="button"
+                              *ngIf="userProfile.uid === msg.message.senderId"
+                              (click)="deleteMessage(msg)"
+                            >
+                              <span class="align-middle">Törlés</span
+                              ><span
+                                class="ms-2 mt-2 bi bi-trash3-fill h3 text-danger rounded align-middle"
+                              ></span>
+                            </button>
+                          </mat-card-actions>
+                        </div>
+                      </mat-card-content>
+                    </mat-card-footer> -->
                 </div>
               </div>
             </mat-card-content>

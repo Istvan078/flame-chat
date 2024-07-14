@@ -10,124 +10,150 @@
   </button>
 </div>
 <div class="ms-4 mb-0 mt-2">
-  <button (click)="user['isRenderOn'] ? removeUserProfile() : getUserProfiles()" class="btn btn-secondary mb-1 me-2" type="button">
-    {{user['isRenderOn'] && isReadyToDeleteProf ? 'Felhasználói profil törlése' : 'Felhasználói profilok lekérése'}}
+  <button
+    (click)="user['isRenderOn'] ? removeUserProfile() : getUserProfiles()"
+    class="btn btn-secondary mb-1 me-2"
+    type="button"
+  >
+    {{
+      user['isRenderOn'] && isReadyToDeleteProf
+        ? 'Felhasználói profil törlése'
+        : 'Felhasználói profilok lekérése'
+    }}
   </button>
 </div>
-  <form *ngIf="user['isRenderOn']" class="mt-2 mb-1 d-flex flex-wrap justify-content-center align-items-center">
-      <div class="me-1 mb-1 form-floating">
-          <input [(ngModel)]="user.uid" name="uid" id="uid" class="form-control" type="text" placeholder="uid" />
-          <label for="uid">User Id</label>
-      </div>
-      <div class="mb-1 me-1 form-floating">
-          <input
-          [(ngModel)]="user.displayName"
-          name="displayName"
-          id="displayName"
-          class="form-control"
-          type="text"
-          placeholder="name"
-          />
-          <label for="displayName">Felhasználónév</label>
-      </div>
-      <div class="mb-1 me-1 form-floating">
-          <input
-          [(ngModel)]="user.email"
-          name="email"
-          id="email"
-          class="form-control"
-          type="text"
-          placeholder="email"
-          />
-          <label for="email">Email</label>
-      </div>
-      <div class="mb-1 me-1 form-floating">
-          <input
-          [(ngModel)]="user.phoneNumber"
-          name="phoneNumber"
-          id="phoneNumber"
-          class="form-control"
-          type="text"
-          placeholder="Phone Number"
-          />
-          <label for="phoneNumber">Telefonszám</label>
-      </div>
-      <div class="mb-1 me-1 form-floating">
-          <input
-          [(ngModel)]="user.profilePicture"
-          name="profilePicture"
-          id="profilePicture"
-          class="form-control"
-          type="text"
-          placeholder="profilePicture"
-          />
-          <label for="profilePicture">Profilkép Url</label>
-      </div>
-      <button (click)="setUserProfile()" class="btn btn-success mb-1 me-2" type="button">
-        Profil mentése
-      </button>
-      <button (click)="sureToDeleteUser()" class="btn btn-danger" type="button">
-          Felhasználó törlése
-      </button>
-    </form>
+<form
+  *ngIf="user['isRenderOn']"
+  class="mt-2 mb-1 d-flex flex-wrap justify-content-center align-items-center"
+>
+  <div class="me-1 mb-1 form-floating">
+    <input
+      [(ngModel)]="user.uid"
+      name="uid"
+      id="uid"
+      class="form-control"
+      type="text"
+      placeholder="uid"
+    />
+    <label for="uid">User Id</label>
+  </div>
+  <div class="mb-1 me-1 form-floating">
+    <input
+      [(ngModel)]="user.displayName"
+      name="displayName"
+      id="displayName"
+      class="form-control"
+      type="text"
+      placeholder="name"
+    />
+    <label for="displayName">Felhasználónév</label>
+  </div>
+  <div class="mb-1 me-1 form-floating">
+    <input
+      [(ngModel)]="user.email"
+      name="email"
+      id="email"
+      class="form-control"
+      type="text"
+      placeholder="email"
+    />
+    <label for="email">Email</label>
+  </div>
+  <div class="mb-1 me-1 form-floating">
+    <input
+      [(ngModel)]="user.phoneNumber"
+      name="phoneNumber"
+      id="phoneNumber"
+      class="form-control"
+      type="text"
+      placeholder="Phone Number"
+    />
+    <label for="phoneNumber">Telefonszám</label>
+  </div>
+  <div class="mb-1 me-1 form-floating">
+    <input
+      [(ngModel)]="user.profilePicture"
+      name="profilePicture"
+      id="profilePicture"
+      class="form-control"
+      type="text"
+      placeholder="profilePicture"
+    />
+    <label for="profilePicture">Profilkép Url</label>
+  </div>
+  <button
+    (click)="setUserProfile()"
+    class="btn btn-success mb-1 me-2"
+    type="button"
+  >
+    Profil mentése
+  </button>
+  <button (click)="sureToDeleteUser()" class="btn btn-danger" type="button">
+    Felhasználó törlése
+  </button>
+</form>
 <mat-sidenav-container *ngIf="isSideNavOn">
   <mat-sidenav #sidenav> </mat-sidenav>
 
   <mat-sidenav-content>
     <ol>
       <ng-container *ngFor="let user of users; let i = index">
-          <li class="d-flex flex-cols align-items-center flex-wrap">
-            <div class="my-2 me-2">
-              <span><b><i>{{ user.displayName }} </i></b></span>
+        <li class="d-flex flex-cols align-items-center flex-wrap">
+          <div class="my-2 me-2">
+            <span
+              ><b
+                ><i>{{ user.displayName }} </i></b
+              ></span
+            >
+            <mat-slide-toggle
+              (click)="getIndexOfUser(i); isReadyToDeleteProf = true"
+              [(ngModel)]="user['isRenderOn']"
+            ></mat-slide-toggle>
+          </div>
+          <div class="me-2">
+            <span *ngIf="user['isRenderOn']">Email: {{ user.email }} </span>
+            <span *ngIf="user['isRenderOn']">
+              <img
+                class="rounded-circle ms-2 mt-2"
+                width="75px"
+                height="75px"
+                src="{{ user.profilePicture }}"
+                alt="Profilkép"
+            /></span>
+          </div>
+          <div *ngIf="user.claims" class="d-grid justify-content-start ms-2">
+            <span *ngIf="user['isRenderOn']"
+              >Alap jogosultság: {{ user.claims.basic ? 'Van' : 'Nincs' }}
               <mat-slide-toggle
-                (click)="getIndexOfUser(i); isReadyToDeleteProf = true"
-                [(ngModel)]="user['isRenderOn']"
-              ></mat-slide-toggle>
-            </div>
-            <div class="me-2">
-              <span *ngIf="user['isRenderOn']">Email: {{ user.email }} </span>
-              <span *ngIf="user['isRenderOn']">
-                <img
-                  class="rounded-circle ms-2 mt-2"
-                  width="75px"
-                  height="75px"
-                  src="{{ user.profilePicture }}"
-                  alt="Profilkép"
-              /></span>
-            </div>
-            <div *ngIf="user.claims" class="d-grid justify-content-start ms-2">
-              <span *ngIf="user['isRenderOn']"
-                >Alap jogosultság: {{ user.claims.basic ? "Van" : "Nincs" }}
-                <mat-slide-toggle
-                  color="primary"
-                  (change)="changeClaims(user)"
-                  [(ngModel)]="user.claims.basic"
-                >
-                </mat-slide-toggle
-              ></span>
-              <span *ngIf="user['isRenderOn']"
-                >Admin jogosultság: {{ user.claims.admin ? "Van" : "Nincs" }}
-                <mat-slide-toggle
-                  [disabled]="!loggedInUser.claims.superAdmin"
-                  color="primary"
-                  (change)="changeClaims(user)"
-                  [(ngModel)]="user.claims.admin"
-                >
-                </mat-slide-toggle
-              ></span>
-              <span *ngIf="user['isRenderOn']"
-                >Szuper Admin jogosultság:
-                {{ user.claims.superAdmin ? "Van" : "Nincs" }}
-                <mat-slide-toggle
-                  color="primary"
-                  [disabled]="!loggedInUser.claims.superAdmin"
-                  (change)="changeClaims(user)"
-                  [(ngModel)]="user.claims.superAdmin"
-                >
-                </mat-slide-toggle
-              ></span>
-            </div>
-          </li>
+                color="primary"
+                (change)="changeClaims(user)"
+                [(ngModel)]="user.claims.basic"
+              >
+              </mat-slide-toggle
+            ></span>
+            <span *ngIf="user['isRenderOn']"
+              >Admin jogosultság: {{ user.claims.admin ? 'Van' : 'Nincs' }}
+              <mat-slide-toggle
+                [disabled]="!loggedInUser.claims.superAdmin"
+                color="primary"
+                (change)="changeClaims(user)"
+                [(ngModel)]="user.claims.admin"
+              >
+              </mat-slide-toggle
+            ></span>
+            <span *ngIf="user['isRenderOn']"
+              >Szuper Admin jogosultság:
+              {{ user.claims.superAdmin ? 'Van' : 'Nincs' }}
+              <mat-slide-toggle
+                color="primary"
+                [disabled]="!loggedInUser.claims.superAdmin"
+                (change)="changeClaims(user)"
+                [(ngModel)]="user.claims.superAdmin"
+              >
+              </mat-slide-toggle
+            ></span>
+          </div>
+        </li>
       </ng-container>
     </ol>
   </mat-sidenav-content>

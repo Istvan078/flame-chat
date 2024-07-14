@@ -1,10 +1,22 @@
 <div class="text-center mt-1">
   <button
+    *ngIf="isOnMyPostRoute"
+    routerLink="/chat"
+    color="primary"
+    mat-raised-button
+    type="button"
+    class="green me-2 my-1"
+  >
+    <mat-icon> keyboard_backspace </mat-icon>
+    Vissza
+  </button>
+  <button
     *ngIf="!isNewPost"
     (click)="isNewPost = !isNewPost"
     color="primary"
     mat-raised-button
     type="button"
+    class="my-1"
   >
     Új bejegyzés
   </button>
@@ -62,7 +74,7 @@
   <mat-form-field class="select-container mt-2">
     <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
     <mat-label>Láthatóság</mat-label>
-    <mat-select formControlName="sharing" id="sharing">
+    <mat-select formControlName="isShared" id="isShared">
       <mat-option (click)="notShared = false" ngClass="green" value="yes"
         >Ismerősök</mat-option
       >
@@ -76,64 +88,35 @@
   </button>
 </form>
 
-<!-- <div class="text-center">
-  <button
-    class="blue mt-1 mb-3"
-    (click)="showNotSharedPosts = !showNotSharedPosts"
-    mat-raised-button
-    type="button"
-  >
-    Privát bejegyzéseim
-  </button>
-</div> -->
-<!-- <ng-container *ngIf="showNotSharedPosts">
-  <div *ngFor="let privatePost of privatePosts | sort" class="row">
-    <div class="col text-center">
-      <mat-card class="bgCard my-2">
-        <mat-card-header>
-          <mat-card-title>{{ userProfile.displayName }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          {{ privatePost.message }}
-        </mat-card-content>
-        <mat-card-content>
-          <div
-            *ngFor="let pic of privatePost.pictures"
-            class="col-12 d-flex justify-content-center"
-          >
-            <img
-              class="rounded"
-              [src]="pic.url"
-              [alt]="pic.name"
-              width="75%"
-              height="100%"
-            />
-          </div>
-        </mat-card-content>
-
-        <mat-card-footer>
-          <small>{{ privatePost.timeStamp }}</small>
-        </mat-card-footer>
-      </mat-card>
-    </div>
-  </div>
-</ng-container> -->
-
-<div *ngFor="let myPost of myPostsArr | sort; let i = index" class="row mt-3">
+<div *ngFor="let myPost of myPostsArr; let i = index" class="row mt-3">
   <div class="col text-center">
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
+        <ng-container *ngFor="let sWithMe of postSharedWithMe"
+          ><div class="mb-4 space-div" *ngIf="myPost.id === sWithMe.fromPostId">
+            <span class="shared-with-me-by"
+              ><mat-icon class="align-middle">share</mat-icon> Megosztotta:
+              {{ sWithMe.sharedWithMeBy }}</span
+            >
+            <span class="shared-with-me-time"
+              ><mat-icon class="align-middle">timer</mat-icon> Megosztva:
+              {{ sWithMe.timeStamp }}</span
+            >
+          </div></ng-container
+        >
         <mat-card-title>{{ myPost.displayName }}</mat-card-title>
       </mat-card-header>
 
-      <mat-card-content>{{ myPost.message }}</mat-card-content>
+      <mat-card-content class="post-text">{{
+        myPost.message
+      }}</mat-card-content>
       <mat-card-content
         *ngIf="myPost.iFrame"
         style="height: 50vh; width: 100%"
         class="mb-2"
       >
         <iframe
-          class="mb-2 rounded iFrame"
+          class="mb-2 rounded iFrames-for-my-posts"
           [attr.data-post-id]="myPost.id"
           width="100%"
           height="100%"
@@ -164,7 +147,7 @@
         <small>{{ myPost.timeStamp }}</small>
         <ng-container *ngFor="let person of peopleLikedPost">
           <div
-            *ngIf="person[0].displayName && myPost.id === person[0].postId"
+            *ngIf="person[0]?.displayName && myPost?.id === person[0]?.postId"
             class="d-flex align-items-center justify-content-center w-100"
           >
             <p
@@ -174,12 +157,12 @@
               <mat-icon class="text-primary mx-2">thumb_up</mat-icon>
               <span class="text-start"
                 >{{
-                  myPost.liked?.length > 1
+                  (myPost?.liked)!.length > 1
                     ? person[0].displayName +
                       ' és további ' +
-                      (myPost.liked?.length - 1) +
+                      ((myPost?.liked)!.length - 1) +
                       ' ember kedveli'
-                    : person[0].displayName + ' kedveli'
+                    : person[0]?.displayName + ' kedveli'
                 }}
               </span>
             </p>
@@ -189,7 +172,7 @@
       <mat-card-actions class="w-100 justify-content-center pt-0">
         <div class="d-flex flex-wrap justify-content-center">
           <button
-            (click)="like(post, i)"
+            (click)="like(myPost, i)"
             class="me-2 mb-1"
             color="accent"
             mat-raised-button
@@ -250,7 +233,7 @@
       </mat-form-field>
       <button
         *ngIf="myPost.id === comment.postId"
-        (click)="commentPost(post)"
+        (click)="commentPost(myPost)"
         class="bg-primary"
         mat-raised-button
         type="button"

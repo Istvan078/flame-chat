@@ -8,7 +8,7 @@ import {
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { UserClass } from 'src/app/models/user.model';
+import { FirebaseUser, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -96,13 +96,18 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
   saveProfile() {
     new Promise(res => {
-      this.auth.isLoggedIn().subscribe((user: any) => {
-        this.base.getUserProfiles().subscribe(userProfiles => {
+      this.auth.isLoggedIn().subscribe((user: FirebaseUser) => {
+        this.base.getUserProfiles().subscribe(async userProfiles => {
           let userProfile = userProfiles.filter(
-            (userProfile: any) => userProfile.uid === user.uid
+            (userProfile: any) => userProfile.uid === user?.uid
           );
-
-          this.userProf.uid = user.uid;
+          if (!user?.displayName) {
+            await user?.updateProfile({
+              displayName: this.userProf.displayName,
+            });
+            console.log('SIKERES FELHASZNÁLÓI PROFIL FRISSÍTÉS');
+          }
+          if (user?.uid) this.userProf.uid = user?.uid;
           this.userProf.key = userProfile[0].key;
           // this.userProf.ageCalc();
           if (this.profilePhotoUrl) {

@@ -139,3 +139,139 @@
     </button>
   </div>
 </ng-container>
+
+@if(post?.id && !isSelectFriend) {
+<ng-container>
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <img
+        [src]="user?.profilePicture"
+        width="25px"
+        height="25px"
+        class="text-secondary align-middle me-2 rounded-circle"
+      />
+      <b>{{ user?.displayName }}</b>
+    </h4>
+  </div>
+  <div class="modal-body">
+    <form>
+      <select
+        (change)="onOptionSelected($event)"
+        name="where-to-share"
+        class="form-select"
+        id="where-to-share"
+        [(ngModel)]="selectedValue"
+      >
+        <option
+          *ngFor="let option of options"
+          [disabled]="option.disabled"
+          [value]="option.value"
+        >
+          {{ option.label }}
+        </option>
+        @if(selectedFriend?.displayName) {
+        <option value="friend">
+          {{ selectedFriend?.displayName }}
+        </option>
+
+        }
+      </select>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button
+      (click)="sharePostOnFriendProfile()"
+      type="button"
+      class="btn btn-success"
+      data-bs-dismiss="modal"
+      [disabled]="!selectedFriend"
+    >
+      <span class="text-white align-middle"
+        >Megosztás most
+        <mat-icon class="text-white align-middle">
+          {{ 'reply' }}
+        </mat-icon></span
+      >
+    </button>
+  </div>
+</ng-container>
+} @if(isSelectFriend) {
+<div>
+  <div class="modal-body select-friends-modal">
+    <h2>
+      <mat-icon (click)="backToOptions()" class="align-middle me-2"
+        >arrow_back</mat-icon
+      >
+      Ismerős választása
+    </h2>
+    <h3
+      (click)="chooseFriend(fr)"
+      class="friend-h3"
+      *ngFor="let fr of userFriends"
+    >
+      <mat-icon
+        style="width: fit-content; height: fit-content"
+        class="align-middle me-2 d-inline-flex"
+        ><img
+          width="50px"
+          height="50px"
+          [src]="fr.profilePicture"
+          alt="Profilkép"
+        /> </mat-icon
+      >{{ fr.displayName }}
+    </h3>
+  </div>
+</div>
+} @if(!isSubscribedToNotif) {
+<ng-container>
+  <div class="modal-body notif-main-container">
+    <h2 class="text-center">
+      <mat-icon (click)="back()" class="align-middle me-2">arrow_back</mat-icon>
+      Szeretnél feliratkozni az értesítésekre a neked küldött üzenetekről?
+      (Bármikor módosítható)
+    </h2>
+    <h3 class="friend-h3 notification">
+      <mat-icon
+        style="width: fit-content; height: fit-content"
+        class="align-middle me-2 d-inline-flex"
+        >notifications</mat-icon
+      >
+      <button
+        (click)="subscribeOrUnsubToNotifications()"
+        class="me-2"
+        color="primary"
+        mat-raised-button
+      >
+        Igen
+      </button>
+      <button (click)="back()" class="bg-warning" mat-raised-button>Nem</button>
+    </h3>
+  </div>
+</ng-container>
+} @if(isWantToUnsub) {
+<ng-container>
+  <div class="modal-body notif-main-container">
+    <h2 class="text-center">
+      <mat-icon (click)="back()" class="align-middle me-2">arrow_back</mat-icon>
+      Biztos, hogy szeretnél leiratkozni az értesítésekről? (Nem fogsz
+      értesítést kapni a neked küldött üzenetekről)
+    </h2>
+    <h3 class="friend-h3 notification">
+      <mat-icon
+        style="width: fit-content; height: fit-content"
+        class="align-middle me-2 d-inline-flex"
+        >notifications_off</mat-icon
+      >
+      <button
+        (click)="subscribeOrUnsubToNotifications()"
+        class="me-2"
+        color="primary"
+        mat-raised-button
+      >
+        Igen
+      </button>
+      <button (click)="back()" class="bg-warning" mat-raised-button>Nem</button>
+    </h3>
+  </div>
+</ng-container>
+}

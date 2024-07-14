@@ -1,8 +1,11 @@
+import firebase from 'firebase/compat';
 type Claims = {
   basic: boolean;
   admin: boolean;
   superAdmin: boolean;
 };
+
+export type FirebaseUser = firebase.User | null;
 
 export interface Friends {
   displayName?: string;
@@ -22,6 +25,8 @@ export class UserClass {
     friendId: string;
     seenMe: boolean;
     messaging?: boolean;
+    displayName?: string;
+    profilePicture?: string;
   }[];
   public age: number;
   public phoneNumber: string = '';
@@ -33,9 +38,9 @@ export class UserClass {
   public key: string = '';
   public uid: string = '';
   constructor(
+    public displayName?: string,
     public birthDate: string = '',
     public gender: string = '',
-    public displayName: string = '',
     public pictures: { name: string; url: string }[] = [],
     public profilePicture: string = ''
   ) {

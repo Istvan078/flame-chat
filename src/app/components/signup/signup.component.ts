@@ -32,15 +32,16 @@ export class SignupComponent {
   createUserWithEmAndPa() {
     this.authService
       .createUserWithEmAndPa(this.email, this.password)
-      .then((usr) => {
+      .then(usr => {
         this.base.addUserData({
           uid: usr.user?.uid,
           email: usr.user?.email,
         });
+        this.base.sendWelcomeEmail(usr.user!.email!);
         usr.user?.sendEmailVerification();
         return usr.user;
       })
-      .then((usr) => {
+      .then(usr => {
         const actModal = this.modalRef.open(ModalComponent, {
           centered: true,
         });
@@ -48,8 +49,8 @@ export class SignupComponent {
       })
       .then(() => {
         this.authService.signOut().then(() => {
-          this.authService.userLoggedInSubject.next(new UserClass())
-          this.router.navigate(['login'])
+          this.authService.userLoggedInSubject.next(new UserClass());
+          this.router.navigate(['/login']);
         });
       });
   }

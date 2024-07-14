@@ -5,8 +5,16 @@ import {
   DocumentData,
 } from '@angular/fire/compat/firestore';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { BehaviorSubject, Observable, Subject, finalize } from 'rxjs';
-import { Post } from '../models/post.model';
+import {
+  BehaviorSubject,
+  Observable,
+  Subject,
+  debounceTime,
+  distinctUntilChanged,
+  finalize,
+  map,
+} from 'rxjs';
+import { MyPost, Post } from '../models/post.model';
 
 @Injectable({
   providedIn: 'root',
@@ -15,43 +23,113 @@ export class FirestoreService {
   private privatePostRef!: AngularFirestoreCollection;
   private filesFromChat!: AngularFirestoreCollection;
   private sharedPostRef = this.fireStore.collection(`users/posts/shared`);
-  private myPostsRef = this.fireStore.collection('users/posts/my-posts');
+  private myPostsRef = 'users/posts/my-posts';
+  private userKey = '';
+  private myPostsRefImproved = `users/posts/my-posts/${this.userKey}/my-posts`;
   picturesSubject: Subject<any> = new Subject();
   filesSubject: Subject<any> = new Subject();
   filesBehSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   postsNotiSubject: Subject<any> = new Subject();
+  private myPostsNotiSubject: Subject<any> = new Subject();
+  private getMyPostsSubject: Subject<any> = new Subject();
+  userKeySubject: Subject<string> = new Subject();
+  private sharedPostsSubject: BehaviorSubject<any> = new BehaviorSubject([]);
+  testSubject: Subject<any> = new Subject();
 
   constructor(
     private fireStore: AngularFirestore,
     private fireStorage: AngularFireStorage
   ) {}
 
-  createPost(
-    post: Post,
-    notShared?: boolean,
-    userKey?: string,
-    postedOnMyProf?: boolean
-  ) {
-    if (!notShared && !postedOnMyProf) {
-      this.sharedPostRef.add(post);
-    } else if (notShared && !postedOnMyProf) {
-      this.privatePostRef = this.fireStore.collection(
-        `users/posts/private/${userKey}/posts`
-      );
-      this.privatePostRef.add(post);
-      // console.log(this.privatePostRef.ref.id);
-      // console.log(this.privatePostRef.ref.path);
-      // console.log(this.privatePostRef.ref.parent);
-    } else if (!notShared && postedOnMyProf) {
-      this.myPostsRef.add(post);
-      this.sharedPostRef.add(post);
-    } else {
-      this.myPostsRef.add(post);
+  getMyPostsSub() {
+    return this.getMyPostsSubject;
+  }
+
+  async createPost(post: Post) {
+    return this.sharedPostRef.add(post);
+    // console.log(this.privatePostRef.ref.id);
+    // console.log(this.privatePostRef.ref.path);
+    // console.log(this.privatePostRef.ref.parent);
+  }
+
+  async updatePost(docId: string, post: Partial<Post>) {
+    return this.sharedPostRef.doc(docId).update(post);
+  }
+
+  getMyPostsNotiSubj() {
+    return this.myPostsNotiSubject;
+  }
+
+  async getPosts(isItOnMyProfile: boolean, userKey?: string) {
+    if (!isItOnMyProfile)
+      return this.sharedPostRef.ref
+        .where('isShared', '==', 'yes')
+        .get()
+        .then(querySnapshot => {
+          const posts: Post[] = [];
+          querySnapshot.forEach((doc: any = {}) => {
+            posts.push({ ...doc.data() });
+          });
+          return posts;
+        });
+    if (isItOnMyProfile) {
+      const querySnapshotMyPosts = await this.sharedPostRef.ref
+        .where('userKey', '==', userKey)
+        .get();
+      const qSnapshotSharedPostsOnMyProf = await this.sharedPostRef.ref
+        .where('userKeys', 'array-contains', userKey)
+        .get();
+      const posts: Post[] = [];
+      const postIds: string[] = [];
+      querySnapshotMyPosts.forEach((doc: any = {}) => {
+        posts.push({ ...doc.data() });
+      });
+      qSnapshotSharedPostsOnMyProf.forEach((doc: any = {}) => {
+        posts.push({ ...doc.data() });
+      });
+      posts.map((post, i, arr) => {
+        if (!postIds.includes(post.id)) {
+          postIds.push(post.id);
+          return post;
+        } else return arr.splice(i, 1);
+      });
+      return posts;
     }
   }
 
-  async getMyPosts() {
-    return this.myPostsRef.ref.get().then(querySnapshot => {
+  refreshSharedPosts() {
+    return this.sharedPostRef.valueChanges('child_added');
+  }
+
+  refreshPostsAfterLike() {
+    return this.sharedPostRef.valueChanges('child_added').pipe(
+      map((posts: any[]) =>
+        posts.filter((post: Post) => post.isShared === 'yes')
+      ),
+      debounceTime(500),
+      distinctUntilChanged()
+    );
+  }
+
+  refreshMyPosts(userKey: string) {
+    const myPostsRef = this.fireStore.collection(
+      `${this.myPostsRef}/${userKey}/my-posts`
+    );
+    return myPostsRef.valueChanges('child-added');
+  }
+
+  async createMyPost(post: MyPost, userKey: string) {
+    const myPostsRef = this.fireStore.collection(
+      `${this.myPostsRef}/${userKey}/my-posts`
+    );
+    return myPostsRef.add(post);
+  }
+
+  async getMyPosts(userKey: string) {
+    const myPostsRef = this.fireStore.collection(
+      `${this.myPostsRef}/${userKey}/my-posts`
+    );
+    return myPostsRef.ref.get().then(querySnapshot => {
       const myPosts: any[] = [];
       querySnapshot.forEach((doc: any = {}) => {
         myPosts.push({ id: doc.id, ...doc.data() });
@@ -60,27 +138,24 @@ export class FirestoreService {
     });
   }
 
-  getSharedPosts() {
-    return this.sharedPostRef.ref
-      .where('notSeen', '!=', [])
-      .get()
-      .then(querySnapshot => {
-        const posts: any[] = [];
-        querySnapshot.forEach((doc: any = {}) => {
-          posts.push({ id: doc.id, ...doc.data() });
-        });
-        console.log(posts);
-        return posts;
-      });
+  async updateMyPost(userKey: string, docId: string, data: Partial<MyPost>) {
+    const myPostsRef = this.fireStore.collection(
+      `${this.myPostsRef}/${userKey}/my-posts`
+    );
+    return myPostsRef.doc(docId).update(data);
   }
 
-  refreshSharedPosts() {
-    return this.sharedPostRef.valueChanges('child_added');
-  }
-
-  updateDocument(docId: string, updatedData: any, isShared: boolean) {
+  updateDocument(
+    docId: string,
+    updatedData: any,
+    isShared: boolean,
+    userKey?: string
+  ) {
+    const myPostsRef = this.fireStore.collection(
+      `${this.myPostsRef}/${userKey}/my-posts`
+    );
     if (!isShared)
-      return this.myPostsRef
+      return myPostsRef
         .doc(docId)
         .update(updatedData)
         .then(() => {
@@ -104,12 +179,27 @@ export class FirestoreService {
     });
   }
 
-  getPrivatePosts(userKey: string): Observable<DocumentData> {
-    this.privatePostRef = this.fireStore.collection(
-      `users/posts/private/${userKey}/posts`
-    );
-    return this.privatePostRef.valueChanges();
-  }
+  // Dokumentum áthelyezése (másolás és törlés)
+  // moveDocument(fromPath: string, toPath: string, docId: string): Promise<void> {
+  //   const fromDocRef = this.fireStore.collection(fromPath).doc(docId);
+  //   const toDocRef = this.fireStore.collection(toPath).doc(docId);
+
+  //   return fromDocRef
+  //     .get()
+  //     .pipe(take(1))
+  //     .toPromise()
+  //     .then(docSnapshot => {
+  //       if (docSnapshot?.exists) {
+  //         const data = docSnapshot.data();
+  //         return toDocRef.set(data).then(() => {
+  //           return fromDocRef.delete();
+  //           console.log('SIKERES DOK ÁTHELYEZÉS');
+  //         });
+  //       } else {
+  //         return Promise.reject('Document does not exist');
+  //       }
+  //     });
+  // }
 
   addFilesToChat(data: any, userKey: string) {
     this.filesFromChat = this.fireStore.collection(
@@ -195,6 +285,13 @@ export class FirestoreService {
       `users/profiles/pushSubscription/${userKey}/subscription`
     );
     return notiSubPath.ref.where('endpoint', '==', endpoint).get();
+  }
+
+  deleteUserNotificationSub(userKey: string, id: string) {
+    const notiSubPath = this.fireStore.collection(
+      `users/profiles/pushSubscription/${userKey}/subscription`
+    );
+    return notiSubPath.doc(id).delete();
   }
 
   deleteUserNotiSubscription(userKey: string, endpoint: string) {

@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Post } from 'src/app/models/post.model';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { UserClass } from 'src/app/models/user.model';
+import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-my-posts',
@@ -24,29 +25,38 @@ export class MyPostsComponent {
   userProfile: UserClass = new UserClass();
   userProfilesUidsArr: Partial<UserClass[]> | any[] = [];
   userProfiles: UserClass[] = [];
+  @Input() userFriends: Friends[] = [];
   uploadedPictures: any[] = [];
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
   myPostsArr: Post[] = [];
   privatePosts: Post[] = [];
   peopleLikedPost: any[] = [];
+  postSharedWithMe: any[] = [];
   picturesSubscription!: Subscription;
   userProfilesSub!: Subscription;
+  isNavigatedToPostsSub!: Subscription;
   uploadCompleted: boolean = false;
   notShared: boolean = false;
   showNotSharedPosts: boolean = false;
   isNewPost: boolean = false;
   isCommentOn: boolean = false;
+  isOnMyPostRoute: boolean = false;
+  isActivatedRoute: boolean = false;
 
   constructor(
     private fBuilder: FormBuilder,
     private firestoreService: FirestoreService,
     private base: BaseService,
     private auth: AuthService,
-    private ngbModal: NgbModal
+    private ngbModal: NgbModal,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
+    this.isNavigatedToPostsSub = this.base.isNavigatedToPostsSubject.subscribe(
+      isNavigated => (this.isOnMyPostRoute = isNavigated)
+    );
     this.auth.getUser().then((user: UserClass) => {
       this.userProfilesSub = this.base
         .getUserProfiles()
@@ -64,7 +74,7 @@ export class MyPostsComponent {
       message: ['', [Validators.required, Validators.minLength(5)]],
       pictures: this.fBuilder.array([]),
       notSeen: [...this.userProfilesUidsArr],
-      sharing: ['yes'],
+      isShared: ['yes'],
       timeStamp: [''],
       displayName: [this.userProfile.displayName],
       iFrame: [''],
@@ -79,33 +89,88 @@ export class MyPostsComponent {
     this.picturesSubscription.unsubscribe();
   }
 
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      // this.firestoreService
-      //   .getPrivatePosts(this.userProfile.key as string)
-      //   .subscribe((privatePosts: any) => (this.privatePosts = privatePosts));
+  ngAfterViewInit() {
+    setTimeout(async () => {
       this.publishForm.patchValue({
         name: this.userProfile.displayName,
         displayName: this.userProfile.displayName,
       });
+      this.route.params.subscribe(async par => {
+        this.isActivatedRoute = true;
+        await this.init();
+      });
 
-      this.firestoreService.getMyPosts().then((res: any[]) => {
-        this.myPostsArr = res;
-        console.log(this.myPostsArr);
-        this.getPostsData();
+      // if (!this.isActivatedRoute) this.init();
+      this.firestoreService.getMyPostsSub().subscribe(async getPosts => {
+        if (getPosts.isGetMyPosts) {
+          await this.init();
+          console.log(`***POSZTOK INICIALIZÁLVA***`);
+          // this.firestoreService.getMyPostsSub().next();
+        }
+        // else this.firestoreService.getMyPostsSub().unsubscribe();
       });
     }, 1000);
+  }
+
+  async init() {
+    this.peopleLikedPost = [];
+    const myPosts = await this.firestoreService.getPosts(
+      true,
+      this.userProfile.key
+    );
+    if (myPosts) this.myPostsArr = myPosts;
+    this.getPostsData();
+    this.postSharedWithMe = await this.firestoreService.getMyPosts(
+      this.userProfile.key
+    );
+    this.myPostsArr.forEach((myPost, i) => {
+      const postSharedWithMe = this.postSharedWithMe.find(
+        psWithMe => psWithMe.fromPostId === myPost.id
+      );
+      if (postSharedWithMe) {
+        const sharedWithMeBy = myPost.sharedWithMe?.find(
+          sWithMe => sWithMe.myKey === this.userProfile.key
+        );
+        const sharerFriendProfile = this.userFriends.find(
+          fr => fr.friendKey === sharedWithMeBy?.byWhoKey
+        );
+        if (sharedWithMeBy) myPost.displayName = '';
+        const index = this.postSharedWithMe.findIndex(
+          post => post.fromPostId === myPost.id
+        );
+        this.postSharedWithMe[index].sharedWithMeBy =
+          sharerFriendProfile?.displayName;
+        if (sharedWithMeBy)
+          this.postSharedWithMe[index].timeStamp = new Date(
+            sharedWithMeBy.timeStamp
+          ).toLocaleString();
+      }
+    });
+    this.postSharedWithMe.forEach(async post => {
+      if (post?.seen === false) {
+        post.seen = true;
+        await this.firestoreService.updateMyPost(
+          this.userProfile.key,
+          post.id,
+          {
+            seen: true,
+          }
+        );
+        this.firestoreService.getMyPostsNotiSubj().next(0);
+      }
+    });
   }
 
   getPostsData() {
     let proba: any[] = [];
     setTimeout(() => {
-      const iFrames: NodeListOf<HTMLIFrameElement> = document.querySelectorAll(
-        '.iFrame'
-      ) as NodeListOf<HTMLIFrameElement>;
+      const iFrames: HTMLCollectionOf<HTMLIFrameElement> =
+        document.getElementsByClassName(
+          'iFrames-for-my-posts'
+        ) as HTMLCollectionOf<HTMLIFrameElement>;
       console.log(iFrames);
 
-      this.myPostsArr.forEach((sP, i) => {
+      this.myPostsArr.map((sP, i) => {
         if (sP?.iFrame) {
           const correspondingIframe = Array.from(iFrames).find(
             iframe => iframe.getAttribute('data-post-id') === sP.id
@@ -116,14 +181,28 @@ export class MyPostsComponent {
         }
       });
 
-      // this.myPostsArr
-      //   .filter(sp => sp.iFrame)
-      //   .map((sP, i) => {
-      //     console.log(sP);
-      //     if (sP?.iFrame && iFrames[i]) {
-      //       iFrames[i].src = sP.iFrame;
-      //     }
-      //   });
+      this.myPostsArr.map(myPost => {
+        if (myPost.sharedWithMe?.length)
+          myPost.sharedWithMe.map(sWithMe => {
+            if (sWithMe.myKey === this.userProfile.key) {
+              myPost['isSharedWithMe'] = true;
+              if (myPost.timeStamp > sWithMe.timeStamp) {
+                myPost.newestTimeStamp = myPost.timeStamp;
+              }
+              if (sWithMe.timeStamp > myPost.timeStamp) {
+                myPost.newestTimeStamp = sWithMe.timeStamp;
+              }
+            }
+          });
+        if (!myPost.isSharedWithMe) {
+          myPost.newestTimeStamp = myPost.timeStamp;
+        }
+      });
+      this.myPostsArr.sort((a: any, b: any) => {
+        if (a.newestTimeStamp > b.newestTimeStamp)
+          return -1; // Csökkenő sorrendbe rendezés
+        else return 1;
+      });
 
       this.myPostsArr.map((sP: any, i: number) => {
         sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
@@ -140,23 +219,8 @@ export class MyPostsComponent {
             .sort(() => Math.random() - 0.5);
           this.peopleLikedPost.push(proba as any);
         }
-        // if (sP.notSeen.includes(this.userProfile.uid)) {
-        //   const filteredArr = sP.notSeen.filter(
-        //     (uid: any) => uid !== this.userProfile.uid
-        //   );
-        //   this.firestoreService
-        //     .updateDocument(sP.id, {
-        //       notSeen: filteredArr,
-        //     })
-        //     .then(() => this.firestoreService.postsNotiSubject.next(0));
-        // }
       });
     }, 500);
-  }
-
-  ngOnDestroy(): void {
-    if (this.picturesSubscription) this.picturesSubscription.unsubscribe();
-    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
   }
 
   filesArrivedForSubject() {
@@ -191,7 +255,7 @@ export class MyPostsComponent {
     this.isNewPost = false;
   }
 
-  postPost() {
+  async postPost() {
     const date: Date = new Date();
     const iFrame = this.publishForm.get('iFrame')?.value;
     let modifiedIFrame;
@@ -208,6 +272,9 @@ export class MyPostsComponent {
           'www.youtube.com/embed'
         );
       }
+      if (iFrame?.includes('live')) {
+        modifiedIFrame = iFrame.replace('live', 'embed');
+      }
     }
     this.publishForm.patchValue({
       timeStamp: date.getTime(),
@@ -217,59 +284,62 @@ export class MyPostsComponent {
 
     if (!iFrame) this.publishForm.removeControl('iFrame');
     this.post = this.publishForm.value;
-    this.post.pictures = this.picturesArray;
-    this.firestoreService.createPost(
-      this.post,
-      this.notShared,
-      this.userProfile.key,
-      true
-    );
-    this.picturesArray = [];
-    // if (this.notShared) this.showNotSharedPosts = true;
-  }
-
-  like(post: Post, i: number) {
-    if (!post?.liked?.includes(this.userProfile.uid)) {
-      if (!post.liked?.length)
-        this.firestoreService
-          .updateDocument(
-            post.id,
-            {
-              liked: [this.userProfile.uid],
-            },
-            false
-          )
-          .then(() => {
-            this.firestoreService.getMyPosts().then((shPosts: any[]) => {
-              this.refreshPost(shPosts, i, post);
-            });
-          });
-
-      if (post.liked?.length)
-        this.firestoreService
-          .updateDocument(
-            post.id,
-            {
-              liked: [...post.liked, this.userProfile.uid],
-            },
-            false
-          )
-          .then(() => {
-            this.firestoreService.getMyPosts().then((shPosts: any[]) => {
-              this.refreshPost(shPosts, i, post);
-            });
-          });
+    this.post.userKey = this.userProfile.key;
+    if (!this.notShared)
+      this.post.private = {
+        isPrivate: false,
+      };
+    if (this.notShared) {
+      this.post.private = {
+        isPrivate: true,
+        sharedByKey: this.userProfile.key,
+      };
+      this.post.notSeen = [];
     }
+    this.post.pictures = this.picturesArray;
+    const postRef = await this.firestoreService.createPost(this.post);
+    await this.firestoreService.updatePost(postRef.id, { id: postRef.id });
+    this.picturesArray = [];
   }
 
-  refreshPost(myPosts: any[], i: number, post: Post) {
+  async like(post: Post, i: number) {
+    const posts = await this.firestoreService.getPosts(
+      true,
+      this.userProfile.key
+    );
+    if (posts)
+      posts.sort((a: any, b: any) => {
+        if (a.timeStamp > b.timeStamp) return -1;
+        else return 1;
+      });
+    if (posts)
+      if (!posts[i]?.liked?.includes(this.userProfile.uid)) {
+        if (!posts[i].liked?.length) {
+          await this.firestoreService.updatePost(post.id, {
+            liked: [this.userProfile.uid],
+          });
+        }
+
+        if (posts[i].liked?.length) {
+          await this.firestoreService.updatePost(post.id, {
+            liked: [...(posts[i].liked as any), this.userProfile.uid],
+          });
+        }
+        const postsAfterLike = await this.firestoreService.getPosts(
+          true,
+          this.userProfile.key
+        );
+        if (postsAfterLike) this.refreshPost(postsAfterLike, i);
+      }
+  }
+
+  refreshPost(myPosts: any[], i: number) {
     myPosts.sort((a: any, b: any) => {
       if (a.timeStamp > b.timeStamp) return -1;
       else return 1;
     });
     this.myPostsArr[i].liked = myPosts[i].liked;
     let filteredArr: any[] = [];
-
     this.userProfiles
       .filter(uP => this.myPostsArr[i].liked?.includes(uP.uid))
       .map(user => {
@@ -278,10 +348,20 @@ export class MyPostsComponent {
           uid: user.uid,
           postId: this.myPostsArr[i].id,
         };
-        if (!this.peopleLikedPost[i]?.includes(user.uid)) filteredArr.push(obj);
-      })
-      .sort(() => Math.random() - 0.5);
-    this.peopleLikedPost[i] = filteredArr;
+        filteredArr.push(obj);
+      });
+
+    this.peopleLikedPost.map((person, ind, arr) => {
+      if (person[0]?.postId === filteredArr[0].postId) {
+        arr.splice(ind, 1);
+        arr.push(['DUMMY TEXT']);
+      }
+      if (ind === arr.length - 1) {
+        if (person[0]?.postId !== filteredArr[0].postId)
+          this.peopleLikedPost.push(filteredArr);
+        person.sort(() => Math.random() - 0.5);
+      }
+    });
   }
 
   addPictures() {
@@ -386,19 +466,42 @@ export class MyPostsComponent {
     this.comment.postId = postId;
   }
 
-  commentPost(post: Post) {
+  async commentPost(post: Post) {
     this.comment.uid = this.userProfile.uid;
     if (post.comments?.length) {
       post.comments.push(this.comment);
-      this.firestoreService
-        .updateDocument(post.id, { comments: post.comments }, false)
-        .then(() => (this.comment = {}));
+      const postUpdated = await this.firestoreService.updatePost(post.id, {
+        comments: post.comments,
+      });
+      this.comment = {};
     }
     if (!post.comments?.length) {
       post.comments = [this.comment];
-      this.firestoreService
-        .updateDocument(post.id, { comments: post.comments }, false)
-        .then(() => (this.comment = {}));
+      const postUpdated = await this.firestoreService.updatePost(post.id, {
+        comments: post.comments,
+      });
+      this.comment = {};
     }
   }
+
+  ngOnDestroy(): void {
+    if (this.picturesSubscription) this.picturesSubscription.unsubscribe();
+    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
+    if (this.isNavigatedToPostsSub) this.isNavigatedToPostsSub.unsubscribe();
+  }
+
+  // moveDoc() {
+  //   const fromPath = `users/posts/private/${this.userProfile.key}/posts`;
+  //   const toPath = `users/posts/my-posts/${this.userProfile.key}/my-posts`;
+  //   const docId = 'zOzVb6gCMPHn9Y8fzkrf';
+
+  //   this.firestoreService
+  //     .moveDocument(fromPath, toPath, docId)
+  //     .then(() => {
+  //       console.log('Document moved successfully');
+  //     })
+  //     .catch(error => {
+  //       console.error('Error moving document:', error);
+  //     });
+  // }
 }

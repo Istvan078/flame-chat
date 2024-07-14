@@ -13,6 +13,7 @@ import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { BaseService } from 'src/app/services/base.service';
+import { Environments } from 'src/app/environments';
 
 @Component({
   selector: 'app-users',
@@ -33,7 +34,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     'Jogosultságok',
   ];
   users: UserClass[] = [];
-  usersApiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
+  usersApiUrl = Environments.API_URL;
   @ViewChild('saveChanges', { static: false }) saveChanges!: ElementRef;
   @ViewChild('sidenav') sidenav!: MatSidenav;
 
@@ -82,7 +83,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.userProfiles.forEach(uP => {
       if (!uP.age && uP.birthDate) {
         const uProf = new UserClass(uP.birthDate);
-        uProf.ageCalc();
+        uProf?.ageCalc();
         const updatedAge = { age: uProf.age };
         this.base.updateUserData(updatedAge, uP.key);
         console.log(uProf);
