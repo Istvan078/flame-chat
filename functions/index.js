@@ -4,16 +4,15 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+const environments = require('./config/config');
+
 const forecast = require('./utils/forecast');
 const geocode = require('./utils/geocode');
 
-const sendWelcomeEmail = require('./emails/account');
-
-const serviceAccount = require('./project0781-firebase-adminsdk-xbbql-1dc8cfc27d.json');
+const serviceAccount = require(environments.SERVICE_ACCOUNT_ROUTE);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL:
-    'https://project0781-default-rtdb.europe-west1.firebasedatabase.app',
+  databaseURL: environments.DATABASE_URL,
 });
 
 const app = express();
@@ -153,9 +152,8 @@ app.get('/weather', (req, res) => {
 const webpush = require('web-push');
 
 const vapidKeys = {
-  publicKey:
-    'BGu2VBK9pEWy7k9zBXgJWsvHHAiN8rNqkk1nUljXcQFKTLZDjGSOZmAhVW2lad4QPohsn6A4lyUH-ltJ5KRdg8Y',
-  privateKey: 'nikhXkK0w3gWvxr_G8Jh6wyUHnxejrgBu_VMtxHAPf8',
+  publicKey: environments.VAPID_PUBLIC_KEY,
+  privateKey: environments.VAPID_PRIVATE_KEY,
 };
 
 // inicializálás

@@ -1,3 +1,4 @@
 node_modules/
-index.js
-functions/project0781-firebase-adminsdk-xbbql-1dc8cfc27d.json
+service-account.json
+emails
+config
