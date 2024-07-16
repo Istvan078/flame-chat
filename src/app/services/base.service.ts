@@ -252,15 +252,31 @@ export class BaseService implements OnDestroy {
   }
 
   updateUserData(body: any, key: string) {
-    if (key) this.refUsers.update(key, body);
+    if (key) return this.refUsers.update(key, body);
   }
 
   deleteUserData(id: string) {
     return this.refUsers.remove(id);
   }
 
-  addProfilePicture(file: any) {
-    const fullPath = 'profilePictures' + '/' + file.name;
+  getProfilePictures(userEmail: string) {
+    const fullPath = 'profilePictures/' + userEmail;
+    const storageRef = this.fireStorage.ref(fullPath);
+    const urls: any[] = [];
+    return new Promise(res => {
+      storageRef.listAll().subscribe(what => {
+        what.items.forEach(item =>
+          item
+            .getDownloadURL()
+            .then(url => urls.push(url))
+            .then(resolve => res(urls))
+        );
+      });
+    });
+  }
+
+  addProfilePicture(file: any, userEmail: string) {
+    const fullPath = 'profilePictures/' + userEmail + '/' + file.name;
     const storageRef = this.fireStorage.ref(fullPath);
     const upload = this.fireStorage.upload(fullPath, file);
     upload

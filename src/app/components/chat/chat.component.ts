@@ -1,11 +1,6 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  Subscription,
-} from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -19,6 +14,15 @@ import { HttpClient } from '@angular/common/http';
 import * as deepMerge from 'deepmerge';
 import { ToastService } from 'src/app/services/toast.service';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
+import {
+  animate,
+  group,
+  keyframes,
+  state,
+  style,
+  transition,
+  trigger,
+} from '@angular/animations';
 
 type Notification = {
   displayName: string;
@@ -31,10 +35,157 @@ type Notification = {
   selector: 'app-chat',
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss'],
+  animations: [
+    trigger('slide-in-out', [
+      state(
+        'in-1',
+        style({
+          transform: 'translateX(0) scale(0.2)',
+          opacity: 1,
+        })
+      ),
+      transition('void => *', [
+        style({ opacity: 0, transform: 'translateX(-50%)' }),
+        animate(2000),
+      ]),
+      transition('* => void', [
+        animate(
+          300,
+          style({
+            transform: 'translateX(50%)',
+            opacity: 0,
+          })
+        ),
+      ]),
+    ]),
+    trigger('slide-in-keyframed', [
+      state(
+        'in-0',
+        style({
+          transform: 'translateX(0) scale(0.2)',
+          opacity: 1,
+        })
+      ),
+      transition('void => *', [
+        animate(
+          1000,
+          keyframes([
+            style({
+              opacity: 0,
+              transform: 'translateX(-50%)',
+              offset: 0,
+            }),
+            style({
+              transform: 'translateX(-25%)',
+              opacity: 0.5,
+              offset: 0.3,
+            }),
+            style({
+              transform: 'translateX(-10%)',
+              opacity: 1,
+              offset: 0.6,
+            }),
+            style({
+              transform: 'translateX(0)',
+              opacity: 1,
+              offset: 1,
+            }),
+          ])
+        ),
+      ]),
+    ]),
+    trigger('fade-in', [
+      state(
+        'in-2',
+        style({
+          opacity: 0,
+          transform: 'scale(0)',
+        })
+      ),
+      state(
+        'normal',
+        style({
+          opacity: 1,
+          transform: 'scale(1)',
+        })
+      ),
+      transition('in-2 => normal', [
+        animate(
+          500,
+          keyframes([
+            style({
+              transform: 'scale(0.2)',
+              opacity: 0.3,
+              offset: 0.3,
+            }),
+            style({
+              transform: 'scale(0.5)',
+              opacity: 1,
+              offset: 0.6,
+            }),
+            style({
+              transform: 'scale(1)',
+              opacity: 1,
+              offset: 1,
+            }),
+          ])
+        ),
+      ]),
+    ]),
+    trigger('slide-in-keyframed-3', [
+      state(
+        'normal',
+        style({
+          transform: 'translateX(0) scale(0)',
+          opacity: 0,
+        })
+      ),
+      state(
+        'in-2',
+        style({
+          transform: 'translateX(0) scale(1)',
+          opacity: 1,
+        })
+      ),
+      transition('normal => in-2', [
+        animate(
+          2000,
+          keyframes([
+            style({
+              opacity: 0,
+              transform: 'translateX(-50%) scale(0)',
+              offset: 0,
+            }),
+            style({
+              transform: 'translateX(-25%) scale(0.5)',
+              opacity: 0.5,
+              offset: 0.3,
+            }),
+            style({
+              transform: 'translateX(-10%)',
+              opacity: 1,
+              offset: 0.6,
+            }),
+            style({
+              transform: 'translateX(0) scale(1)',
+              opacity: 1,
+              offset: 1,
+            }),
+          ])
+        ),
+      ]),
+    ]),
+  ],
 })
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild(MatAccordion) accordion!: MatAccordion;
   @ViewChild('slideToggle') slideToggle!: MatSlideToggle;
+  // @HostListener('click') isUserOnline() {
+  //   this.isOnline();
+  // }
+
+  // ANIMÁCIÓVAL KAPCSOLATOS //
+  chatAnimationState: string = 'normal';
 
   // FELHASZNÁLÓVAL KAPCSOLATOS //
   userProfiles: UserClass[] = [];
@@ -49,6 +200,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   showFriendsToChoose: boolean = false;
   showAllFriends: boolean = false;
   friendsOn: boolean = false;
+  isUserOnlineNow: boolean = false;
 
   // ISMERŐS KERESÉSE //
   friendSearch: string = '';
@@ -98,16 +250,16 @@ export class ChatComponent implements OnInit, OnDestroy {
   authNull = 2;
 
   // FELIRATKOZÁSOK //
-  userLoggedInSubscription!: Subscription;
-  isSuperAdminSubscription!: Subscription;
-  usersSubscription!: Subscription;
-  userFriendSubjectSub!: Subscription;
-  getAllMessagesSubjectSub!: Subscription;
-  filesBehSubjectSub!: Subscription;
-  haventSeenMsgsArrSubjSub!: Subscription;
-  messSubscription!: Subscription;
-  postsNotiSub!: Subscription;
-
+  userLoggedInSubscription: Subscription = Subscription.EMPTY;
+  isSuperAdminSubscription: Subscription = Subscription.EMPTY;
+  usersSubscription: Subscription = Subscription.EMPTY;
+  userFriendSubjectSub: Subscription = Subscription.EMPTY;
+  getAllMessagesSubjectSub: Subscription = Subscription.EMPTY;
+  filesBehSubjectSub: Subscription = Subscription.EMPTY;
+  haventSeenMsgsArrSubjSub: Subscription = Subscription.EMPTY;
+  messSubscription: Subscription = Subscription.EMPTY;
+  postsNotiSub: Subscription = Subscription.EMPTY;
+  isSubscribedForNotSub: Subscription = Subscription.EMPTY;
   // OBSERVABLES //
   customInterval$ = new Observable(subscriber => {
     let timesExecuted = 0;
@@ -123,6 +275,18 @@ export class ChatComponent implements OnInit, OnDestroy {
     }, 2000);
   });
 
+  onAnimate() {
+    console.log(this.chatAnimationState);
+    this.chatAnimationState =
+      this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
+  }
+
+  animateMessages() {
+    console.log(this.chatAnimationState);
+    this.chatAnimationState =
+      this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
+  }
+
   constructor(
     private auth: AuthService,
     private base: BaseService,
@@ -132,83 +296,29 @@ export class ChatComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private toastService: ToastService
   ) {}
-
   ngOnInit() {
-    // if(!this.friendPushSub) {
-    //   this.auth.swPushh().subscribe(sub => {
-    //     this.friendPushSub = sub
-    //     console.log(this.friendPushSub)
-    //   });
-    // }
-    // this.customInterval$.subscribe({
-    //   next: val => console.log(val),
-    //   complete: () => console.log('TELJESÍTVE'),
-    //   error: err => console.log(err),
-    // });
+    // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐ //
+    window.addEventListener('click', async e => {
+      if (!this.isUserOnlineNow) {
+        await this.base.updateUserData({ online: true }, this.userProfile?.key);
+        this.isUserOnlineNow = true;
+      }
+    });
+    // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
+    window.addEventListener('blur', async e => {
+      if (this.isUserOnlineNow) {
+        await this.base.updateUserData(
+          { online: false },
+          this.userProfile?.key
+        );
+        await this.base.updateUserData(
+          { lastTimeOnline: new Date().getTime() },
+          this.userProfile?.key
+        );
+        this.isUserOnlineNow = false;
+      }
+    });
     this.test();
-    new Observable(observer => {
-      const interval = setInterval(async () => {
-        this.myPushSubscription = this.auth.swPushh();
-        if (this.myPushSubscription?.endpoint && this.userProfile?.key) {
-          let JSONed = this.myPushSubscription?.toJSON();
-          const querySnapShot =
-            await this.firestore.getUserNotiSubscriptionReformed(
-              this.userProfile?.key,
-              JSONed.endpoint!
-            );
-          if (querySnapShot.empty) this.subscribedForNotifications = false;
-          else this.subscribedForNotifications = true;
-          observer.next(this.myPushSubscription);
-          observer.complete();
-          clearInterval(interval);
-        }
-        console.log('FUT AZ INTERVAL');
-      }, 200);
-      setTimeout(async () => {
-        console.log(`TIMEOUT LEJÁRT`);
-        let JSONed = this.myPushSubscription?.toJSON();
-        if (JSONed?.endpoint) {
-          const querySnapShot =
-            await this.firestore.getUserNotiSubscriptionReformed(
-              this.userProfile?.key,
-              JSONed.endpoint
-            );
-          console.log(querySnapShot);
-          console.log(JSONed);
-          if (querySnapShot.empty) {
-            console.log('NINCS ILYEN FELIRATKOZÁS MÉG');
-            const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
-              animation: true,
-              fullscreen: true,
-            });
-            doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
-            const choiceResult = await doYouSubscribeModal.result;
-            console.log(choiceResult);
-            if (choiceResult === 'Igen') {
-              await this.updateUserNotifications({ checked: true });
-              this.subscribedForNotifications = true;
-            }
-          }
-          if (JSONed.endpoint) observer.complete();
-        } else {
-          console.log('LE VAN TILTVA AZ ÉRTESÍTÉSEK A BÖNGÉSZŐBEN');
-          const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
-            animation: true,
-            fullscreen: true,
-          });
-          doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
-          const choiceResult = await doYouSubscribeModal.result;
-          console.log(choiceResult);
-          if (choiceResult === 'Igen') {
-            await this.updateUserNotifications({ checked: true });
-            observer.complete();
-          }
-        }
-        clearInterval(interval);
-      }, 5000);
-    }).subscribe(val => console.log(val));
-    if (this.myPushSubscription?.endpoint)
-      this.subscribedForNotifications = true;
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
     });
@@ -268,6 +378,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             });
         });
     }).then(res => {
+      this.isSubscribedForNotSub = this.isSubscribedForNotifications();
+      this.isSubscribedForNotSub.unsubscribe();
       let docIdsArr: any[] = [];
       console.log(res);
       if (this.firestore.filesBehSubject.value.length === 0) {
@@ -412,7 +524,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             setTimeout(() => {
               this.setDefaultProfilePic();
             }, 200000);
-            if (this.userProfile?.uid) this.isOnline();
+            // if (this.userProfile?.uid) this.isOnline();
           }
           observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
           observer.complete();
@@ -543,6 +655,72 @@ export class ChatComponent implements OnInit, OnDestroy {
     // });
   }
 
+  isSubscribedForNotifications() {
+    return new Observable(observer => {
+      const interval = setInterval(async () => {
+        this.myPushSubscription = this.auth.swPushh();
+        if (this.myPushSubscription?.endpoint && this.userProfile?.key) {
+          let JSONed = this.myPushSubscription?.toJSON();
+          const querySnapShot =
+            await this.firestore.getUserNotiSubscriptionReformed(
+              this.userProfile?.key,
+              JSONed.endpoint!
+            );
+          if (querySnapShot.empty) this.subscribedForNotifications = false;
+          else this.subscribedForNotifications = true;
+          observer.next(this.myPushSubscription);
+          observer.complete();
+          clearInterval(interval);
+        }
+        console.log('FUT AZ INTERVAL');
+      }, 200);
+      setTimeout(async () => {
+        console.log(`TIMEOUT LEJÁRT`);
+        let JSONed = this.myPushSubscription?.toJSON();
+        if (JSONed?.endpoint) {
+          const querySnapShot =
+            await this.firestore.getUserNotiSubscriptionReformed(
+              this.userProfile?.key,
+              JSONed.endpoint
+            );
+          console.log(querySnapShot);
+          console.log(JSONed);
+          if (querySnapShot.empty) {
+            console.log('NINCS ILYEN FELIRATKOZÁS MÉG');
+            const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
+              animation: true,
+              fullscreen: true,
+            });
+            doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
+            const choiceResult = await doYouSubscribeModal.result;
+            console.log(choiceResult);
+            if (choiceResult === 'Igen') {
+              await this.updateUserNotifications({ checked: true });
+              this.subscribedForNotifications = true;
+            }
+          }
+          if (JSONed.endpoint) observer.complete();
+        } else if (!this.isSAdmin) {
+          console.log('LE VAN TILTVA AZ ÉRTESÍTÉSEK A BÖNGÉSZŐBEN');
+          const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
+            animation: true,
+            fullscreen: true,
+          });
+          doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
+          const choiceResult = await doYouSubscribeModal.result;
+          console.log(choiceResult);
+          if (choiceResult === 'Igen') {
+            await this.updateUserNotifications({ checked: true });
+            observer.complete();
+          }
+        }
+        clearInterval(interval);
+      }, 5000);
+      if (this.myPushSubscription?.endpoint)
+        this.subscribedForNotifications = true;
+    }).subscribe(val => console.log(val));
+  }
+
   toUserProfile() {
     this.isUserProfileOn = true;
     this.router.navigate([`profile/${this.userProfile.uid}`]);
@@ -565,6 +743,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.runMessagesSubjectValueTransfer();
             this.getVisibleMessagesForSelectedFriend();
             res('-----ÜZENETEK LEKÉRVE-----');
+            this.animateMessages();
           });
     }).then(res => {
       console.log(res);
@@ -1165,23 +1344,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
-  isOnline() {
-    const onlineUser = {
-      online: true,
-    };
-    window.addEventListener('focus', e => {
-      this.base.updateUserData(onlineUser, this.userProfile?.key);
-    });
-    window.addEventListener('blur', e => {
-      this.base.updateUserData({ online: false }, this.userProfile?.key);
-      this.base.updateUserData(
-        { lastTimeOnline: new Date().getTime() },
-        this.userProfile?.key
-      );
-    });
-  }
-
   areFriendsOnline() {
+    setTimeout(() => {
+      this.onAnimate();
+    }, 100);
     const interval = setInterval(() => {
       this.userFriends?.map(fr => {
         return this.userProfiles.map(uP => {

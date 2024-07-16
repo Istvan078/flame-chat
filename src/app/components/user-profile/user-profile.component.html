@@ -69,7 +69,7 @@
         [stepControl]="f.form.value"
         label="Töltsd fel a profilképed (Opcionális)"
       >
-        <div class="mt-2">
+        <div class="mt-2 mb-2 d-flex flex-column">
           <button class="btn btn-warning fileButton" type="button">
             <mat-icon class="align-middle">attach_file</mat-icon>
             <label for="profilePicture">Profilkép kiválasztása</label>
@@ -84,11 +84,9 @@
           </button>
           <button
             [disabled]="!profilePhoto"
-            (click)="
-              userProf.profilePicture ? changeProfilePic() : addProfilePic()
-            "
+            (click)="addOrChangeProfilePic()"
             type="button"
-            class="btn btn-success ms-1"
+            class="btn btn-success ms-1 mt-1"
           >
             <mat-icon class="align-middle">upload</mat-icon>
             Profilkép Feltöltése
@@ -113,7 +111,77 @@
             <h4 class="pt-2">{{ percent }}%</h4>
           </div>
         </div>
-        <div class="row justify-content-center mt-2">
+        <ng-container
+          *ngIf="userProf.profilePicture === chosenProfPic?.nativeElement.src"
+        >
+          <h3 class="fw-bold text-center mb-0 text-primary border-1">
+            Beállított <mat-icon class="align-middle">photo</mat-icon>
+          </h3>
+          <mat-icon class="text-center d-inline-block w-100 text-warning"
+            >arrow_downward</mat-icon
+          >
+        </ng-container>
+        <div class="slider">
+          <div class="mainContainer">
+            <!-- <div *ngIf="isLoading" class="loadingSpinner">*</div> -->
+            <!-- <ng-template [ngIf]="error">
+              <div class="errorContainer">
+                {{ this.showErrorAlert() }}
+                <button (click)="clearError()" type="button">Rendben</button>
+              </div>
+            </ng-template> -->
+            <div class="left-arrow">
+              <span *ngIf="isLeftArrow" (click)="toLeft()"><</span>
+            </div>
+            <ng-container *ngFor="let pic of profilePicsArr">
+              <div class="products">
+                <div class="imgContainer">
+                  <img
+                    id="myProfilePic"
+                    #profilePic
+                    [src]="pic"
+                    [attr.data-src]="pic"
+                    alt="Profilkép"
+                  />
+                </div>
+                <!-- <div class="under-prodpic-container">
+                  <h4>{{ product.name }}</h4>
+                  <span *ngIf="product.price">{{ product.price }} Ft</span>
+                  <p>{{ product.description }}</p>
+                </div>
+                <p *ngIf="product.available">Elérhető: {{ product.available }} db</p>
+                <div>
+                  <input
+                    placeholder="Db"
+                    class="order-quantity-input"
+                    name="order-quantity"
+                    [(ngModel)]="product.orderQuantity"
+                    type="number"
+                    min="1"
+                  />
+                </div> -->
+              </div>
+            </ng-container>
+            <div class="right-arrow">
+              <span *ngIf="isRightArrow" (click)="toRight()">></span>
+            </div>
+          </div>
+          <div
+            *ngIf="userProf.profilePicture !== chosenProfPic?.nativeElement.src"
+            class="change-profpic-button"
+          >
+            <button
+              color="primary"
+              mat-raised-button
+              (click)="updateProfilePic()"
+              class="pt-2 pb-2 bg-primary"
+              type="button"
+            >
+              Profilkép megváltoztatása
+            </button>
+          </div>
+        </div>
+        <!-- <div class="row justify-content-center mt-2">
           <div
             *ngIf="percent === 0 || pictures; else newPic"
             class="col-12 d-flex justify-content-center align-items-center"
@@ -127,7 +195,7 @@
               [alt]="userProf.profilePicture"
             />
           </div>
-        </div>
+        </div> -->
         <ng-template #newPic>
           <div class="d-grid justify-content-center">
             <div class="profilePicContainer">
@@ -135,12 +203,15 @@
             </div>
           </div>
         </ng-template>
-        <div class="d-flex mt-2 justify-content-between">
+        <div
+          class="d-flex mt-2 justify-content-between mat-stepper-button-cont"
+        >
           <button
             mat-flat-button
             color="accent"
             matStepperPrevious
             type="button"
+            class="me-1"
           >
             Vissza
           </button>
@@ -152,8 +223,11 @@
       <mat-step>
         <ng-template matStepLabel>Kész</ng-template>
         <h3>
-          Már készen is vagyunk. Kattints a profil mentése gombra és
-          megkezdheted a csevegést.
+          {{
+            !userProf.lastTimeOnline
+              ? 'Már készen is vagyunk. Kattints az adatok mentése gombra és megkezdheted a csevegést.'
+              : 'Sikeres módosítás, kattints az adatok mentése gombra a folytatáshoz.'
+          }}
         </h3>
         <div class="d-flex justify-content-between">
           <button
@@ -171,13 +245,14 @@
             mat-raised-button
             type="submit"
           >
-            Profil mentése
+            Adatok elmentése
           </button>
         </div>
       </mat-step>
     </mat-vertical-stepper>
   </form>
 </div>
+
 <!-- <div  *ngIf="userPictures.length > 0" [attr.data-bs-interval]="false" id="picturesCarousel" class="carousel slide" data-bs-ride="carousel">
             <div  class="carousel-indicators">
               <button *ngFor="let pic of userPictures; let i = index" type="button" [attr.data-bs-target]="'#picturesCarousel'" [attr.data-bs-slide-to]="i" [class.active]="i === 0" attr.aria-label="Slide {{i + 1}}"></button>

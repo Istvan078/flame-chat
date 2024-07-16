@@ -9,12 +9,14 @@
     ></button>
   </div>
   <div class="modal-body text-center">
+    @if(picturesArr.length){
     <div
-      *ngIf="picturesArr.length"
       class="d-flex flex-wrap justify-content-center align-items-center tape"
     >
       <div class="left ms-2">
-        <span *ngIf="viewIndex > 0" (click)="left()"><</span>
+        @if(viewIndex > 0){
+        <span (click)="left()"><</span>
+        }
       </div>
       <img
         [ngClass]="{ 'fade-in': fadeIn }"
@@ -23,19 +25,20 @@
         alt="Kép"
       />
       <div class="right">
-        <span *ngIf="viewIndex < picturesArr.length - 1" (click)="right()"
-          >></span
-        >
+        @if(viewIndex < picturesArr.length - 1) {
+        <span (click)="right()">></span>
+        }
       </div>
     </div>
-    <h4 *ngIf="uploadTrue">
-      Sikeres feltöltés, küldéshez kattints a küldés gombra!
-    </h4>
-    <h4 *ngIf="picturesUploaded">Sikeres feltöltés!</h4>
+    } @if(uploadTrue){
+    <h4>Sikeres feltöltés, küldéshez kattints a küldés gombra!</h4>
+    } @if(picturesUploaded){
+    <h4>Sikeres feltöltés!</h4>
+    }
   </div>
   <div class="modal-footer">
+    @if(uploadTrue || picturesUploaded){
     <button
-      *ngIf="uploadTrue || picturesUploaded"
       (click)="activeModal.close('Modal bezárva')"
       data-bs-dismiss="modal"
       type="button"
@@ -43,5 +46,6 @@
     >
       Rendben <mat-icon class="align-middle">done</mat-icon>
     </button>
+    }
   </div>
 </div>

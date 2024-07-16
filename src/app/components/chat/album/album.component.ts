@@ -6,6 +6,7 @@ import { BaseService } from 'src/app/services/base.service';
 import { FilesModalComponent } from '../../modals/files-modal/files-modal.component';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Router } from '@angular/router';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-album',
@@ -33,7 +34,8 @@ export class AlbumComponent implements OnInit, OnDestroy {
     private snackbar: MatSnackBar,
     private modalRef: NgbModal,
     private firestore: FirestoreService,
-    private router: Router
+    private router: Router,
+    private utilsService: UtilityService
   ) {}
   ngOnInit(): void {
     const shouldNavigate = localStorage.getItem('shouldNavigate');
@@ -89,62 +91,13 @@ export class AlbumComponent implements OnInit, OnDestroy {
     this.selectedFiles = Array.from($event.target.files);
   }
 
-  resizeImage(
-    file: File,
-    maxWidth: number,
-    maxHeight: number,
-    quality: number
-  ): Promise<Blob> {
-    return new Promise((res, rej) => {
-      const img = new Image();
-      const reader = new FileReader();
-      reader.onload = e => {
-        img.src = e.target?.result as string;
-      };
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        let width = img.width;
-        let height = img.height;
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round(height * (maxWidth / width));
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round(width * (maxHeight / height));
-            height = maxHeight;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        ctx?.drawImage(img, 0, 0, width, height);
-        console.log(canvas, ctx);
-        canvas.toBlob(
-          blob => {
-            if (blob) {
-              res(blob);
-            } else rej(new Error('A vászon üres'));
-          },
-          'image/jpg',
-          quality
-        );
-      };
-      reader.onerror = error => {
-        rej(error);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
   addPictures() {
     const maxWidth = 800;
     const maxHeight = 600;
     const quality = 0.75; // Tömörítési szint (0.0 - 1.0)
     this.selectedFiles.forEach(file => {
-      this.resizeImage(file, maxWidth, maxHeight, quality)
+      this.utilsService
+        .resizeImage(file, maxWidth, maxHeight, quality)
         .then(resizedBlob => {
           console.log(resizedBlob);
           const resizedFile = new File([resizedBlob], file.name, {

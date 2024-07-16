@@ -42,8 +42,9 @@
     <mat-accordion>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
+          [@slide-in-out]
           (click)="getMyPosts()"
-          class="d-grid justify-content-center"
+          class="d-grid justify-content-center my-posts-header"
         >
           @if(userProfile?.displayName) {
           <mat-panel-title class="pt-2 me-0"
@@ -77,8 +78,9 @@
       </mat-expansion-panel>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
+          [@slide-in-keyframed]
           (click)="getSharedPosts()"
-          class="d-grid justify-content-center"
+          class="d-grid justify-content-center exp-panel-headers"
         >
           <mat-panel-title class="pt-2"
             >Kezdőlap
@@ -88,7 +90,7 @@
               matBadge="{{ postsNotificationNumber }}"
               matBadgeColor="primary"
               aria-hidden="false"
-              class="ms-2"
+              class="ms-2 feeds-icon"
               >feed</mat-icon
             >
           </mat-panel-title>
@@ -103,8 +105,9 @@
       </mat-expansion-panel>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
+          [@slide-in-keyframed]
           (click)="areFriendsOnline()"
-          class="d-grid justify-content-center"
+          class="d-grid justify-content-center exp-panel-headers"
           [ngClass]="haventSeenMessagesArr!.length > 0 ? 'newMessage' : ''"
         >
           <mat-panel-title class="pt-2">
@@ -114,13 +117,16 @@
               [matBadgeDisabled]="!haventSeenMessagesArr?.length"
               matBadge="{{ haventSeenMessagesArr?.length }}"
               matBadgeColor="primary"
-              class="ms-2"
+              class="ms-2 messages-icon"
               aria-hidden="false"
               >chat</mat-icon
             ></mat-panel-title
           >
         </mat-expansion-panel-header>
-        <div class="row justify-content-center">
+        <div
+          [@slide-in-keyframed-3]="chatAnimationState"
+          class="row justify-content-center"
+        >
           <div class="text-center mt-2">
             <button
               (click)="showFriendsToChoose = !showFriendsToChoose"
@@ -256,17 +262,21 @@
       </mat-expansion-panel>
       <mat-expansion-panel class="mb-2">
         <mat-expansion-panel-header
+          [@slide-in-keyframed]
           (click)="toAlbum()"
-          class="d-grid justify-content-center"
+          class="d-grid justify-content-center exp-panel-headers"
         >
           <mat-panel-title class="pt-2">
             Fényképeim
-            <mat-icon class="ms-2">photos</mat-icon>
+            <mat-icon class="ms-2 album-icon">photos</mat-icon>
           </mat-panel-title>
         </mat-expansion-panel-header>
       </mat-expansion-panel>
       <mat-expansion-panel class="mb-2">
-        <mat-expansion-panel-header class="d-grid justify-content-center">
+        <mat-expansion-panel-header
+          [@slide-in-keyframed]
+          class="d-grid justify-content-center exp-panel-headers"
+        >
           <mat-panel-title class="pt-2">
             Ismerősök
             <mat-icon
@@ -274,7 +284,7 @@
               [matBadgeDisabled]="!userFriends?.length"
               [matBadge]="userFriends?.length"
               matBadgeColor="primary"
-              class="ms-2"
+              class="ms-2 friends-icon"
               aria-hidden="false"
               >groups</mat-icon
             ></mat-panel-title
@@ -351,12 +361,13 @@
 
       <mat-expansion-panel class="mt-2">
         <mat-expansion-panel-header
+          [@slide-in-keyframed]
           (click)="toUserProfile()"
-          class="d-grid justify-content-center"
+          class="d-grid justify-content-center exp-panel-headers"
         >
           <mat-panel-title
             >Profilom
-            <mat-icon class="ms-2">person</mat-icon>
+            <mat-icon class="ms-2 profile-icon">person</mat-icon>
           </mat-panel-title>
         </mat-expansion-panel-header>
         <div class="row">
@@ -493,6 +504,7 @@
 </div>
 
 <div
+  [@fade-in]="chatAnimationState"
   class="allMessagesContainer"
   [ngClass]="messageButtonClicked ? 'reducedHeight' : ''"
   *ngIf="userMessages"

@@ -1,4 +1,5 @@
-<ng-container *ngIf="name">
+@if(name) {
+<ng-container>
   <div class="modal-header">
     <h5 class="modal-title">
       {{ friendName }}
@@ -29,8 +30,8 @@
     </button>
   </div>
 </ng-container>
-
-<ng-container *ngIf="userName">
+} @if(userName) {
+<ng-container>
   <div class="modal-header">
     <h5 class="modal-title">
       {{ userName }}
@@ -63,8 +64,8 @@
     </button>
   </div>
 </ng-container>
-
-<ng-container *ngIf="userEmail">
+} @if(userEmail) {
+<ng-container>
   <div class="modal-body">
     <h3>
       Megerősítő e-mail sikeresen elküldve a megadott e-mail-címre:
@@ -85,8 +86,8 @@
     </button>
   </div>
 </ng-container>
-
-<ng-container *ngIf="likedPeople.length">
+} @if(likedPeople.length) {
+<ng-container>
   <div class="modal-header">
     <h4 class="modal-title">
       <mat-icon class="text-secondary align-middle me-2">people</mat-icon
@@ -94,10 +95,12 @@
     </h4>
   </div>
   <div class="modal-body">
-    <h3 *ngFor="let person of likedPeople">
+    @for(person of likedPeople; track person){
+    <h3>
       <mat-icon class="text-primary align-middle me-2">thumb_up</mat-icon
       >{{ person.displayName }}
     </h3>
+    }
   </div>
   <div class="modal-footer">
     <button
@@ -115,8 +118,8 @@
     </button>
   </div>
 </ng-container>
-
-<ng-container *ngIf="error?.message">
+} @if(error?.message){
+<ng-container>
   <div class="modal-header">
     <h4 class="modal-title">
       <mat-icon class="text-warning align-middle me-2">error</mat-icon
@@ -139,8 +142,7 @@
     </button>
   </div>
 </ng-container>
-
-@if(post?.id && !isSelectFriend) {
+} @if(post?.id && !isSelectFriend) {
 <ng-container>
   <div class="modal-header">
     <h4 class="modal-title">
@@ -162,14 +164,11 @@
         id="where-to-share"
         [(ngModel)]="selectedValue"
       >
-        <option
-          *ngFor="let option of options"
-          [disabled]="option.disabled"
-          [value]="option.value"
-        >
+        @for(option of options; track option) {
+        <option [disabled]="option.disabled" [value]="option.value">
           {{ option.label }}
         </option>
-        @if(selectedFriend?.displayName) {
+        } @if(selectedFriend?.displayName) {
         <option value="friend">
           {{ selectedFriend?.displayName }}
         </option>
@@ -204,11 +203,8 @@
       >
       Ismerős választása
     </h2>
-    <h3
-      (click)="chooseFriend(fr)"
-      class="friend-h3"
-      *ngFor="let fr of userFriends"
-    >
+    @for(fr of userFriends; track fr){
+    <h3 (click)="chooseFriend(fr)" class="friend-h3">
       <mat-icon
         style="width: fit-content; height: fit-content"
         class="align-middle me-2 d-inline-flex"
@@ -220,6 +216,7 @@
         /> </mat-icon
       >{{ fr.displayName }}
     </h3>
+    }
   </div>
 </div>
 } @if(!isSubscribedToNotif) {

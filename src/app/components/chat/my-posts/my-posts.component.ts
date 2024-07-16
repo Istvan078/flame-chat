@@ -7,8 +7,9 @@ import { BaseService } from 'src/app/services/base.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FirestoreService } from 'src/app/services/firestore.service';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-my-posts',
@@ -33,6 +34,7 @@ export class MyPostsComponent {
   privatePosts: Post[] = [];
   peopleLikedPost: any[] = [];
   postSharedWithMe: any[] = [];
+  iFrames: any;
   picturesSubscription!: Subscription;
   userProfilesSub!: Subscription;
   isNavigatedToPostsSub!: Subscription;
@@ -48,25 +50,22 @@ export class MyPostsComponent {
     private fBuilder: FormBuilder,
     private firestoreService: FirestoreService,
     private base: BaseService,
-    private auth: AuthService,
     private ngbModal: NgbModal,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private utilService: UtilityService
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit() {
     this.isNavigatedToPostsSub = this.base.isNavigatedToPostsSubject.subscribe(
       isNavigated => (this.isOnMyPostRoute = isNavigated)
     );
-    this.auth.getUser().then((user: UserClass) => {
-      this.userProfilesSub = this.base
-        .getUserProfiles()
-        .subscribe((userProfiles: UserClass[]) => {
-          this.userProfiles = userProfiles;
-          this.userProfilesUidsArr = this.userProfiles.map(uP => uP.uid);
-          let userProfile = userProfiles.filter(uP => uP.uid === user.uid);
-          Object.assign(this.userProfile, ...userProfile);
-          this.userProfilesSub.unsubscribe();
-        });
+    const AllUserDtlsRes = await this.utilService.getUserProfiles();
+    this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
+      this.userProfiles = AllUserDtls.userProfiles;
+      this.userProfile = AllUserDtls.userProfile;
+      this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
+      console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
+      this.userProfilesSub.unsubscribe();
     });
 
     this.publishForm = this.fBuilder.group({
@@ -159,68 +158,158 @@ export class MyPostsComponent {
         this.firestoreService.getMyPostsNotiSubj().next(0);
       }
     });
+
+    const imgTargets = document.querySelectorAll(
+      '.pics-container img[data-src]'
+    );
+    const imgObserver = new IntersectionObserver(this.loadImage, {
+      root: null,
+      threshold: [0],
+      rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
+    });
+    imgTargets.forEach(img => {
+      imgObserver.observe(img);
+      // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
+      // meghatározott root elemet
+    });
+  }
+
+  loadImage(entries: any, observer: any) {
+    const [entry] = entries;
+    // src-t átállítom a data-src-ra ha eléri a képet a scrollpozíció
+    if (!entry.isIntersecting) return;
+    entry.target.src = entry.target.dataset.src;
+    entry.target.addEventListener('load', (e: any) => {
+      e.target.classList.remove('lazy-img');
+    });
+    observer.unobserve(entry.target);
+  }
+
+  loadIFrames(entries: any, observer: IntersectionObserver) {
+    const [entry] = entries;
+    console.log(entry);
+    // if (!entry.isIntersecting) return;
+    const target = entry.target;
+    target.src = target.dataset.src;
+    observer.unobserve(entry.target);
+  }
+
+  renderIFrames() {
+    // data-src-t csinálni
+    // const innerHeight = (window.innerHeight / 10).toString() + 'px';
+    new Observable(observer => {
+      const interval = setInterval(() => {
+        this.iFrames = document.getElementsByClassName(
+          'iFrames-for-my-posts'
+        ) as HTMLCollectionOf<HTMLIFrameElement>;
+        (this.iFrames as any) = Array.from(this.iFrames);
+        if (this.iFrames.length) {
+          observer.next();
+          observer.complete();
+          clearInterval(interval);
+        }
+      }, 5);
+    }).subscribe(adat => {
+      const sectionObserver = new IntersectionObserver(
+        (entries, obs) => {
+          const [entry] = entries;
+          if (!entry.isIntersecting) return;
+          entry.target.classList.remove('section-hidden');
+          obs.unobserve(entry.target);
+        },
+        {
+          root: null,
+          threshold: 0.1,
+          rootMargin: '-100px',
+        }
+      );
+      const sectionOne = document.querySelectorAll('.section-1');
+      sectionOne.forEach((section, i) => {
+        sectionObserver.observe(section);
+        section.classList.add('section-hidden');
+      });
+      console.log(sectionOne);
+      this.myPostsArr.map(sP => {
+        const correspondingIframe = (this.iFrames as any).find(
+          (iframe: any) => iframe.getAttribute('data-postid') === sP.id
+        );
+        if (sP.iFrame) {
+          if (!this.iFrames[0]?.src) {
+            setTimeout(() => {
+              console.log(sectionOne[0]);
+              if (
+                sectionOne[0].getBoundingClientRect().top <
+                  window.innerHeight ||
+                sectionOne[1].getBoundingClientRect().top < window.innerHeight
+              ) {
+                sectionOne[0].classList.remove('section-hidden');
+                sectionOne[1].classList.remove('section-hidden');
+              }
+            }, 1);
+            this.iFrames[0].src = sP.iFrame;
+          }
+          if (
+            !this.iFrames[1]?.src &&
+            sP.id === this.iFrames[1]?.dataset.postid
+          ) {
+            this.iFrames[1].src = sP.iFrame;
+          }
+          (correspondingIframe as HTMLIFrameElement).dataset['src'] = sP.iFrame;
+        }
+      });
+      const iFrameObserver = new IntersectionObserver(this.loadIFrames, {
+        root: null, // a célpont elemet a teljes viewporton figyeli hogy interszektál-e
+        threshold: 0,
+        rootMargin: '200px',
+      });
+      (this.iFrames as any)?.forEach((iFrame: HTMLIFrameElement) =>
+        iFrameObserver.observe(iFrame)
+      );
+    });
   }
 
   getPostsData() {
     let proba: any[] = [];
-    setTimeout(() => {
-      const iFrames: HTMLCollectionOf<HTMLIFrameElement> =
-        document.getElementsByClassName(
-          'iFrames-for-my-posts'
-        ) as HTMLCollectionOf<HTMLIFrameElement>;
-      console.log(iFrames);
-
-      this.myPostsArr.map((sP, i) => {
-        if (sP?.iFrame) {
-          const correspondingIframe = Array.from(iFrames).find(
-            iframe => iframe.getAttribute('data-post-id') === sP.id
-          );
-          if (correspondingIframe) {
-            correspondingIframe.src = sP.iFrame;
-          }
-        }
-      });
-
-      this.myPostsArr.map(myPost => {
-        if (myPost.sharedWithMe?.length)
-          myPost.sharedWithMe.map(sWithMe => {
-            if (sWithMe.myKey === this.userProfile.key) {
-              myPost['isSharedWithMe'] = true;
-              if (myPost.timeStamp > sWithMe.timeStamp) {
-                myPost.newestTimeStamp = myPost.timeStamp;
-              }
-              if (sWithMe.timeStamp > myPost.timeStamp) {
-                myPost.newestTimeStamp = sWithMe.timeStamp;
-              }
+    this.renderIFrames();
+    this.myPostsArr.map(myPost => {
+      if (myPost.sharedWithMe?.length)
+        myPost.sharedWithMe.map(sWithMe => {
+          if (sWithMe.myKey === this.userProfile.key) {
+            myPost['isSharedWithMe'] = true;
+            if (myPost.timeStamp > sWithMe.timeStamp) {
+              myPost.newestTimeStamp = myPost.timeStamp;
             }
-          });
-        if (!myPost.isSharedWithMe) {
-          myPost.newestTimeStamp = myPost.timeStamp;
-        }
-      });
-      this.myPostsArr.sort((a: any, b: any) => {
-        if (a.newestTimeStamp > b.newestTimeStamp)
-          return -1; // Csökkenő sorrendbe rendezés
-        else return 1;
-      });
+            if (sWithMe.timeStamp > myPost.timeStamp) {
+              myPost.newestTimeStamp = sWithMe.timeStamp;
+            }
+          }
+        });
+      if (!myPost.isSharedWithMe) {
+        myPost.newestTimeStamp = myPost.timeStamp;
+      }
+    });
+    this.myPostsArr.sort((a: any, b: any) => {
+      if (a.newestTimeStamp > b.newestTimeStamp)
+        return -1; // Csökkenő sorrendbe rendezés
+      else return 1;
+    });
 
-      this.myPostsArr.map((sP: any, i: number) => {
-        sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
-        if (sP.liked?.length) {
-          proba = this.userProfiles
-            .filter(uP => sP.liked?.includes(uP.uid))
-            .map(user => {
-              return {
-                displayName: user.displayName,
-                uid: user.uid,
-                postId: sP.id,
-              };
-            })
-            .sort(() => Math.random() - 0.5);
-          this.peopleLikedPost.push(proba as any);
-        }
-      });
-    }, 500);
+    this.myPostsArr.map((sP: any, i: number) => {
+      sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
+      if (sP.liked?.length) {
+        proba = this.userProfiles
+          .filter(uP => sP.liked?.includes(uP.uid))
+          .map(user => {
+            return {
+              displayName: user.displayName,
+              uid: user.uid,
+              postId: sP.id,
+            };
+          })
+          .sort(() => Math.random() - 0.5);
+        this.peopleLikedPost.push(proba as any);
+      }
+    });
   }
 
   filesArrivedForSubject() {

@@ -1,0 +1,25 @@
+<!-- <ng-content select="form-container"></ng-content> -->
+<form class="mt-3 d-grid" [formGroup]="FormData()![0].formGroup!">
+  @for(data of FormData(); track data) {
+
+  <mat-form-field>
+    <mat-label>{{ data.label }}</mat-label>
+    @if(data.matIcon){
+    <mat-icon matSuffix>{{ data.matIcon }}</mat-icon>
+    } @if(!data.textArea){
+    <input
+      class="text-center"
+      [formControlName]="data.input.formControlName"
+      matInput
+      [type]="data?.input?.type!"
+    />
+    } @else {<textarea
+      [formControlName]="data.input.formControlName"
+      matInput
+      rows="5"
+    ></textarea>
+    }
+  </mat-form-field>
+  }
+  <ng-content></ng-content>
+</form>

@@ -42,6 +42,19 @@
   font-style: italic;
 }
 
+.lazy-img {
+  filter: blur(20px);
+}
+
+.section-hidden {
+  opacity: 0;
+  transform: translate(20rem, -20rem);
+}
+
+.section-visible {
+  transition: transform 2s, opacity 3s;
+}
+
 @media screen and (max-width: 770px) {
   .space-div {
     height: 50px;
@@ -49,5 +62,8 @@
   .shared-with-me-time {
     top: 50px;
     left: 10px;
+  }
+  .section-hidden {
+    transform: translate(7rem, -20rem) !important;
   }
 }

@@ -10,6 +10,7 @@ import { FriendProfileComponent } from '../user-profile/friend-profile/friend-pr
 import { AlbumComponent } from './album/album.component';
 import { MyPostsComponent } from './my-posts/my-posts.component';
 import { ToastComponent } from '../toast/toast.component';
+import { PostsComponent } from './shared/posts/posts.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { ToastComponent } from '../toast/toast.component';
     MyPostsComponent,
     NewsComponent,
     ToastComponent,
+    PostsComponent,
   ],
   imports: [
     SharedModule,

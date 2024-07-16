@@ -6,7 +6,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -15,11 +15,60 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
+import { UtilityService } from 'src/app/services/utility.service';
+import { Form } from 'src/app/models/utils/form.model';
+import {
+  animate,
+  keyframes,
+  state,
+  style,
+  transition,
+  trigger,
+} from '@angular/animations';
 
 @Component({
   selector: 'app-news',
   templateUrl: './news.component.html',
   styleUrls: ['./news.component.scss'],
+  animations: [
+    trigger('fade-in', [
+      state(
+        'normal',
+        style({
+          opacity: 0,
+          transfrom: 'translateY(-50%) scale(0)',
+          color: 'grey',
+        })
+      ),
+      state(
+        'faded-in',
+        style({
+          opacity: 1,
+          transfrom: 'translateY(0) scale(1)',
+          color: 'black',
+        })
+      ),
+      transition('normal => faded-in', [
+        animate(
+          1000,
+          keyframes([
+            style({
+              opacity: 0.3,
+              transfrom: 'translateY(-50%) scale(0.3)',
+            }),
+            style({
+              opacity: 0.8,
+              transfrom: 'translateY(-30%) scale(0.6)',
+            }),
+            style({
+              opacity: 1,
+              transfrom: 'translateY(0) scale(1)',
+            }),
+          ])
+        ),
+      ]),
+    ]),
+  ],
 })
 export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() userFriends?: Friends[];
@@ -35,6 +84,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
   peopleLikedPost: any[] = [];
+  iFrames!: HTMLCollectionOf<HTMLIFrameElement>;
   picturesSubscription!: Subscription;
   userProfilesSub!: Subscription;
   sharedPostsSub!: Subscription;
@@ -43,19 +93,33 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   isNewPost: boolean = false;
   isCommentOn: boolean = false;
   pipeRefresh: boolean = false;
+  isLoading: boolean = false;
   postIndex: any;
   selectedFriendSub!: Subscription;
+
+  newsAnimationState: string = 'normal';
+
+  formData: Form[] = [];
 
   constructor(
     private fBuilder: FormBuilder,
     private firestoreService: FirestoreService,
     private base: BaseService,
-    private auth: AuthService,
+    private utilityService: UtilityService,
     private ngbModal: NgbModal,
     private http: HttpClient
   ) {}
 
-  ngOnInit() {
+  startAnimate() {
+    setTimeout(() => {
+      this.newsAnimationState = 'faded-in';
+    }, 100);
+    this.newsAnimationState = 'normal';
+  }
+
+  async ngOnInit() {
+    this.isLoading = true;
+    this.formData = this.utilityService.getFormDataForPosts();
     this.selectedFriendSub = this.base.selectedFriendSubject.subscribe(
       async fr => {
         if (fr.friendKey) {
@@ -64,16 +128,13 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
     );
-    this.auth.getUser().then((user: UserClass) => {
-      this.userProfilesSub = this.base
-        .getUserProfiles()
-        .subscribe((userProfiles: UserClass[]) => {
-          this.userProfiles = userProfiles;
-          this.userProfilesUidsArr = this.userProfiles.map(uP => uP.uid);
-          let userProfile = userProfiles.filter(uP => uP.uid === user.uid);
-          Object.assign(this.userProfile, ...userProfile);
-          this.userProfilesSub.unsubscribe();
-        });
+    const AllUserDtlsRes = await this.utilityService.getUserProfiles();
+    this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
+      this.userProfiles = AllUserDtls.userProfiles;
+      this.userProfile = AllUserDtls.userProfile;
+      this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
+      console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
+      this.userProfilesSub.unsubscribe();
     });
 
     this.publishForm = this.fBuilder.group({
@@ -86,6 +147,8 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       displayName: [this.userProfile.displayName],
       iFrame: [''],
     });
+
+    this.formData[0].formGroup = this.publishForm;
 
     this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
       picture => {
@@ -114,10 +177,14 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async init() {
+    this.isLoading = true;
     this.peopleLikedPost = [];
     const posts = await this.firestoreService.getPosts(false);
     if (posts) this.sharedPosts = posts;
+
     this.getPostsData();
+    this.startAnimate();
+    this.isLoading = false;
   }
 
   refreshTimeStamp() {
@@ -127,53 +194,160 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pipeRefresh = true;
   }
 
-  getPostsData() {
-    let proba: any[] = [];
-    setTimeout(() => {
-      const iFrames: HTMLCollectionOf<HTMLIFrameElement> =
-        document.getElementsByClassName(
+  loadImage(entries: any, observer: any) {
+    const [entry] = entries;
+    // src-t átállítom a data-src-ra ha eléri a képet a scrollpozíció
+    if (!entry.isIntersecting) return;
+    entry.target.src = entry.target.dataset.src;
+    entry.target.addEventListener('load', (e: any) => {
+      e.target.classList.remove('lazy-img');
+    });
+    observer.unobserve(entry.target);
+  }
+
+  loadIFrames(entries: any, observer: IntersectionObserver) {
+    const [entry] = entries;
+    console.log(entry);
+    // if (!entry.isIntersecting) return;
+    const target = entry.target;
+    target.src = target.dataset.src;
+    observer.unobserve(entry.target);
+  }
+
+  renderIFrames() {
+    // data-src-t csinálni
+    // const innerHeight = (window.innerHeight / 10).toString() + 'px';
+    new Observable(observer => {
+      const interval = setInterval(() => {
+        this.iFrames = document.getElementsByClassName(
           'iFrames-for-shared-post'
         ) as HTMLCollectionOf<HTMLIFrameElement>;
-      this.sharedPosts.map((sP, i, arr) => {
-        const correspondingIframe = Array.from(iFrames).find(
-          iframe => iframe.getAttribute('data-post-id') === sP.id
+        (this.iFrames as any) = Array.from(this.iFrames);
+        if (this.iFrames.length) {
+          observer.next();
+          observer.complete();
+          clearInterval(interval);
+        }
+      }, 5);
+    }).subscribe(adat => {
+      const imgTargets = document.querySelectorAll(
+        '.pics-container img[data-src]'
+      );
+      console.log(imgTargets);
+      const imgObserver = new IntersectionObserver(this.loadImage, {
+        root: null,
+        threshold: [0],
+        rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
+      });
+      imgTargets.forEach(img => {
+        imgObserver.observe(img);
+        // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
+        // meghatározott root elemet
+      });
+      const sectionObserver = new IntersectionObserver(
+        (entries, obs) => {
+          const [entry] = entries;
+          if (!entry.isIntersecting) return;
+          entry.target.classList.remove('section-hidden');
+          obs.unobserve(entry.target);
+        },
+        {
+          root: null,
+          threshold: 0.1,
+          rootMargin: '-100px',
+        }
+      );
+      const sectionOne = document.querySelectorAll('.section-1');
+      sectionOne.forEach((section, i) => {
+        sectionObserver.observe(section);
+        section.classList.add('section-hidden');
+      });
+      console.log(sectionOne);
+      this.sharedPosts.map(sP => {
+        const correspondingIframe = (this.iFrames as any).find(
+          (iframe: any) => iframe.getAttribute('data-postid') === sP.id
         );
         if (sP.iFrame) {
-          correspondingIframe!.src = sP.iFrame;
+          if (!this.iFrames[0]?.src) {
+            // setTimeout(() => {
+            //   console.log(sectionOne[0]);
+            //   if (
+            //     sectionOne[0].getBoundingClientRect().top <
+            //       window.innerHeight ||
+            //     sectionOne[1].getBoundingClientRect().top < window.innerHeight
+            //   ) {
+            //     sectionOne[0].classList.remove('section-hidden');
+            //     sectionOne[1].classList.remove('section-hidden');
+            //   }
+            // }, 1);
+            this.iFrames[0].src = sP.iFrame;
+          }
+          if (
+            !this.iFrames[1]?.src &&
+            sP.id === this.iFrames[1]?.dataset['postid']
+          ) {
+            this.iFrames[1].src = sP.iFrame;
+          }
+          (correspondingIframe as HTMLIFrameElement).dataset['src'] = sP.iFrame;
         }
       });
+      const iFrameObserver = new IntersectionObserver(this.loadIFrames, {
+        root: null, // a célpont elemet a teljes viewporton figyeli hogy interszektál-e
+        threshold: 0,
+        rootMargin: '200px',
+      });
+      (this.iFrames as any)?.forEach((iFrame: HTMLIFrameElement) =>
+        iFrameObserver.observe(iFrame)
+      );
+    });
+  }
 
-      this.sharedPosts.map((sP: any, i: number) => {
-        sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
-        if (sP.liked?.length) {
-          proba = this.userProfiles
-            .filter(uP => sP.liked?.includes(uP.uid))
-            .map(user => {
-              return {
-                displayName: user.displayName,
-                uid: user.uid,
-                postId: sP.id,
-              };
-            })
-            .sort(() => Math.random() - 0.5);
-          this.peopleLikedPost.push(proba as any);
-        }
-        if (sP.notSeen.includes(this.userProfile.uid)) {
-          const filteredArr = sP.notSeen.filter(
-            (uid: any) => uid !== this.userProfile.uid
-          );
-          this.firestoreService
-            .updateDocument(
-              sP.id,
-              {
-                notSeen: filteredArr,
-              },
-              true
-            )
-            .then(() => this.firestoreService.postsNotiSubject.next(0));
-        }
-      });
-    }, 500);
+  getPostsData() {
+    let proba: any[] = [];
+    this.renderIFrames();
+    // const iFrames: HTMLCollectionOf<HTMLIFrameElement> =
+    //   document.getElementsByClassName(
+    //     'iFrames-for-shared-post'
+    //   ) as HTMLCollectionOf<HTMLIFrameElement>;
+    // this.sharedPosts.map((sP, i, arr) => {
+    //   const correspondingIframe = Array.from(iFrames).find(
+    //     iframe => iframe.getAttribute('data-postid') === sP.id
+    //   );
+    //   if (sP.iFrame) {
+    //     correspondingIframe!.src = sP.iFrame;
+    //   }
+    // });
+
+    this.sharedPosts.map((sP: any, i: number) => {
+      sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
+      if (sP.liked?.length) {
+        proba = this.userProfiles
+          .filter(uP => sP.liked?.includes(uP.uid))
+          .map(user => {
+            return {
+              displayName: user.displayName,
+              uid: user.uid,
+              postId: sP.id,
+            };
+          })
+          .sort(() => Math.random() - 0.5);
+        this.peopleLikedPost.push(proba as any);
+      }
+      if (sP.notSeen.includes(this.userProfile.uid)) {
+        const filteredArr = sP.notSeen.filter(
+          (uid: any) => uid !== this.userProfile.uid
+        );
+        this.firestoreService
+          .updateDocument(
+            sP.id,
+            {
+              notSeen: filteredArr,
+            },
+            true
+          )
+          .then(() => this.firestoreService.postsNotiSubject.next(0));
+      }
+    });
   }
 
   filesArrivedForSubject() {

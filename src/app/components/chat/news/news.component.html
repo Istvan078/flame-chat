@@ -9,57 +9,40 @@
     Új bejegyzés
   </button>
 </div>
-<form
-  *ngIf="isNewPost"
-  class="mt-3 d-grid"
-  (ngSubmit)="onSubmit()"
-  [formGroup]="publishForm"
+<!-- *ngIf="isNewPost" -->
+<app-posts
+  [@fade-in]="newsAnimationState"
+  *ngIf="formData[0].formGroup"
+  (submitForm)="onSubmit()"
+  [FormData]="formData"
 >
-  <mat-form-field>
-    <mat-label>Név</mat-label>
-    <mat-icon matSuffix>person</mat-icon>
-    <input class="text-center" formControlName="name" matInput type="text" />
-    <span *ngIf="publishForm.get('name')?.touched"
-      >Nem változtathatja meg a nevet!</span
+</app-posts>
+<!-- <div class="text-center" formArrayName="pictures">
+  <button
+    (click)="addPictures()"
+    color="accent"
+    mat-raised-button
+    type="button"
+  >
+    Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
+  </button>
+  <ng-container>
+    <div
+      *ngFor="let pictureControl of forFormArray(); let i = index"
+      class="input-group mb-2"
     >
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Bejegyzés szövege</mat-label>
-    <textarea formControlName="message" matInput rows="5"></textarea>
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Youtube link</mat-label>
-    <input formControlName="iFrame" matInput />
-  </mat-form-field>
-
-  <div class="text-center" formArrayName="pictures">
-    <button
-      (click)="addPictures()"
-      color="accent"
-      mat-raised-button
-      type="button"
-    >
-      Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
-    </button>
-    <ng-container>
-      <div
-        *ngFor="let pictureControl of forFormArray(); let i = index"
-        class="input-group mb-2"
-      >
-        <input
-          (change)="selectedFiles($event)"
-          *ngIf="i < 1"
-          type="file"
-          multiple
-          class="form-control"
-          [formControlName]="i"
-        />
-      </div>
-    </ng-container>
-  </div>
-  <mat-form-field class="select-container mt-2">
+      <input
+        (change)="selectedFiles($event)"
+        *ngIf="i < 1"
+        type="file"
+        multiple
+        class="form-control"
+        [formControlName]="i"
+      />
+    </div>
+  </ng-container>
+</div> -->
+<!-- <mat-form-field class="select-container mt-2">
     <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
     <mat-label>Látható mások számára is</mat-label>
     <mat-select formControlName="isShared" id="isShared">
@@ -70,13 +53,18 @@
         >Csak nekem</mat-option
       >
     </mat-select>
-  </mat-form-field>
-  <button class="shareButton" color="accent" mat-raised-button type="submit">
-    Új bejegyzés megosztása
-  </button>
-</form>
+  </mat-form-field> -->
+<button class="shareButton" color="accent" mat-raised-button type="submit">
+  Új bejegyzés megosztása
+</button>
+
+<div *ngIf="isLoading" class="loadingSpinnerContainer">
+  <h2>Adatok töltése folyamatban...</h2>
+  <div class="loadingSpinner">*</div>
+</div>
 
 <div
+  [@fade-in]="newsAnimationState"
   *ngFor="let post of sharedPosts | sort : pipeRefresh; let i = index"
   class="row mt-3"
 >
@@ -94,7 +82,8 @@
       >
         <iframe
           class="mb-2 rounded iFrames-for-shared-post"
-          [attr.data-post-id]="post.id"
+          [attr.data-postId]="post.id"
+          data-src
           width="100%"
           height="100%"
           title=""
@@ -108,11 +97,12 @@
       <mat-card-content>
         <div
           *ngFor="let pic of post.pictures"
-          class="col-12 d-flex justify-content-center mb-2"
+          class="col-12 d-flex justify-content-center mb-2 pics-container"
         >
           <img
-            class="rounded"
-            [src]="pic.url"
+            class="rounded lazy-img"
+            src="../../../../assets/cute-cat-placeholder.png"
+            [attr.data-src]="pic.url"
             [alt]="pic.name"
             width="80%"
             height="100%"

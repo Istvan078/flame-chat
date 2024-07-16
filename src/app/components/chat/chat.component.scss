@@ -248,6 +248,29 @@ mat-expansion-panel-header:hover {
   }
 }
 
+.my-posts-header {
+  background: rgb(78, 90, 162, 0.7) !important;
+}
+
+.exp-panel-headers {
+  background: rgba(141, 148, 190, 0.7) !important;
+}
+
+.album-icon {
+  color: rgb(46, 46, 219);
+}
+.feeds-icon {
+  color: green;
+}
+.messages-icon {
+  color: rgb(177, 80, 19);
+}
+.friends-icon {
+  color: rgb(88, 21, 88);
+}
+.profile-icon {
+  color: rgb(177, 40, 40);
+}
 @media screen and (max-height: 614px) {
   .right {
     width: fit-content;

@@ -26,3 +26,319 @@
 .picUploadInput {
   display: none;
 }
+
+// TESZT ALATT VAN ///////////////////////////////////
+
+.slider {
+  width: 100%;
+  height: 100%;
+  overflow-y: hidden;
+}
+
+.left-arrow {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+}
+
+.right-arrow {
+  display: grid;
+  justify-content: center;
+  align-items: center;
+}
+
+.left-arrow span {
+  font-size: 1.5rem;
+  color: white;
+  background: rgb(65, 65, 203);
+  cursor: pointer;
+}
+
+.right-arrow span {
+  font-size: 1.5rem;
+  color: white;
+  background: rgb(65, 65, 203);
+  cursor: pointer;
+}
+
+.products {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: white;
+  // background-image: var(--main-color);
+  box-shadow: 0px 0px 3px 5px rgb(194, 181, 181, 0.5);
+  margin-bottom: 10px;
+  margin-right: 5px;
+  margin-left: 5px;
+  width: 100%;
+  min-height: 60vh;
+  max-height: fit-content;
+  border-radius: 5px;
+  opacity: 0;
+
+  .under-prodpic-container {
+    max-height: 55px;
+    overflow: auto;
+  }
+}
+
+.loadingSpinner {
+  position: relative;
+  z-index: -1;
+  text-align: center;
+  width: 100%;
+  height: 200px;
+  font-size: 15rem;
+  color: purple;
+  animation: loadingSpinner 1s linear infinite;
+}
+
+.change-color-mode-container {
+  display: grid;
+  position: absolute;
+  right: 7px;
+  top: 50px;
+  z-index: 0;
+}
+
+.btn-dark-mode {
+  background: black;
+}
+
+.btn-light-mode {
+  background: rgb(255, 251, 251);
+  color: black;
+}
+
+.order-quantity-input {
+  width: 45px;
+  text-align: center;
+  margin-bottom: 7px;
+}
+
+.full-opacity {
+  opacity: 1;
+}
+
+.opacity-animation {
+  transition: opacity 1s ease-in;
+}
+
+button {
+  border: none;
+  color: white;
+}
+
+// button:first-child {
+//   background: rgb(198, 118, 131, 0.7);
+// }
+
+// button:first-child:hover {
+//   background: rgb(198, 118, 131);
+// }
+
+.d-none {
+  display: none;
+}
+
+@keyframes loadingSpinner {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.errorContainer {
+  padding: 3px;
+  width: fit-content;
+  border-radius: 3px;
+  margin: 5px;
+  background: var(--error-color);
+}
+
+.deleteButton {
+  background-color: rgb(243, 9, 9, 0.8);
+  border-color: rgba(200, 27, 27, 0.8);
+}
+
+.deleteButton:hover {
+  background-color: rgba(162, 25, 25, 1);
+  border-color: rgba(162, 25, 25, 1);
+}
+
+.mainContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: 10px;
+  margin-top: 0;
+  height: 60vh;
+  // background-color: rgba(221, 207, 207,0.8);
+  transition: opacity 1s ease-out;
+}
+
+.categoriesContainer {
+  margin-left: 4px;
+}
+
+.categoriesContainer button:nth-child(2) {
+  background: rgb(4, 4, 4, 0.7);
+}
+
+.categoriesContainer button:nth-child(2):hover {
+  background: rgb(4, 4, 4, 1);
+}
+
+.categoriesContainer button:nth-child(3) {
+  background: rgba(19, 97, 7, 0.7);
+}
+
+.categoriesContainer button:nth-child(3):hover {
+  background: rgba(24, 172, 2, 1);
+}
+
+.categoriesContainer button:nth-child(4) {
+  background: rgba(199, 157, 17, 0.7);
+}
+
+.categoriesContainer button:nth-child(4):hover {
+  background: rgba(199, 157, 17, 1);
+}
+
+.categoriesContainer button:nth-child(5) {
+  background: rgba(138, 81, 12, 0.7);
+}
+
+.categoriesContainer button:nth-child(5):hover {
+  background: rgba(138, 81, 12, 1);
+}
+
+.fade-in {
+  opacity: 1;
+  transition: opacity 1s ease-in;
+}
+
+.imgContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+img {
+  width: 100%;
+  height: 90%;
+  border-radius: 10px;
+}
+
+.searchContainer {
+  margin-left: 5px;
+  margin-top: 60px;
+
+  button {
+    background: blue;
+    border: none;
+    padding: 5px;
+  }
+}
+
+.change-profpic-button {
+  padding: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+  // position: relative;
+  // bottom: -50px;
+  // right: 0;
+}
+
+.mat-stepper-button-cont {
+  top: 30px !important;
+}
+
+.left-arrow span {
+  height: 50px;
+  width: 20px;
+  padding-top: 13px;
+  text-align: center;
+  font-size: 2rem;
+}
+
+.right-arrow span {
+  height: 50px;
+  width: 20px;
+  padding-top: 13px;
+  text-align: center;
+  font-size: 2rem;
+}
+
+@media screen and (min-width: 375px) and (max-width: 500px) {
+  .mainContainer {
+    height: 60vh;
+    width: 67vw;
+  }
+  .change-profpic-button {
+    padding: 0px;
+    margin-top: 20px !important;
+    text-align: center;
+  }
+  .left-arrow span {
+    height: 50px;
+    width: 20px;
+    padding-top: 13px;
+    text-align: center;
+    font-size: 2rem;
+  }
+
+  .right-arrow span {
+    height: 50px;
+    width: 20px;
+    padding-top: 13px;
+    text-align: center;
+    font-size: 2rem;
+  }
+}
+
+@media screen and (max-width: 375px) {
+  .change-profpic-button {
+    padding: 0px;
+    margin-top: 20px !important;
+    text-align: center;
+  }
+  .mat-stepper-button-cont {
+    top: 70px !important;
+  }
+  .mainContainer {
+    height: 60vh;
+    width: 61.5vw;
+  }
+  .products {
+    width: 80%;
+  }
+  .change-color-mode-container {
+    display: flex;
+    width: fit-content;
+    right: 50px;
+    top: 15px;
+  }
+  .left-arrow span {
+    height: 50px;
+    width: 20px;
+    padding-top: 13px;
+    text-align: center;
+    font-size: 2rem;
+  }
+
+  .right-arrow span {
+    height: 50px;
+    width: 20px;
+    padding-top: 13px;
+    text-align: center;
+    font-size: 2rem;
+  }
+}

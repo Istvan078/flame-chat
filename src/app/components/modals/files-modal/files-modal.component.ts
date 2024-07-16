@@ -14,7 +14,6 @@ export class FilesModalComponent {
   @Input() viewIndex: number = 0;
   @Input() picturesArr: any[] = [];
   fadeIn: boolean = false;
-  // @Output() passViewIndex: EventEmitter<any> = new EventEmitter()
 
   left() {
     if (this.viewIndex > 0) {
