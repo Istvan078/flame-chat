@@ -5,18 +5,16 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
 import { Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
-import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
 import { UtilityService } from 'src/app/services/utility.service';
-import { Form } from 'src/app/models/utils/form.model';
 import {
   animate,
   keyframes,
@@ -96,13 +94,11 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoading: boolean = false;
   postIndex: any;
   selectedFriendSub!: Subscription;
+  allDataForSubmit: any;
 
   newsAnimationState: string = 'normal';
 
-  formData: Form[] = [];
-
   constructor(
-    private fBuilder: FormBuilder,
     private firestoreService: FirestoreService,
     private base: BaseService,
     private utilityService: UtilityService,
@@ -119,7 +115,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit() {
     this.isLoading = true;
-    this.formData = this.utilityService.getFormDataForPosts();
     this.selectedFriendSub = this.base.selectedFriendSubject.subscribe(
       async fr => {
         if (fr.friendKey) {
@@ -137,19 +132,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       this.userProfilesSub.unsubscribe();
     });
 
-    this.publishForm = this.fBuilder.group({
-      name: [{ value: this.userProfile.displayName, disabled: true }],
-      message: ['', [Validators.required, Validators.minLength(5)]],
-      pictures: this.fBuilder.array([]),
-      notSeen: [...this.userProfilesUidsArr],
-      isShared: ['yes'],
-      timeStamp: [''],
-      displayName: [this.userProfile.displayName],
-      iFrame: [''],
-    });
-
-    this.formData[0].formGroup = this.publishForm;
-
     this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
       picture => {
         this.picturesArray.push(picture);
@@ -161,10 +143,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     setTimeout(async () => {
-      this.publishForm.patchValue({
-        name: this.userProfile.displayName,
-        displayName: this.userProfile.displayName,
-      });
       this.init();
       this.firestoreService.getMyPostsSub().subscribe(async getPosts => {
         if (getPosts.isGetSharedPosts) {
@@ -305,49 +283,45 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   getPostsData() {
     let proba: any[] = [];
     this.renderIFrames();
-    // const iFrames: HTMLCollectionOf<HTMLIFrameElement> =
-    //   document.getElementsByClassName(
-    //     'iFrames-for-shared-post'
-    //   ) as HTMLCollectionOf<HTMLIFrameElement>;
-    // this.sharedPosts.map((sP, i, arr) => {
-    //   const correspondingIframe = Array.from(iFrames).find(
-    //     iframe => iframe.getAttribute('data-postid') === sP.id
-    //   );
-    //   if (sP.iFrame) {
-    //     correspondingIframe!.src = sP.iFrame;
-    //   }
-    // });
-
-    this.sharedPosts.map((sP: any, i: number) => {
-      sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
-      if (sP.liked?.length) {
-        proba = this.userProfiles
-          .filter(uP => sP.liked?.includes(uP.uid))
-          .map(user => {
-            return {
-              displayName: user.displayName,
-              uid: user.uid,
-              postId: sP.id,
-            };
-          })
-          .sort(() => Math.random() - 0.5);
-        this.peopleLikedPost.push(proba as any);
-      }
-      if (sP.notSeen.includes(this.userProfile.uid)) {
-        const filteredArr = sP.notSeen.filter(
-          (uid: any) => uid !== this.userProfile.uid
-        );
-        this.firestoreService
-          .updateDocument(
-            sP.id,
-            {
-              notSeen: filteredArr,
-            },
-            true
-          )
-          .then(() => this.firestoreService.postsNotiSubject.next(0));
-      }
-    });
+    const subscription = new Observable(obs => {
+      const interval = setInterval(() => {
+        if (this.sharedPosts.length) {
+          this.sharedPosts.map((sP: any, i: number) => {
+            sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
+            if (sP.liked?.length) {
+              proba = this.userProfiles
+                .filter(uP => sP.liked?.includes(uP.uid))
+                .map(user => {
+                  return {
+                    displayName: user.displayName,
+                    uid: user.uid,
+                    postId: sP.id,
+                  };
+                })
+                .sort(() => Math.random() - 0.5);
+              this.peopleLikedPost.push(proba as any);
+            }
+            if (sP.notSeen.includes(this.userProfile.uid)) {
+              const filteredArr = sP.notSeen.filter(
+                (uid: any) => uid !== this.userProfile.uid
+              );
+              this.firestoreService
+                .updateDocument(
+                  sP.id,
+                  {
+                    notSeen: filteredArr,
+                  },
+                  true
+                )
+                .then(() => this.firestoreService.postsNotiSubject.next(0));
+            }
+          });
+          clearInterval(interval);
+          subscription.unsubscribe();
+        }
+        console.log(`INTERVAL LEFUTOTT`);
+      }, 200);
+    }).subscribe();
   }
 
   filesArrivedForSubject() {
@@ -368,9 +342,10 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onSubmit() {
-    if (!this.chosenFiles) this.postPost();
-    if (this.chosenFiles) {
+  onSubmit(allDataForSubmit: any) {
+    this.allDataForSubmit = allDataForSubmit;
+    if (!this.allDataForSubmit.chosenFiles) this.postPost();
+    if (this.allDataForSubmit.chosenFiles) {
       this.uploadFiles().then(res => {
         console.log(res);
         this.filesArrivedForSubject().then(res => {
@@ -384,7 +359,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async postPost() {
     const date: Date = new Date();
-    const iFrame = this.publishForm.get('iFrame')?.value;
+    const iFrame = this.allDataForSubmit.form.get('iFrame')?.value;
     let modifiedIFrame;
     if (iFrame) {
       if (iFrame?.includes('youtu.be')) {
@@ -403,14 +378,14 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         modifiedIFrame = iFrame.replace('live', 'embed');
       }
     }
-    this.publishForm.patchValue({
+    this.allDataForSubmit.form.patchValue({
       timeStamp: date.getTime(),
       notSeen: [...this.userProfilesUidsArr],
       iFrame: modifiedIFrame ? modifiedIFrame.trim() : '',
     });
 
-    if (!iFrame) this.publishForm.removeControl('iFrame');
-    this.post = this.publishForm.value;
+    if (!iFrame) this.allDataForSubmit.form.removeControl('iFrame');
+    this.post = this.allDataForSubmit.form.value;
     this.post.pictures = this.picturesArray;
     this.post.userKey = this.userProfile.key;
     this.post.private = {
@@ -419,6 +394,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     const postRef = await this.firestoreService.createPost(this.post);
     await this.firestoreService.updatePost(postRef.id, { id: postRef.id });
     this.picturesArray = [];
+    this.allDataForSubmit.form.reset();
   }
 
   async like(post: Post, i: number) {
@@ -477,21 +453,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  addPictures() {
-    const arrayControl = this.fBuilder.control(null);
-    (<FormArray>this.publishForm.get('pictures')).controls.push(arrayControl);
-  }
-
-  forFormArray() {
-    return (<FormArray>this.publishForm.get('pictures')).controls;
-  }
-
-  selectedFiles($event: any) {
-    (this.publishForm.get('pictures') as FormArray).clear();
-    this.chosenFiles = this.fBuilder.control($event.target.files);
-    (this.publishForm.get('pictures') as FormArray).push(this.chosenFiles);
-  }
-
   resizeImage(
     file: File,
     maxWidth: number,
@@ -547,7 +508,9 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       const maxWidth = 800;
       const maxHeight = 600;
       const quality = 0.85;
-      let fileArr = Array.from(this.publishForm.get('pictures')?.value[0]);
+      let fileArr = Array.from(
+        this.allDataForSubmit.form.get('pictures')?.value[0]
+      );
       fileArr.map((file: any) => {
         this.resizeImage(file, maxWidth, maxHeight, quality).then(
           resizedBlob => {

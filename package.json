@@ -5,6 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "reinstall": "npm run clean && npm install",
+    "clean": "rimraf dist node_modules",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -50,6 +52,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "rimraf": "^6.0.1",
     "tslib": "^2.6.3",
     "typescript": "~5.4.5"
   }

@@ -65,7 +65,7 @@ export class FirestoreService {
       return this.sharedPostRef.ref
         .where('isShared', '==', 'yes')
         .get()
-        .then(querySnapshot => {
+        .then((querySnapshot: any) => {
           const posts: Post[] = [];
           querySnapshot.forEach((doc: any = {}) => {
             posts.push({ ...doc.data() });
@@ -129,7 +129,7 @@ export class FirestoreService {
     const myPostsRef = this.fireStore.collection(
       `${this.myPostsRef}/${userKey}/my-posts`
     );
-    return myPostsRef.ref.get().then(querySnapshot => {
+    return myPostsRef.ref.get().then((querySnapshot: any) => {
       const myPosts: any[] = [];
       querySnapshot.forEach((doc: any = {}) => {
         myPosts.push({ id: doc.id, ...doc.data() });
@@ -302,11 +302,11 @@ export class FirestoreService {
       notiSubPath.ref
         .where('endpoint', '==', endpoint)
         .get()
-        .then(docs => {
+        .then((docs: any) => {
           if (docs.empty) {
             rej('Nincs feliratkozás');
           } else {
-            docs.forEach(doc => {
+            docs.forEach((doc: any) => {
               console.log(doc.id, doc.data());
               const deletedDoc = notiSubPath
                 .doc(doc.id)

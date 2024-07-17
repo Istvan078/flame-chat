@@ -1,4 +1,9 @@
-<div class="text-center mt-1">
+<div
+  [class]="{
+    'text-center': true,
+    'mt-1': true
+  }"
+>
   <button
     *ngIf="!isNewPost"
     (click)="isNewPost = !isNewPost"
@@ -9,54 +14,16 @@
     Új bejegyzés
   </button>
 </div>
-<!-- *ngIf="isNewPost" -->
+
 <app-posts
+  *ngIf="isNewPost"
   [@fade-in]="newsAnimationState"
-  *ngIf="formData[0].formGroup"
-  (submitForm)="onSubmit()"
-  [FormData]="formData"
+  (onSubmit)="onSubmit($event)"
 >
-</app-posts>
-<!-- <div class="text-center" formArrayName="pictures">
-  <button
-    (click)="addPictures()"
-    color="accent"
-    mat-raised-button
-    type="button"
-  >
-    Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
+  <button class="shareButton" color="accent" mat-raised-button type="submit">
+    Új bejegyzés megosztása
   </button>
-  <ng-container>
-    <div
-      *ngFor="let pictureControl of forFormArray(); let i = index"
-      class="input-group mb-2"
-    >
-      <input
-        (change)="selectedFiles($event)"
-        *ngIf="i < 1"
-        type="file"
-        multiple
-        class="form-control"
-        [formControlName]="i"
-      />
-    </div>
-  </ng-container>
-</div> -->
-<!-- <mat-form-field class="select-container mt-2">
-    <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
-    <mat-label>Látható mások számára is</mat-label>
-    <mat-select formControlName="isShared" id="isShared">
-      <mat-option (click)="notShared = false" ngClass="green" value="yes"
-        >Igen</mat-option
-      >
-      <mat-option (click)="notShared = true" ngClass="yellow" value="no"
-        >Csak nekem</mat-option
-      >
-    </mat-select>
-  </mat-form-field> -->
-<button class="shareButton" color="accent" mat-raised-button type="submit">
-  Új bejegyzés megosztása
-</button>
+</app-posts>
 
 <div *ngIf="isLoading" class="loadingSpinnerContainer">
   <h2>Adatok töltése folyamatban...</h2>

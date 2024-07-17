@@ -1,6 +1,12 @@
 <!-- <ng-content select="form-container"></ng-content> -->
-<form class="mt-3 d-grid" [formGroup]="FormData()![0].formGroup!">
-  @for(data of FormData(); track data) {
+
+<form
+  *ngIf="publishForm"
+  class="mt-3 d-grid"
+  [formGroup]="publishForm"
+  (ngSubmit)="onFormSubmit()"
+>
+  @for(data of AllFormData(); track data) {
 
   <mat-form-field>
     <mat-label>{{ data.label }}</mat-label>
@@ -21,5 +27,42 @@
     }
   </mat-form-field>
   }
-  <ng-content></ng-content>
+  <div class="text-center" formArrayName="pictures">
+    <button
+      (click)="addPictures()"
+      color="accent"
+      mat-raised-button
+      type="button"
+    >
+      Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
+    </button>
+    <ng-container>
+      <div
+        *ngFor="let pictureControl of forFormArray(); let i = index"
+        class="input-group mb-2"
+      >
+        <input
+          (change)="selectedFiles($event)"
+          *ngIf="i < 1"
+          type="file"
+          multiple
+          class="form-control"
+          [formControlName]="i"
+        />
+      </div>
+    </ng-container>
+  </div>
+  <mat-form-field class="select-container mt-2">
+    <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
+    <mat-label>Látható mások számára is</mat-label>
+    <mat-select formControlName="isShared" id="isShared">
+      <mat-option (click)="notShared = false" ngClass="green" value="yes"
+        >Igen</mat-option
+      >
+      <mat-option (click)="notShared = true" ngClass="yellow" value="no"
+        >Csak nekem</mat-option
+      >
+    </mat-select>
+  </mat-form-field>
+  <ng-content #ngcontent></ng-content>
 </form>
