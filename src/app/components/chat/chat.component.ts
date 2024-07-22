@@ -1,8 +1,14 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
-import { Friends, UserClass } from 'src/app/models/user.model';
+import { ForUserSubject, Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { MatAccordion } from '@angular/material/expansion';
@@ -23,6 +29,7 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
+import { UtilityService } from 'src/app/services/utility.service';
 
 type Notification = {
   displayName: string;
@@ -180,9 +187,7 @@ type Notification = {
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild(MatAccordion) accordion!: MatAccordion;
   @ViewChild('slideToggle') slideToggle!: MatSlideToggle;
-  // @HostListener('click') isUserOnline() {
-  //   this.isOnline();
-  // }
+  @ViewChild('messageCardCont') messageCardCont!: ElementRef;
 
   // ANIMÁCIÓVAL KAPCSOLATOS //
   chatAnimationState: string = 'normal';
@@ -191,6 +196,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   userProfiles: UserClass[] = [];
   userNotFriends: any[] = [];
   userFriends?: Friends[] = [];
+  notConfirmedMeUsers: UserClass[] = [];
   seenMeArr: any[] = []; // KIK NÉZTÉK MEG A PROFILOM
   userProfile: UserClass = new UserClass();
   signAsFriend: UserClass = new UserClass();
@@ -245,9 +251,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // TOAST //
   toastVal: any = {};
+  notConfirmedSignedAsFriend: boolean = false;
 
   // SUBJECTHEZ //
   authNull = 2;
+  forUserSubject: ForUserSubject = new ForUserSubject();
 
   // FELIRATKOZÁSOK //
   userLoggedInSubscription: Subscription = Subscription.EMPTY;
@@ -260,6 +268,18 @@ export class ChatComponent implements OnInit, OnDestroy {
   messSubscription: Subscription = Subscription.EMPTY;
   postsNotiSub: Subscription = Subscription.EMPTY;
   isSubscribedForNotSub: Subscription = Subscription.EMPTY;
+  getFriendsSub: Subscription = Subscription.EMPTY;
+  userSubjectSub: Subscription = Subscription.EMPTY;
+  allUserDetailsSub: Subscription = Subscription.EMPTY;
+  getFriendsFromUtilSub!: Subscription;
+  seenMeSub!: Subscription;
+  getMyPostsSub: Subscription = Subscription.EMPTY;
+  refreshMyPostsSub: Subscription = Subscription.EMPTY;
+
+  // ESEMÉNYFIGYELŐK //
+  private isOnlineHandler: () => void;
+  private isOfflineHandler: () => void;
+
   // OBSERVABLES //
   customInterval$ = new Observable(subscriber => {
     let timesExecuted = 0;
@@ -294,57 +314,25 @@ export class ChatComponent implements OnInit, OnDestroy {
     private ngbModal: NgbModal,
     private firestore: FirestoreService,
     private http: HttpClient,
-    private toastService: ToastService
-  ) {}
+    private toastService: ToastService,
+    private utilService: UtilityService,
+    private element: ElementRef
+  ) {
+    this.isOnlineHandler = this.handleOnline.bind(this);
+    this.isOfflineHandler = this.handleOffline.bind(this);
+  }
   ngOnInit() {
-    // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐ //
-    window.addEventListener('click', async e => {
-      if (!this.isUserOnlineNow) {
-        await this.base.updateUserData({ online: true }, this.userProfile?.key);
-        this.isUserOnlineNow = true;
-      }
-    });
-    // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
-    window.addEventListener('blur', async e => {
-      if (this.isUserOnlineNow) {
-        await this.base.updateUserData(
-          { online: false },
-          this.userProfile?.key
-        );
-        await this.base.updateUserData(
-          { lastTimeOnline: new Date().getTime() },
-          this.userProfile?.key
-        );
-        this.isUserOnlineNow = false;
-      }
-    });
+    this.isUserOnline();
     this.test();
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
     });
-    if (
-      Object.keys(this.base.userFriendsSubject.getValue()).length !== 0 &&
-      !this.userFriends?.length
-    ) {
-      this.userFriendSubjectSub = this.base.userFriendsSubject.subscribe(
-        uFrs => {
-          this.userFriends = uFrs.userFriends;
-          this.userNotFriends = uFrs.userNotFriends;
-        }
-      );
-    }
-
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
       obj => {
-        if (obj.allChatsArray) {
-          this.allChatsArray = obj.allChatsArray;
-        }
-        if (obj.showFriendsMess) {
-          this.showFriendsMess = obj.showFriendsMess;
-        }
-        if (obj.haventSeenMessagesArr) {
+        if (obj.allChatsArray) this.allChatsArray = obj.allChatsArray;
+        if (obj.showFriendsMess) this.showFriendsMess = obj.showFriendsMess;
+        if (obj.haventSeenMessagesArr)
           this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
-        }
       }
     );
     this.haventSeenMsgsArrSubjSub = this.base.haventSeenMsgsArr.subscribe(
@@ -352,34 +340,75 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.haventSeenMessagesArr = hSMArr;
       }
     );
+
+    this.userSubjectSub = this.utilService.userSubject.subscribe(user => {
+      if (user.userProfiles) this.userProfiles = user.userProfiles;
+      if (user.userProfile) this.userProfile = user.userProfile;
+      if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
+      if (user.userFriends) this.userFriends = user.userFriends;
+      if (user.notConfirmedMeUsers)
+        this.notConfirmedMeUsers = user.notConfirmedMeUsers;
+      if (user.subscription) user.subscription.unsubscribe();
+      if (!this.notConfirmedMeUsers.length) this.confirmFriend();
+      if (this.notConfirmedMeUsers.length || this.userNotFriends.length)
+        this.friendsOn = true;
+    });
     new Promise(res => {
       this.userLoggedInSubscription = this.auth
         .getUserLoggedInSubject()
-        .subscribe((user: any) => {
+        .subscribe(async (user: any) => {
           // felhasznaloi adatok lekerese
-          if (user)
-            this.base.getUserProfiles().subscribe((userProfiles: any[]) => {
-              this.userProfiles = userProfiles;
-              this.userProfile = userProfiles.find(
-                (userProfile: any) => userProfile.uid === user.uid
+          if (
+            (Object.keys(this.utilService.userSubject.getValue()).length ===
+              0 &&
+              !this.userProfiles.length) ||
+            this.authNull === null
+          )
+            if (user.uid) {
+              const profsObs = await this.utilService.getUserProfiles();
+              this.allUserDetailsSub = profsObs.subscribe(
+                (allUserDetails: any) => {
+                  this.userProfiles = allUserDetails.userProfiles;
+                  this.userProfile = allUserDetails.userProfile;
+                  this.utilService.forUserSubject.userProfile =
+                    this.userProfile;
+                  this.utilService.forUserSubject.userProfiles =
+                    this.userProfiles;
+
+                  if (this.userProfile && !this.userProfile.birthDate) {
+                    this.router.navigate(['profile/' + user.uid]);
+                  }
+                  if (
+                    (this.userProfile?.key &&
+                      !Object.keys(this.utilService.userSubject.getValue())
+                        .length) ||
+                    this.authNull === null
+                  ) {
+                    this.subjectValueTransfer(
+                      this.utilService.forUserSubject,
+                      this.utilService.userSubject
+                    );
+                    this.getMyPostsSub = this.getMyPostsSubcription();
+                    this.refreshMyPostsSub = this.refreshMyPosts();
+                    this.getNewPostsNotification();
+                    this.getNotSeenMyPostsNotification();
+                    res('**** SIKERES FELHASZNÁLÓI PROFIL LEKÉRÉS ****');
+                  }
+                }
               );
-              if (this.userProfile && !this.userProfile.birthDate) {
-                this.router.navigate(['profile/' + user.uid]);
-              }
-              // userKey átadása base service-nek
-              if (this.userProfile?.key) {
-                this.base.userKeySubject.next(this.userProfile?.key);
-                res('**** SIKERES FELHASZNÁLÓI PROFIL LEKÉRÉS ****');
-              }
-              this.refreshSharedPosts();
-              this.refreshMyPosts();
-              this.getNewPostsNotification();
-              this.getNotSeenMyPostsNotification();
-            });
+            }
+          if (this.userProfile.key && this.authNull !== null) {
+            console.log(`Lefutott`);
+            this.getMyPostsSub = this.getMyPostsSubcription();
+            this.refreshMyPostsSub = this.refreshMyPosts();
+            this.getNewPostsNotification();
+            this.getNotSeenMyPostsNotification();
+            res('**** SIKERES FELHASZNÁLÓI PROFIL LEKÉRÉS ****');
+          }
         });
     }).then(res => {
-      this.isSubscribedForNotSub = this.isSubscribedForNotifications();
-      this.isSubscribedForNotSub.unsubscribe();
+      this.isSubscribedForNotSub = this.isSubscribedForNotifications()!;
+      if (this.isSubscribedForNotSub) this.isSubscribedForNotSub.unsubscribe();
       let docIdsArr: any[] = [];
       console.log(res);
       if (this.firestore.filesBehSubject.value.length === 0) {
@@ -402,20 +431,21 @@ export class ChatComponent implements OnInit, OnDestroy {
       // baratok listajanak lekerese
       if (!this.userProfile?.uid) return;
       if (this.userProfile?.uid) {
-        const getFriendsSub = this.getFriendsAndNotFriends().subscribe({
+        this.getFriendsSub = this.getFriendsAndNotFriends().subscribe({
           next: (res: any) => {
-            this.base.profileSeenSubject.next(this.userFriends);
             console.log(res);
             // új üzenetek lekérése
             this.messSubscription = this.getNewMessages();
           },
           complete: () => {
             console.log('***OBSERVABLE BEFEJEZŐDÖTT***');
-            getFriendsSub.unsubscribe();
+            this.auth.authNullSubject.next(2);
+            if (this.getFriendsSub) this.getFriendsSub.unsubscribe();
           },
         });
       }
     });
+
     this.isSuperAdminSubscription = this.auth.isSuperAdmin.subscribe(
       value => (this.isSAdmin = value)
     );
@@ -425,110 +455,24 @@ export class ChatComponent implements OnInit, OnDestroy {
   // Ismerősök és nem ismerősök lekérése, beállítása //
   getFriendsAndNotFriends() {
     return new Observable(observer => {
-      const userProfile = this.userProfile;
-      if (this.userProfile.uid && !this.userProfile.friends?.length)
-        this.base.getFriends()?.subscribe(frs => {
-          this.userProfile = userProfile;
-          this.friendsOn = true;
-          userProfile.friends = frs;
-          let friendProfile: any = {};
-          const seenMeArr = this.userProfile.friends
-            ?.filter(f => {
-              return f.seenMe === true;
-            })
-            ?.map((fr, i, arr) => {
-              friendProfile = this.userProfiles.find(
-                uP => uP.uid === fr.friendId
-              );
-              const friend = Object.assign({}, ...arr);
-              friend.displayName = friendProfile.displayName;
-              friend.profilePicture = friendProfile.profilePicture;
-              friend.email = friendProfile.email;
-              friend.friendKey = fr.key;
-              console.log('-----map lefutott----');
-              return friend;
+      if (this.userProfile.uid)
+        if (!this.getFriendsFromUtilSub)
+          this.getFriendsFromUtilSub = this.utilService
+            .getFriends()
+            .subscribe(val => {
+              observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
             });
-
-          this.subjectValueTransfer(seenMeArr, this.base.profileSeenSubject);
-          // barát Uid-k tömb
-          let friendsUids: any[] = [];
-          // barátok tömb
-          let friendsTomb: any[] = [];
-
-          const userProfilesCopy: any[] = [...this.userProfiles];
-          const userProfileCopy = { ...this.userProfile };
-
-          if (
-            Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
-            this.authNull === null
-          ) {
-            const userProfilesUids = userProfilesCopy.map(uProfs => uProfs.uid);
-            userProfileCopy.friends?.forEach(f => {
-              const prof = this.userProfiles.find(uP => {
-                return f.friendId === uP.uid;
-              });
-              if (f.seenMe === undefined) {
-                f.seenMe = false;
-                this.base.updateFriend(f.key, {
-                  seenMe: f.seenMe,
-                } as any);
-              }
-              friendsUids.push(f.friendId);
-              if (userProfilesUids.includes(f.friendId)) {
-                friendsTomb.push({
-                  friendKey: f['key'],
-                  friendId: f.friendId,
-                  seenMe: f.seenMe,
-                  messaging: f.messaging,
-                  displayName: prof?.displayName,
-                  profilePicture: prof?.profilePicture,
-                  email: prof?.email,
-                  online: prof?.online,
-                });
-              }
-            });
-          }
-
-          //////////////////// LEÍRÁS ///////////////////
-          // nem baratok kiszűrése //
-          if (
-            Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
-            this.authNull === null
-          ) {
-            const userNotFriendsProf: any[] = this.userProfiles.filter(
-              item =>
-                !friendsUids.includes(item.uid) && item.uid !== userProfile.uid
-            );
-            //  nem baratok tomb beállítása
-            this.userNotFriends = userNotFriendsProf;
-          }
-          if (
-            Object.keys(this.base.userFriendsSubject.getValue()).length === 0 ||
-            this.authNull === null
-          ) {
-            this.userFriends = friendsTomb;
-            // subjecttel átküldi a userFriendst
-            this.subjectValueTransfer(
-              this.userFriends,
-              this.base.profileSeenSubject
-            );
-            const forFriendsSubject = {
-              userFriends: this.userFriends,
-              userNotFriends: this.userNotFriends,
-            };
-            this.subjectValueTransfer(
-              forFriendsSubject,
-              this.base.userFriendsSubject
-            );
-            this.subjectValueTransfer(2, this.auth.authNullSubject);
-            setTimeout(() => {
-              this.setDefaultProfilePic();
-            }, 200000);
-            // if (this.userProfile?.uid) this.isOnline();
-          }
-          observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
-          observer.complete();
-        });
+      if (!this.seenMeSub)
+        this.seenMeSub = this.utilService
+          .getFriendsForNotifUpdate()
+          .subscribe(seenMeArr => {
+            this.subjectValueTransfer(seenMeArr, this.base.profileSeenSubject);
+            observer.complete();
+          });
+      setTimeout(() => {
+        console.log(`TIMEOUT MEGJAVÍTANI`);
+        this.setDefaultProfilePic();
+      }, 5000);
     });
   }
 
@@ -545,10 +489,18 @@ export class ChatComponent implements OnInit, OnDestroy {
         const choiceResult = await areUSureToUnsub.result;
         if (choiceResult === 'Igen') {
           wantsToUnsub = true;
+          if (
+            !this.userProfile.pushNotificationsOn ||
+            this.userProfile.pushNotificationsOn === true
+          ) {
+            this.base.updateUserData(
+              { pushNotificationsOn: 'off' },
+              this.userProfile.key
+            );
+          }
         }
       } catch (err) {
         this.slideToggle.checked = true;
-        console.log(err);
       }
     }
     if (isSubscribed) {
@@ -567,11 +519,16 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.firestore
         .getUserNotiSubscriptionReformed(this.userProfile.key, JSONed.endpoint!)
         .then(docs => {
-          if (docs.empty && isSubscribed && !wantsToUnsub)
+          if (docs.empty && isSubscribed && !wantsToUnsub) {
+            this.base.updateUserData(
+              { pushNotificationsOn: true },
+              this.userProfile.key
+            );
             this.firestore.saveUserNotiSubscription(
               this.userProfile.key,
               JSONed
             );
+          }
           docs.forEach(async doc => {
             if (doc.exists && !isSubscribed && wantsToUnsub) {
               await this.firestore.deleteUserNotificationSub(
@@ -581,40 +538,140 @@ export class ChatComponent implements OnInit, OnDestroy {
               this.myPushSubscription.unsubscribe();
             }
 
-            if (!doc.exists && isSubscribed && !wantsToUnsub)
+            if (!doc.exists && isSubscribed && !wantsToUnsub) {
+              this.base.updateUserData(
+                { pushNotificationsOn: true },
+                this.userProfile.key
+              );
               this.firestore.saveUserNotiSubscription(
                 this.userProfile.key,
                 JSONed
               );
+            }
           });
         });
     }
   }
 
-  signAsAFriend(user: UserClass) {
+  signAsAFriend(user: Friends) {
+    console.log(user);
     const friend: {} = {
-      friendId: user.uid,
-      friendKey: user.key,
+      friendId: user.friendId,
+      friendKey: user.friendKey,
+      confirmed: false,
     };
-    this.base.addFriends(friend, user.key)?.then(() => {
-      const modalRef = this.ngbModal.open(ModalComponent, {
-        centered: true,
-      });
-      modalRef.componentInstance.friendName = user.displayName;
-      this.toastVal = user;
-      modalRef.componentInstance.name = 'Ismerősnek jelölve.';
-      this.base.userFriendsSubject.next({});
-      this.getFriendsAndNotFriends().subscribe(() => {
+    this.base
+      .addFriends(friend, user.friendKey!, this.userProfile.key)
+      ?.then(() => {
+        const modalRef = this.ngbModal.open(ModalComponent, {
+          centered: true,
+          animation: true,
+        });
+        modalRef.componentInstance.friendName = user.displayName;
+        this.toastVal = user;
+        modalRef.componentInstance.name = 'Ismerősnek jelölve.';
+        this.userNotFriends = this.userNotFriends.filter(
+          nFr => nFr.friendKey !== user.friendKey
+        );
+        this.utilService.forUserSubject.userNotFriends = this.userNotFriends;
+        this.subjectValueTransfer(
+          this.utilService.forUserSubject,
+          this.utilService.userSubject
+        );
         this.filterShowFriendsMessArr();
         this.base.getAllMessagesSubject.next({
           showFriendsMess: this.showFriendsMess,
         });
       });
+    const forSignedInFriendsProf = {
+      friendId: this.userProfile.uid,
+      friendKey: this.userProfile.key,
+      areFriends: false,
+    };
+    this.base.updateFriendsFriend(
+      user.friendKey!,
+      this.userProfile.key,
+      forSignedInFriendsProf
+    );
+  }
+
+  async confirmedFriend(friend: string) {
+    const friendProf = this.notConfirmedMeUsers.find(uP => {
+      if (uP.displayName === friend) return uP.displayName === friend;
+      if (uP.email === friend) return uP.email === friend;
+    });
+    await this.base.updateFriendsFriend(friendProf!.key, this.userProfile.key, {
+      confirmed: true,
+    } as any);
+    await this.base.updateFriend(
+      friendProf!.key,
+      { areFriends: true } as any,
+      this.userProfile.key
+    );
+    this.utilService.forUserSubject.notConfirmedMeUsers =
+      this.notConfirmedMeUsers.filter(uP => {
+        if (uP.displayName === friend) return uP.displayName !== friend;
+        if (uP.email === friend) return uP.email !== friend;
+      });
+    this.subjectValueTransfer(
+      this.utilService.forUserSubject,
+      this.utilService.userSubject
+    );
+  }
+
+  confirmFriend() {
+    const promise = new Promise((res, rej) => {
+      this.notConfirmedMeUsers = this.userProfiles.map((uP, i, arr) => {
+        if (uP.friends) {
+          const friendsArrIterable = [...Object.entries(uP.friends as any)];
+          const friendsArr: any = friendsArrIterable.flat();
+          const friendsArray = [];
+          let obj: any = {};
+          for (let i = 0; i < friendsArr.length; i++) {
+            if (typeof friendsArr[i] === 'string') {
+              obj.key = friendsArr[i];
+            } else {
+              obj.friendId = friendsArr[i].friendId;
+              obj.confirmed = friendsArr[i].confirmed;
+              friendsArray.push(obj);
+              obj = {};
+            }
+          }
+          ///////////// A USER ÉN VAGYOK ///////////////
+          const user: any = friendsArray.find(
+            (f: any) => f.friendId === this.userProfile.uid
+          );
+          if (user?.confirmed === false) return uP;
+        } else {
+          return undefined as any;
+        }
+      });
+      this.notConfirmedMeUsers = this.notConfirmedMeUsers.filter(uP => uP);
+      if (this.notConfirmedMeUsers.length)
+        this.notConfirmedMeUsers.map(uP => {
+          this.toastService.addToast(
+            uP.displayName ? uP.displayName : uP.email!,
+            'Ismerősnek jelölt téged',
+            {
+              autohide: false,
+            }
+          );
+        });
+      this.utilService.forUserSubject.notConfirmedMeUsers =
+        this.notConfirmedMeUsers;
+      this.utilService.forUserSubject.userFriends = this.userFriends!;
+      this.utilService.forUserSubject.userNotFriends = this.userNotFriends;
+      if (this.notConfirmedMeUsers.length)
+        this.subjectValueTransfer(
+          this.utilService.forUserSubject,
+          this.utilService.userSubject
+        );
     });
   }
 
-  removeFriend(friend: any) {
-    this.base.removeFriend(friend).then(() => {
+  async removeFriend(friend: any) {
+    await this.base.removeFriendsFriend(friend.friendKey, this.userProfile.key);
+    this.base.removeFriend(friend.friendKey, this.userProfile.key).then(() => {
       const modalRef = this.ngbModal.open(ModalComponent, {
         ariaLabelledBy: 'modal-basic-title',
         centered: true,
@@ -623,12 +680,9 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (this.toastVal.uid == friend.friendId) {
         modalRef.componentInstance.friendName = this.toastVal.displayName;
       }
-      this.base.userFriendsSubject.next({});
-      this.getFriendsAndNotFriends().subscribe(() => {
-        this.filterShowFriendsMessArr();
-        this.base.getAllMessagesSubject.next({
-          showFriendsMess: this.showFriendsMess,
-        });
+      this.filterShowFriendsMessArr();
+      this.base.getAllMessagesSubject.next({
+        showFriendsMess: this.showFriendsMess,
       });
     });
   }
@@ -672,19 +726,18 @@ export class ChatComponent implements OnInit, OnDestroy {
           observer.complete();
           clearInterval(interval);
         }
-        console.log('FUT AZ INTERVAL');
       }, 200);
       setTimeout(async () => {
-        console.log(`TIMEOUT LEJÁRT`);
         let JSONed = this.myPushSubscription?.toJSON();
-        if (JSONed?.endpoint) {
+        if (
+          JSONed?.endpoint &&
+          this.userProfile.pushNotificationsOn !== false
+        ) {
           const querySnapShot =
             await this.firestore.getUserNotiSubscriptionReformed(
               this.userProfile?.key,
               JSONed.endpoint
             );
-          console.log(querySnapShot);
-          console.log(JSONed);
           if (querySnapShot.empty) {
             console.log('NINCS ILYEN FELIRATKOZÁS MÉG');
             const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
@@ -692,15 +745,30 @@ export class ChatComponent implements OnInit, OnDestroy {
               fullscreen: true,
             });
             doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
-            const choiceResult = await doYouSubscribeModal.result;
-            console.log(choiceResult);
-            if (choiceResult === 'Igen') {
-              await this.updateUserNotifications({ checked: true });
-              this.subscribedForNotifications = true;
+
+            try {
+              const choiceResult = await doYouSubscribeModal.result;
+              if (choiceResult === 'Igen') {
+                await this.updateUserNotifications({ checked: true });
+                this.subscribedForNotifications = true;
+                if (!this.userProfile.pushNotificationsOn) {
+                  this.base.updateUserData(
+                    { pushNotificationsOn: true },
+                    this.userProfile.key
+                  );
+                }
+              }
+            } catch (err) {
+              if (err) {
+                this.base.updateUserData(
+                  { pushNotificationsOn: false },
+                  this.userProfile.key
+                );
+              }
             }
           }
           if (JSONed.endpoint) observer.complete();
-        } else if (!this.isSAdmin) {
+        } else if (!this.isSAdmin && !JSONed?.endpoint) {
           console.log('LE VAN TILTVA AZ ÉRTESÍTÉSEK A BÖNGÉSZŐBEN');
           const doYouSubscribeModal = this.ngbModal.open(ModalComponent, {
             animation: true,
@@ -708,7 +776,6 @@ export class ChatComponent implements OnInit, OnDestroy {
           });
           doYouSubscribeModal.componentInstance.isSubscribedToNotif = false;
           const choiceResult = await doYouSubscribeModal.result;
-          console.log(choiceResult);
           if (choiceResult === 'Igen') {
             await this.updateUserNotifications({ checked: true });
             observer.complete();
@@ -726,7 +793,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.router.navigate([`profile/${this.userProfile.uid}`]);
   }
 
-  getMessageUser(user: any, i: number) {
+  getMessageUser(user: any) {
     this.selectedFriend = user; // objektum
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
@@ -776,9 +843,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         file.fileName
       )
     );
-
-    console.log(files);
-    console.log(i);
     this.firestore
       .deleteFilesFromFirestore(docId, this.userProfile.key)
       .then(val => {
@@ -808,7 +872,11 @@ export class ChatComponent implements OnInit, OnDestroy {
           if (user.messaging === undefined) {
             const startMessaging = { messaging: true };
             this.base
-              .updateFriend(user.friendKey, startMessaging as any)
+              .updateFriend(
+                user.friendKey,
+                startMessaging as any,
+                this.userProfile.key
+              )
               .then(() => {
                 for (const usr of this.showFriendsMess) {
                   if (usr.friendKey === user.friendKey) {
@@ -860,7 +928,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     // Kiválasztom az első 5 üzenetet
-    this.visibleMessages = selectedFriendMessages.slice(0, 10);
+    this.visibleMessages = selectedFriendMessages.slice(0, 15);
     // Leszűröm az urlt tartalmazó üzeneteket és elmentem egy tömbbe
     const urlMessages: Chat[] = this.visibleMessages.filter(mess =>
       mess.message.message.includes('https://')
@@ -912,15 +980,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         );
       }
     });
-    // this.visibleMessages.map(mess => {
-    //   if (
-    //     !mess.message.seen &&
-    //     mess.message.senderId === this.selectedFriend.friendId
-    //   ) {
-    //     mess.message.seen = true;
-    //     this.base.updateMessage(mess.key, mess);
-    //   }
-    // });
     return this.visibleMessages;
   }
 
@@ -973,7 +1032,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         msg.message.viewTimeStamp = this.calcMinutesPassed(
           new Date(msg.message.timeStamp)
         );
-        // const participants0Uid = msg.participants[0].split('-').shift();
         if (msg.participants[1] === userProfile?.uid) {
           this.haventSeenMessagesArr?.push(msg);
           this.allChatsArray.unshift(msg);
@@ -992,11 +1050,45 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ////////////////  LEÍRÁS  /////////////
   // Ha még nincs levelezés a 2 ember között beállítom hogy legyen //
-  firstMessageToFriend(mess: any) {
+  async firstMessageToFriend(mess: any) {
     const startMessaging = { messaging: true };
-    this.base.updateFriend(mess.friendKey as string, startMessaging as any);
+    await this.base.updateFriend(
+      mess.friendKey as string,
+      startMessaging as any,
+      this.userProfile.key
+    );
     this.showFriendsToChoose = false;
     mess.messaging = true;
+    setTimeout(() => {
+      const messageCardElements = this.element.nativeElement.querySelectorAll(
+        '.messageCardCont div h2'
+      );
+      // const showAllFriendsCont = this.element.nativeElement.querySelector(
+      //   '.showAllFriendsCont'
+      // );
+
+      messageCardElements.forEach((el: any) => {
+        if (mess.displayName === el.innerText) {
+          console.log(el);
+          const container = el.parentNode.parentNode;
+          window.scrollTo(
+            el.getBoundingClientRect().x,
+            el.getBoundingClientRect().y
+            // showAllFriendsCont.getBoundingClientRect().height
+          );
+          if (mess.messaging) {
+            container.classList.add('hidden');
+            console.log(container.classList.contains('hidden'));
+            setTimeout(() => {
+              container.classList.remove('hidden');
+              container.classList.add('fade-in');
+              container.style.backgroundColor = 'darkGreen';
+              console.log(container.classList.contains('fade-in'));
+            }, 50);
+          }
+        }
+      });
+    }, 5);
   }
 
   selectedFs($event: any) {
@@ -1299,7 +1391,6 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   toFriendProfile(friendId: string) {
     const userProfile = this.userProfile;
-    console.log(userProfile);
     const promise = new Promise((res, rej) => {
       const friendProfile = this.userProfiles.find(uP => {
         return uP.uid === friendId;
@@ -1321,27 +1412,45 @@ export class ChatComponent implements OnInit, OnDestroy {
             obj = {};
           }
         }
-
         const user: any = friendsArray.find(
           (f: any) => f.friendId === userProfile.uid
         );
         if (user) user.seenMe = true;
-        this.base
-          .updateFriend(user.key, { seenMe: user.seenMe } as any)
-          .then(() => {
-            this.base.userProfilesSubject.next(this.userProfiles);
-            this.base.friendProfileSubject.next(friendProfile);
-            res('');
-          });
+        if (!user?.key) {
+          this.notConfirmedSignedAsFriend = true;
+          if (this.toastService.toasts.length) this.toastService.toasts = [];
+          this.toastService.addToast(
+            'A FELHASZNÁLÓ MÉG NEM IGAZOLTA VISSZA ISMERŐSNEK JELÖLÉSED',
+            ''
+          );
+        }
+        if (user?.key)
+          this.base
+            .updateFriend(
+              user.key,
+              { seenMe: user.seenMe } as any,
+              friendProfile.key
+            )
+            .then(() => {
+              this.base.userProfilesSubject.next(this.userProfiles);
+              this.base.friendProfileSubject.next(friendProfile);
+              res('');
+            });
       } else {
+        this.notConfirmedSignedAsFriend = true;
+        if (this.toastService.toasts.length) this.toastService.toasts = [];
+        this.toastService.addToast(
+          'A FELHASZNÁLÓ MÉG NEM IGAZOLTA VISSZA ISMERŐSNEK JELÖLÉSED',
+          ''
+        );
         this.base.friendProfileSubject.next(friendProfile);
         res('');
       }
     });
 
-    promise.then(() =>
-      this.router.navigate(['/' + friendId + '/friend-profile'])
-    );
+    promise.then(() => {
+      this.router.navigate(['/' + friendId + '/friend-profile']);
+    });
   }
 
   areFriendsOnline() {
@@ -1362,14 +1471,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   refreshMyPosts() {
-    this.firestore
+    return this.firestore
       .refreshMyPosts(this.userProfile?.key)
       .subscribe((myPosts: any[]) => {
         myPosts.map(myPost => {
-          if (
-            myPost.seen === false &&
-            !this.seenMyPosts.includes(myPost.fromPostId)
-          ) {
+          if (!this.seenMyPosts.includes(myPost.fromPostId)) {
             console.log(myPost);
             this.seenMyPosts.push(myPost.fromPostId);
             this.firestore.getMyPostsNotiSubj().next(this.seenMyPosts.length);
@@ -1400,6 +1506,23 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
+  getMyPostsSubcription() {
+    return this.firestore
+      .refreshSharedWithMePosts()
+      .subscribe((sPosts: any[]) => {
+        console.log(sPosts);
+        sPosts.map(sPost => {
+          if (
+            sPost.notSeen?.includes(this.userProfile?.uid) &&
+            !this.seenPosts.includes(sPost.timeStamp)
+          ) {
+            this.seenPosts.push(sPost.timeStamp);
+            this.firestore.postsNotiSubject.next(this.seenPosts.length);
+          }
+        });
+      });
+  }
+
   getSharedPosts() {
     if (this.getSharedPostsCounter === -1) return this.getSharedPostsCounter++;
     if (!this.getSharedPostsCounter) {
@@ -1413,23 +1536,35 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
   }
 
-  refreshSharedPosts() {
-    this.firestore.refreshSharedPosts().subscribe((sPosts: any[]) => {
-      sPosts.map(sPost => {
-        if (
-          sPost.notSeen?.includes(this.userProfile?.uid) &&
-          !this.seenPosts.includes(sPost.timeStamp)
-        ) {
-          this.seenPosts.push(sPost.timeStamp);
-          this.firestore.postsNotiSubject.next(this.seenPosts.length);
-        }
-      });
-    });
-  }
-
   toAlbum() {
     this.base.userProfileSubject.next(this.userProfile);
     this.router.navigate(['/album/' + this.userProfile.uid]);
+  }
+
+  async handleOnline() {
+    if (!this.isUserOnlineNow) {
+      await this.base.updateUserData({ online: true }, this.userProfile?.key);
+      this.isUserOnlineNow = true;
+    }
+  }
+
+  async handleOffline() {
+    if (this.isUserOnlineNow) {
+      await this.base.updateUserData({ online: false }, this.userProfile?.key);
+      await this.base.updateUserData(
+        { lastTimeOnline: new Date().getTime() },
+        this.userProfile?.key
+      );
+      this.isUserOnlineNow = false;
+    }
+  }
+
+  async isUserOnline() {
+    // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
+    window.addEventListener('click', this.isOnlineHandler);
+    window.addEventListener('focus', this.isOnlineHandler);
+    // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
+    window.addEventListener('blur', this.isOfflineHandler);
   }
 
   ngOnDestroy(): void {
@@ -1460,5 +1595,15 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.postsNotiSub) {
       this.postsNotiSub.unsubscribe();
     }
+    if (this.getFriendsSub) this.getFriendsSub.unsubscribe();
+    if (this.userSubjectSub) this.userSubjectSub.unsubscribe();
+    if (this.allUserDetailsSub) this.allUserDetailsSub.unsubscribe();
+    if (this.getFriendsFromUtilSub) this.getFriendsFromUtilSub.unsubscribe();
+    if (this.seenMeSub) this.seenMeSub.unsubscribe();
+    if (this.getMyPostsSub) this.getMyPostsSub.unsubscribe();
+    if (this.refreshMyPostsSub) this.refreshMyPostsSub.unsubscribe();
+    window.removeEventListener('click', this.isOnlineHandler);
+    window.removeEventListener('focus', this.isOnlineHandler);
+    window.removeEventListener('blur', this.isOfflineHandler);
   }
 }

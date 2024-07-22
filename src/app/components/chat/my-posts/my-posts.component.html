@@ -46,30 +46,26 @@
     <input formControlName="iFrame" matInput />
   </mat-form-field>
 
-  <div class="text-center" formArrayName="pictures">
-    <button
-      (click)="addPictures()"
-      color="accent"
-      mat-raised-button
-      type="button"
-    >
-      Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
-    </button>
-    <ng-container>
-      <div
-        *ngFor="let pictureControl of forFormArray(); let i = index"
-        class="input-group mb-2"
+  <div class="text-center">
+    <button class="text-center" color="accent" mat-raised-button type="button">
+      <label class="picture-input-label" for="add-pictures"
+        >Fényképek hozzáadása</label
       >
-        <input
-          (change)="selectedFiles($event)"
-          *ngIf="i < 1"
-          type="file"
-          multiple
-          class="form-control"
-          [formControlName]="i"
-        />
-      </div>
-    </ng-container>
+      <input
+        formArrayName="pictures"
+        (change)="addPictures($event)"
+        type="file"
+        class="picture-input"
+        multiple
+        id="add-pictures"
+      />
+      <mat-icon matSuffix>photo</mat-icon>
+    </button>
+    <h2 *ngIf="chosenFiles?.length" class="fw-bold mt-3 mb-0 pb-0">
+      Bejegyzéshez hozzácsatolt képek
+    </h2>
+    <hr class="mt-0" *ngIf="chosenFiles?.length" />
+    <h3 class="mt-2 mb-0" *ngFor="let file of chosenFiles">{{ file.name }}</h3>
   </div>
   <mat-form-field class="select-container mt-2">
     <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
@@ -88,12 +84,23 @@
   </button>
 </form>
 
+<div *ngIf="isLoading" class="loadingSpinnerContainer">
+  <h2>Adatok töltése folyamatban...</h2>
+  <div class="loadingSpinner">*</div>
+</div>
+
 <div *ngFor="let myPost of myPostsArr; let i = index" class="row mt-3">
   <div class="col text-center">
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
         <ng-container *ngFor="let sWithMe of postSharedWithMe"
-          ><div class="mb-4 space-div" *ngIf="myPost.id === sWithMe.fromPostId">
+          ><div
+            class="mb-4 space-div"
+            *ngIf="
+              myPost.id === sWithMe.fromPostId &&
+              myPost.userKey !== userProfile.key
+            "
+          >
             <span class="shared-with-me-by section-visible section-1"
               ><mat-icon class="align-middle">share</mat-icon> Megosztotta:
               {{ sWithMe.sharedWithMeBy }}</span
@@ -132,7 +139,7 @@
       <mat-card-content>
         <div
           *ngFor="let pic of myPost.pictures"
-          class="col-12 d-flex justify-content-center mb-2 pics-container"
+          class="col-12 d-flex justify-content-center mb-2 my-posts-pics-container"
         >
           <img
             class="rounded lazy-img"

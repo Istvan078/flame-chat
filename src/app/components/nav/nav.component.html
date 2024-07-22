@@ -41,7 +41,17 @@
         <span
           *ngIf="isSuperAdmin || user.claims?.admin"
           (click)="navDisappear()"
-          routerLink="users"
+          routerLink="/admin"
+          class="nav-link me-3"
+          routerLinkActive="active-link"
+        >
+          Admin
+        </span>
+
+        <span
+          *ngIf="isSuperAdmin || user.claims?.admin"
+          (click)="navDisappear()"
+          routerLink="/users"
           class="nav-link me-3"
           routerLinkActive="active-link"
         >
@@ -53,14 +63,14 @@
           *ngIf="user.uid"
           class="nav-link me-3"
           routerLinkActive="active-link"
-          routerLink="chat"
+          routerLink="/chat"
           >Chat
         </span>
 
         <span
           *ngIf="!user.uid"
           class="nav-link me-3"
-          routerLink="signup"
+          routerLink="/signup"
           routerLinkActive="active-link"
         >
           Regisztráció

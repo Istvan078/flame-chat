@@ -1,4 +1,5 @@
 import firebase from 'firebase/compat';
+import { Subscription } from 'rxjs';
 type Claims = {
   basic: boolean;
   admin: boolean;
@@ -16,6 +17,17 @@ export interface Friends {
   profilePicture?: string;
   online?: boolean;
   lastTimeOnline?: any;
+  confirmed: boolean;
+  areFriends?: boolean;
+}
+
+export class ForUserSubject {
+  userProfiles: UserClass[] = [];
+  userProfile: UserClass = new UserClass();
+  userFriends: any[] = [];
+  userNotFriends: any[] = [];
+  notConfirmedMeUsers: any[] = [];
+  subscription: Subscription = Subscription.EMPTY;
 }
 
 export class UserClass {
@@ -27,6 +39,7 @@ export class UserClass {
     messaging?: boolean;
     displayName?: string;
     profilePicture?: string;
+    confirmed?: boolean;
   }[];
   public age: number;
   public phoneNumber: string = '';
@@ -37,6 +50,7 @@ export class UserClass {
   public lastTimeOnline?: number;
   public key: string = '';
   public uid: string = '';
+  public pushNotificationsOn?: boolean;
   constructor(
     public displayName?: string,
     public birthDate: string = '',

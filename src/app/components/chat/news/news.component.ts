@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Observable, Subscription } from 'rxjs';
-import { Post } from 'src/app/models/post.model';
+import { MyPost, Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
@@ -23,6 +23,8 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
+import { MatModalComponent } from '../../modals/mat-modal/mat-modal.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-news',
@@ -72,6 +74,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() userFriends?: Friends[];
   sharedPictures: any[] = [];
   post: Post = new Post();
+  myPost?: MyPost;
   publishForm!: FormGroup;
   chosenFiles: any;
   comment: any = {};
@@ -87,7 +90,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   userProfilesSub!: Subscription;
   sharedPostsSub!: Subscription;
   uploadCompleted: boolean = false;
-  notShared: boolean = false;
+  isShared: string = '';
   isNewPost: boolean = false;
   isCommentOn: boolean = false;
   pipeRefresh: boolean = false;
@@ -103,7 +106,8 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     private base: BaseService,
     private utilityService: UtilityService,
     private ngbModal: NgbModal,
-    private http: HttpClient
+    private http: HttpClient,
+    private matDialog: MatDialog
   ) {}
 
   startAnimate() {
@@ -185,11 +189,46 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   loadIFrames(entries: any, observer: IntersectionObserver) {
     const [entry] = entries;
-    console.log(entry);
     // if (!entry.isIntersecting) return;
     const target = entry.target;
     target.src = target.dataset.src;
     observer.unobserve(entry.target);
+  }
+
+  renderImages() {
+    const sub = new Observable(observer => {
+      const interval = setInterval(() => {
+        const imgTargets = document.querySelectorAll(
+          '.shared-posts-pics-container img[data-src]'
+        );
+        if (imgTargets.length) {
+          observer.next(imgTargets);
+          observer.complete();
+          clearInterval(interval);
+        }
+      }, 5);
+    }).subscribe((imgTargets: any) => {
+      const imgObserver = new IntersectionObserver(this.loadImage, {
+        root: null,
+        threshold: [0],
+        rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
+      });
+
+      imgTargets.forEach((img: any) => {
+        if (imgTargets[0]) {
+          imgTargets[0].src = imgTargets[0].dataset.src;
+          imgTargets[0].classList.remove('lazy-img');
+        }
+        if (imgTargets[1]) {
+          imgTargets[1].src = imgTargets[1].dataset.src;
+          imgTargets[1].classList.remove('lazy-img');
+        }
+        imgObserver.observe(img);
+        // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
+        // meghatározott root elemet
+      });
+      sub.unsubscribe();
+    });
   }
 
   renderIFrames() {
@@ -208,20 +247,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }, 5);
     }).subscribe(adat => {
-      const imgTargets = document.querySelectorAll(
-        '.pics-container img[data-src]'
-      );
-      console.log(imgTargets);
-      const imgObserver = new IntersectionObserver(this.loadImage, {
-        root: null,
-        threshold: [0],
-        rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
-      });
-      imgTargets.forEach(img => {
-        imgObserver.observe(img);
-        // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
-        // meghatározott root elemet
-      });
       const sectionObserver = new IntersectionObserver(
         (entries, obs) => {
           const [entry] = entries;
@@ -240,7 +265,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         sectionObserver.observe(section);
         section.classList.add('section-hidden');
       });
-      console.log(sectionOne);
       this.sharedPosts.map(sP => {
         const correspondingIframe = (this.iFrames as any).find(
           (iframe: any) => iframe.getAttribute('data-postid') === sP.id
@@ -282,13 +306,14 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getPostsData() {
     let proba: any[] = [];
+    this.renderImages();
     this.renderIFrames();
     const subscription = new Observable(obs => {
       const interval = setInterval(() => {
         if (this.sharedPosts.length) {
           this.sharedPosts.map((sP: any, i: number) => {
             sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
-            if (sP.liked?.length) {
+            if (sP.liked?.length && !this.post.id) {
               proba = this.userProfiles
                 .filter(uP => sP.liked?.includes(uP.uid))
                 .map(user => {
@@ -316,10 +341,10 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
                 .then(() => this.firestoreService.postsNotiSubject.next(0));
             }
           });
+          this.post = new Post();
           clearInterval(interval);
           subscription.unsubscribe();
         }
-        console.log(`INTERVAL LEFUTOTT`);
       }, 200);
     }).subscribe();
   }
@@ -334,6 +359,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
           const interval = setInterval(() => {
             fileArr.pop();
             if (fileArr.length === 0) {
+              this.picturesSubscription.unsubscribe();
               res('***SIKERES FÁJLURLLEKÉRÉS***');
               clearInterval(interval);
             }
@@ -378,6 +404,9 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         modifiedIFrame = iFrame.replace('live', 'embed');
       }
     }
+    this.userProfilesUidsArr = this.userProfilesUidsArr.filter(
+      uid => uid !== this.userProfile.uid
+    );
     this.allDataForSubmit.form.patchValue({
       timeStamp: date.getTime(),
       notSeen: [...this.userProfilesUidsArr],
@@ -388,11 +417,45 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.post = this.allDataForSubmit.form.value;
     this.post.pictures = this.picturesArray;
     this.post.userKey = this.userProfile.key;
-    this.post.private = {
-      isPrivate: false,
-    };
+    this.isShared = this.allDataForSubmit.form.get('isShared')?.value;
+    this.myPost = new MyPost();
+    if (this.isShared === 'yes') {
+      this.post.private = {
+        isPrivate: false,
+      };
+      this.myPost.seen = false;
+    }
+    if (this.isShared === 'no') {
+      this.post.private = {
+        isPrivate: true,
+        sharedByKey: this.userProfile.key,
+      };
+    }
     const postRef = await this.firestoreService.createPost(this.post);
     await this.firestoreService.updatePost(postRef.id, { id: postRef.id });
+    if (this.post.private.isPrivate) {
+      if (postRef.id) this.myPost.fromPostId = postRef.id;
+      this.myPost.seen = true;
+      const myPost = { ...this.myPost };
+      const myPostRef = await this.firestoreService.createMyPost(
+        myPost,
+        this.userProfile.key
+      );
+      await this.firestoreService.updateMyPost(
+        this.userProfile.key,
+        myPostRef.id,
+        { id: myPostRef.id }
+      );
+    }
+    if (!this.post.private.isPrivate) {
+      this.post.id = postRef.id;
+      this.sharedPosts.unshift(this.post);
+      this.getPostsData();
+    }
+    const matDialogRef = this.matDialog.open(MatModalComponent, {
+      enterAnimationDuration: 1000,
+    });
+    matDialogRef.componentInstance.isPosted = true;
     this.picturesArray = [];
     this.allDataForSubmit.form.reset();
   }
@@ -486,7 +549,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         canvas.width = width;
         canvas.height = height;
         ctx?.drawImage(img, 0, 0, width, height);
-        console.log(canvas, ctx);
         canvas.toBlob(
           blob => {
             if (blob) {
@@ -543,7 +605,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     });
     const friendSubs = await promise;
-    console.log(friendSubs);
     const body = {
       post: 'Poszt',
       user: this.userProfile,
@@ -583,7 +644,6 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   startPostSharing(post: Post) {
-    console.log(post);
     const modalRef = this.ngbModal.open(ModalComponent, { centered: true });
     modalRef.componentInstance.post = post;
     modalRef.componentInstance.user = this.userProfile;

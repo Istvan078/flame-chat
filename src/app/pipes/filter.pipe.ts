@@ -13,7 +13,7 @@ export class FilterPipe implements PipeTransform {
         return arrayItem.body.toLowerCase().includes(searchWord);
       } else if (arrayItem.message) {
         return arrayItem.message.message.toLowerCase().includes(searchWord);
-      } else {
+      } else if (arrayItem.displayName) {
         return arrayItem.displayName.toLowerCase().includes(searchWord);
       }
     });

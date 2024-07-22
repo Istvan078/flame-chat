@@ -8,6 +8,7 @@ import { UsersComponent } from './components/users/users.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { loginGuardGuard } from './guards/login-guard.guard';
 import { MyPostsComponent } from './components/chat/my-posts/my-posts.component';
+import { AdminComponent } from './components/admin/admin.component';
 
 const routes: Routes = [
   { path: 'home', component: HomeComponent },
@@ -16,6 +17,7 @@ const routes: Routes = [
   { path: 'users', component: UsersComponent },
   { path: 'profile/:uid', component: UserProfileComponent },
   { path: 'my-posts', component: MyPostsComponent },
+  { path: 'admin', component: AdminComponent },
   {
     path: '',
     loadChildren: () =>

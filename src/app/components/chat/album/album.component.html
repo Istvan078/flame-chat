@@ -1,5 +1,17 @@
-<div *ngIf="userProf.uid" class="row">
-  <div class="col">
+<div *ngIf="userProf.uid" class="row align-items-center">
+  <div class="col-xs-12 col-sm-12 col-md-1 col-lg-1 text-center">
+    <button
+      routerLink="/chat"
+      color="primary"
+      mat-raised-button
+      type="button"
+      class="green me-2 my-1"
+    >
+      <mat-icon> keyboard_backspace </mat-icon>
+      Vissza
+    </button>
+  </div>
+  <div class="col-xs-12 col-sm-12 col-md-11 col-lg-11">
     <p class="text-center mb-0 text-success fw-bold">Képek feltöltése</p>
     <div class="text-center">
       <button

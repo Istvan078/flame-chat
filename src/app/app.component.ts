@@ -8,6 +8,8 @@ import {
 import { BaseService } from './services/base.service';
 import { Subscription } from 'rxjs';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { MatDialog } from '@angular/material/dialog';
+import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +20,8 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'Flame Chat';
   routerOutletOff: boolean = false;
   routerOutletOffSub!: Subscription;
-  onDestroyRef = inject(DestroyRef);
+  private matDialog = inject(MatDialog);
+  private onDestroyRef = inject(DestroyRef);
 
   constructor(private base: BaseService, private swUpdate: SwUpdate) {}
   ngOnInit(): void {
@@ -33,20 +36,18 @@ export class AppComponent implements OnInit, OnDestroy {
 
   checkForVersionUpdate = () => {
     if (this.swUpdate.isEnabled) {
-      this.swUpdate.checkForUpdate().then(up => console.log(up));
+      this.swUpdate.checkForUpdate().then(isUpd => isUpd);
       const swUpdateSub = this.swUpdate.versionUpdates.subscribe(val => {
-        console.log(val.type);
         if (val.type === 'NO_NEW_VERSION_DETECTED') swUpdateSub.unsubscribe();
         if (val.type === 'VERSION_READY') {
           swUpdateSub.unsubscribe();
-          const result = confirm(
-            `Új verzió ${
-              (val as VersionReadyEvent).latestVersion.hash
-            } elérhető. Betöltsem az új verziót?`
-          );
-          if (result === true) {
-            window.location.reload();
-          }
+          const matDialogRef = this.matDialog.open(MatModalComponent, {
+            enterAnimationDuration: 2000,
+          });
+          matDialogRef.componentInstance.isUpdateForApp = true;
+          matDialogRef.afterClosed().subscribe(res => {
+            if (res === true) window.location.reload();
+          });
         }
       });
     }

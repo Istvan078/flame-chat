@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { Post } from 'src/app/models/post.model';
+import { Component, computed, Input, signal } from '@angular/core';
+import { MyPost, Post } from 'src/app/models/post.model';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Friends, UserClass } from 'src/app/models/user.model';
@@ -10,6 +10,8 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { Observable, Subscription } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { UtilityService } from 'src/app/services/utility.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatModalComponent } from '../../modals/mat-modal/mat-modal.component';
 
 @Component({
   selector: 'app-my-posts',
@@ -20,13 +22,14 @@ export class MyPostsComponent {
   submitButtonValue: any;
   sharedPictures: any[] = [];
   post!: Post;
+  myPost?: MyPost;
   publishForm!: FormGroup;
   chosenFiles: any;
   comment: any = {};
   userProfile: UserClass = new UserClass();
   userProfilesUidsArr: Partial<UserClass[]> | any[] = [];
   userProfiles: UserClass[] = [];
-  @Input() userFriends: Friends[] = [];
+  userFriends: Friends[] = [];
   uploadedPictures: any[] = [];
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
@@ -45,6 +48,7 @@ export class MyPostsComponent {
   isCommentOn: boolean = false;
   isOnMyPostRoute: boolean = false;
   isActivatedRoute: boolean = false;
+  isLoading: boolean = false;
 
   constructor(
     private fBuilder: FormBuilder,
@@ -52,18 +56,22 @@ export class MyPostsComponent {
     private base: BaseService,
     private ngbModal: NgbModal,
     private route: ActivatedRoute,
-    private utilService: UtilityService
+    private utilService: UtilityService,
+    private matDialog: MatDialog
   ) {}
 
   async ngOnInit() {
-    this.isNavigatedToPostsSub = this.base.isNavigatedToPostsSubject.subscribe(
-      isNavigated => (this.isOnMyPostRoute = isNavigated)
-    );
+    this.isLoading = true;
+    this.route.url.subscribe(urlSegm => {
+      const [{ path }] = urlSegm;
+      if (path === 'my-posts') this.isOnMyPostRoute = true;
+    });
     const AllUserDtlsRes = await this.utilService.getUserProfiles();
     this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
       this.userProfiles = AllUserDtls.userProfiles;
       this.userProfile = AllUserDtls.userProfile;
       this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
+      this.userFriends = AllUserDtls.userFriends!;
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
       this.userProfilesSub.unsubscribe();
     });
@@ -71,7 +79,7 @@ export class MyPostsComponent {
     this.publishForm = this.fBuilder.group({
       name: [{ value: this.userProfile.displayName, disabled: true }],
       message: ['', [Validators.required, Validators.minLength(5)]],
-      pictures: this.fBuilder.array([]),
+      pictures: new FormArray([]),
       notSeen: [...this.userProfilesUidsArr],
       isShared: ['yes'],
       timeStamp: [''],
@@ -112,6 +120,7 @@ export class MyPostsComponent {
   }
 
   async init() {
+    this.isLoading = true;
     this.peopleLikedPost = [];
     const myPosts = await this.firestoreService.getPosts(
       true,
@@ -158,20 +167,10 @@ export class MyPostsComponent {
         this.firestoreService.getMyPostsNotiSubj().next(0);
       }
     });
-
-    const imgTargets = document.querySelectorAll(
-      '.pics-container img[data-src]'
-    );
-    const imgObserver = new IntersectionObserver(this.loadImage, {
-      root: null,
-      threshold: [0],
-      rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
-    });
-    imgTargets.forEach(img => {
-      imgObserver.observe(img);
-      // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
-      // meghatározott root elemet
-    });
+    this.isLoading = false;
+    console.log(this.postSharedWithMe);
+    console.log(this.myPostsArr);
+    console.log(this.userFriends);
   }
 
   loadImage(entries: any, observer: any) {
@@ -187,11 +186,46 @@ export class MyPostsComponent {
 
   loadIFrames(entries: any, observer: IntersectionObserver) {
     const [entry] = entries;
-    console.log(entry);
     // if (!entry.isIntersecting) return;
     const target = entry.target;
     target.src = target.dataset.src;
     observer.unobserve(entry.target);
+  }
+
+  renderImages() {
+    const sub = new Observable(observer => {
+      const interval = setInterval(() => {
+        const imgTargets = document.querySelectorAll(
+          '.my-posts-pics-container img[data-src]'
+        );
+        if (imgTargets.length) {
+          observer.next(imgTargets);
+          observer.complete();
+          clearInterval(interval);
+        }
+      }, 5);
+    }).subscribe((imgTargets: any) => {
+      const imgObserver = new IntersectionObserver(this.loadImage, {
+        root: null,
+        threshold: [0],
+        rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
+      });
+
+      imgTargets.forEach((img: any) => {
+        if (imgTargets[0]) {
+          imgTargets[0].src = imgTargets[0].dataset.src;
+          imgTargets[0].classList.remove('lazy-img');
+        }
+        if (imgTargets[1]) {
+          imgTargets[1].src = imgTargets[1].dataset.src;
+          imgTargets[1].classList.remove('lazy-img');
+        }
+        imgObserver.observe(img);
+        // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
+        // meghatározott root elemet
+      });
+      sub.unsubscribe();
+    });
   }
 
   renderIFrames() {
@@ -228,7 +262,6 @@ export class MyPostsComponent {
         sectionObserver.observe(section);
         section.classList.add('section-hidden');
       });
-      console.log(sectionOne);
       this.myPostsArr.map(sP => {
         const correspondingIframe = (this.iFrames as any).find(
           (iframe: any) => iframe.getAttribute('data-postid') === sP.id
@@ -236,14 +269,13 @@ export class MyPostsComponent {
         if (sP.iFrame) {
           if (!this.iFrames[0]?.src) {
             setTimeout(() => {
-              console.log(sectionOne[0]);
               if (
-                sectionOne[0].getBoundingClientRect().top <
+                sectionOne[0]?.getBoundingClientRect().top <
                   window.innerHeight ||
-                sectionOne[1].getBoundingClientRect().top < window.innerHeight
+                sectionOne[1]?.getBoundingClientRect().top < window.innerHeight
               ) {
-                sectionOne[0].classList.remove('section-hidden');
-                sectionOne[1].classList.remove('section-hidden');
+                sectionOne[0]?.classList.remove('section-hidden');
+                sectionOne[1]?.classList.remove('section-hidden');
               }
             }, 1);
             this.iFrames[0].src = sP.iFrame;
@@ -270,6 +302,7 @@ export class MyPostsComponent {
 
   getPostsData() {
     let proba: any[] = [];
+    this.renderImages();
     this.renderIFrames();
     this.myPostsArr.map(myPost => {
       if (myPost.sharedWithMe?.length)
@@ -296,7 +329,7 @@ export class MyPostsComponent {
 
     this.myPostsArr.map((sP: any, i: number) => {
       sP.timeStamp = new Date(sP.timeStamp).toLocaleString();
-      if (sP.liked?.length) {
+      if (sP.liked?.length && !this.post?.id) {
         proba = this.userProfiles
           .filter(uP => sP.liked?.includes(uP.uid))
           .map(user => {
@@ -310,6 +343,7 @@ export class MyPostsComponent {
         this.peopleLikedPost.push(proba as any);
       }
     });
+    this.post = new Post();
   }
 
   filesArrivedForSubject() {
@@ -322,6 +356,7 @@ export class MyPostsComponent {
           const interval = setInterval(() => {
             fileArr.pop();
             if (fileArr.length === 0) {
+              this.picturesSubscription.unsubscribe();
               res('***SIKERES FÁJLURLLEKÉRÉS***');
               clearInterval(interval);
             }
@@ -331,8 +366,10 @@ export class MyPostsComponent {
   }
 
   onSubmit() {
+    console.log(this.chosenFiles);
     if (!this.chosenFiles) this.postPost();
     if (this.chosenFiles) {
+      console.log(`EZ FUTOTT LE`);
       this.uploadFiles().then(res => {
         console.log(res);
         this.filesArrivedForSubject().then(res => {
@@ -371,7 +408,7 @@ export class MyPostsComponent {
       iFrame: modifiedIFrame ? modifiedIFrame.trim() : '',
     });
 
-    if (!iFrame) this.publishForm.removeControl('iFrame');
+    // if (!iFrame) this.publishForm.removeControl('iFrame');
     this.post = this.publishForm.value;
     this.post.userKey = this.userProfile.key;
     if (!this.notShared)
@@ -388,7 +425,39 @@ export class MyPostsComponent {
     this.post.pictures = this.picturesArray;
     const postRef = await this.firestoreService.createPost(this.post);
     await this.firestoreService.updatePost(postRef.id, { id: postRef.id });
+    if (this.post.private.isPrivate) {
+      this.myPost = new MyPost();
+      if (postRef.id) this.myPost.fromPostId = postRef.id;
+      this.myPost.seen = true;
+      const myPost = { ...this.myPost };
+      const myPostRef = await this.firestoreService.createMyPost(
+        myPost,
+        this.userProfile.key
+      );
+      await this.firestoreService.updateMyPost(
+        this.userProfile.key,
+        myPostRef.id,
+        { id: myPostRef.id }
+      );
+      this.post.id = postRef.id;
+      this.myPostsArr.unshift(this.post);
+      this.getPostsData();
+      this.post.id = postRef.id;
+    }
+    if (!this.post.private.isPrivate && !this.post.id) {
+      this.picturesArray = [];
+      this.chosenFiles = undefined;
+      this.post.id = postRef.id;
+      this.myPostsArr.unshift(this.post);
+      this.getPostsData();
+    }
+    const matDialogRef = this.matDialog.open(MatModalComponent, {
+      enterAnimationDuration: 1000,
+    });
+    matDialogRef.componentInstance.isPosted = true;
     this.picturesArray = [];
+    this.chosenFiles = undefined;
+    this.publishForm.reset();
   }
 
   async like(post: Post, i: number) {
@@ -453,19 +522,11 @@ export class MyPostsComponent {
     });
   }
 
-  addPictures() {
-    const arrayControl = this.fBuilder.control(null);
-    (<FormArray>this.publishForm.get('pictures')).controls.push(arrayControl);
-  }
-
-  forFormArray() {
-    return (<FormArray>this.publishForm.get('pictures')).controls;
-  }
-
-  selectedFiles($event: any) {
+  addPictures(event: any) {
+    this.chosenFiles = this.fBuilder.control(event.target.files);
     (this.publishForm.get('pictures') as FormArray).clear();
-    this.chosenFiles = this.fBuilder.control($event.target.files);
     (this.publishForm.get('pictures') as FormArray).push(this.chosenFiles);
+    this.chosenFiles = Array.from(this.chosenFiles.value);
   }
 
   resizeImage(
@@ -501,7 +562,6 @@ export class MyPostsComponent {
         canvas.width = width;
         canvas.height = height;
         ctx?.drawImage(img, 0, 0, width, height);
-        console.log(canvas, ctx);
         canvas.toBlob(
           blob => {
             if (blob) {

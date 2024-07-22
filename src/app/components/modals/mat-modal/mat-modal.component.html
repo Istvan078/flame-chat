@@ -1,0 +1,26 @@
+@if(isUpdateForApp){
+<ng-container>
+  <h2 mat-dialog-title>Új fontos frissítés és tartalom elérhető</h2>
+  <mat-dialog-content class="mat-typography"
+    >Szeretnéd, hogy frissítsem az applikációt?</mat-dialog-content
+  >
+  <mat-dialog-actions>
+    <button mat-button mat-dialog-close type="button">Nem</button>
+    <button mat-button [mat-dialog-close]="true" cdkFocusInitial type="button">
+      Igen
+    </button>
+  </mat-dialog-actions>
+</ng-container>
+} @if(isPosted){
+<ng-container>
+  <h2 mat-dialog-title>Bejegyzés sikeresen létrehozva</h2>
+  <!-- <mat-dialog-content class="mat-typography"
+    >Szeretnéd, hogy frissítsem az applikációt?</mat-dialog-content
+  > -->
+  <mat-dialog-actions class="justify-content-center">
+    <button mat-button [mat-dialog-close]="true" cdkFocusInitial type="button">
+      Rendben
+    </button>
+  </mat-dialog-actions>
+</ng-container>
+}

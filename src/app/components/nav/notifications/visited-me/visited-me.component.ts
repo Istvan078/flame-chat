@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Chat } from 'src/app/models/chat.model';
 import { BaseService } from 'src/app/services/base.service';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-visited-me',
@@ -12,33 +13,37 @@ export class VisitedMeComponent implements OnInit {
   @Input() newMessages: any[] = [];
   friendsSeenMee: any[] = [];
   @Output() backToChats: EventEmitter<boolean> = new EventEmitter();
-  constructor(private base: BaseService) {}
+  constructor(
+    private base: BaseService,
+    private utilityService: UtilityService
+  ) {}
 
   ngOnInit(): void {
     this.friendsSeenMee = [...this.friendsSeenMe];
   }
 
   backToChat() {
-    const tomb = this.friendsSeenMee.map((f) => {
-      console.log(f.seenMe);
-      this.base.updateFriend(f.friendKey, {
-        friendId: f.friendId,
-        seenMe: false,
-      } as any);
-      console.log('ciklus');
-      return {friendId: f.friendId, seenMe: f.seenMe = false}
+    const tomb = this.friendsSeenMee.map(f => {
+      this.base.updateFriend(
+        f.friendKey,
+        {
+          friendId: f.friendId,
+          seenMe: false,
+        } as any,
+        this.utilityService.userProfile.key
+      );
+      return { friendId: f.friendId, seenMe: (f.seenMe = false) };
     });
-    console.log(tomb);
 
     this.newMessages.forEach((nM: Chat) => {
-      nM.message.seen = true
-      this.base.updateMessage(nM.key, nM)
-    })
+      nM.message.seen = true;
+      this.base.updateMessage(nM.key, nM);
+    });
     // this.newMessages = []
-    
-     this.base.haventSeenMsgsArr.next([])
 
-    this.base.profileSeenSubject.next(tomb)
+    this.base.haventSeenMsgsArr.next([]);
+
+    this.base.profileSeenSubject.next(tomb);
     this.base.logicalSubject.next(false);
     this.backToChats.emit(true);
   }

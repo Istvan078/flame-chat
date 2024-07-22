@@ -73,20 +73,22 @@ export class PostsComponent implements OnInit, AfterContentInit {
   ngAfterContentInit(): void {
     console.log(this.ngcontent);
   }
-  addPictures() {
-    const arrayControl = this.fBuilder.control(null);
-    (<FormArray>this.publishForm.get('pictures')).controls.push(arrayControl);
-  }
-
-  forFormArray() {
-    return (<FormArray>this.publishForm.get('pictures')).controls;
-  }
-
-  selectedFiles($event: any) {
+  addPictures(event: any) {
+    this.chosenFiles = this.fBuilder.control(event.target.files);
     (this.publishForm.get('pictures') as FormArray).clear();
-    this.chosenFiles = this.fBuilder.control($event.target.files);
     (this.publishForm.get('pictures') as FormArray).push(this.chosenFiles);
+    this.chosenFiles = Array.from(this.chosenFiles.value);
   }
+
+  // forFormArray() {
+  //   return (<FormArray>this.publishForm.get('pictures')).controls;
+  // }
+
+  // selectedFiles($event: any) {
+  //   (this.publishForm.get('pictures') as FormArray).clear();
+  //   this.chosenFiles = this.fBuilder.control($event.target.files);
+  //   (this.publishForm.get('pictures') as FormArray).push(this.chosenFiles);
+  // }
   onFormSubmit() {
     const all = {
       chosenFiles: this.chosenFiles,

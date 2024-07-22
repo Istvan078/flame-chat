@@ -1,2 +1,8 @@
-:host form {
+:host .picture-input {
+  display: none;
+}
+:host .picture-input-label {
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
 }

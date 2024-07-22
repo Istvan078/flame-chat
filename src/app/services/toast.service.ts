@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { NgbToastOptions } from '@ng-bootstrap/ng-bootstrap/toast/toast-config';
 
 export interface ToastInfo {
   header: string;
@@ -10,15 +11,15 @@ export interface ToastInfo {
   providedIn: 'root',
 })
 export class ToastService {
-  toasts: ToastInfo[] = [];
+  toasts: any[] = [];
 
   constructor() {}
 
-  addToast(header: string, body: string) {
-    this.toasts.push({ header, body });
+  addToast(header: string, body: string, options?: NgbToastOptions) {
+    this.toasts.push({ header, body, options });
   }
 
-  removeToast(toast: ToastInfo) {
-    this.toasts = this.toasts.filter(t => t !== toast);
+  removeToast(toast: any) {
+    this.toasts = this.toasts.filter(t => t.header !== toast.header);
   }
 }

@@ -1,0 +1,137 @@
+<h1 class="text-center text-success fw-bold">ADMIN</h1>
+<div class="text-center mt-1">
+  <button
+    routerLink="/chat"
+    color="primary"
+    mat-raised-button
+    type="button"
+    class="green me-2 my-1"
+  >
+    <mat-icon> keyboard_backspace </mat-icon>
+    Vissza
+  </button>
+</div>
+
+<ul>
+  <li *ngFor="let pPost of myPrivatePosts">
+    {{ pPost.fromPostId }}
+    <button (click)="deletePost(pPost)" class="bg-danger" mat-button>
+      Poszt törlése
+    </button>
+  </li>
+</ul>
+
+<div *ngFor="let myPost of myPostsArr; let i = index" class="row mt-3">
+  <div class="col text-center">
+    <mat-card>
+      <mat-card-header class="d-flex justify-content-center">
+        <mat-card-title>{{ myPost.displayName }}</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content class="post-text">{{
+        myPost.message
+      }}</mat-card-content>
+      <mat-card-content> Posztazonosító: {{ myPost.id }}</mat-card-content>
+      <mat-card-content
+        *ngIf="myPost.iFrame"
+        style="height: 50vh; width: 100%"
+        class="mb-2"
+      >
+        <iframe
+          class="mb-2 rounded iFrames-for-my-posts"
+          [attr.data-postId]="myPost.id"
+          data-src
+          width="100%"
+          height="100%"
+          title=""
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </mat-card-content>
+
+      <mat-card-content>
+        <div
+          *ngFor="let pic of myPost.pictures"
+          class="col-12 d-flex justify-content-center mb-2 pics-container"
+        >
+          <img
+            class="rounded lazy-img"
+            src="../../../../assets/cute-cat-placeholder.png"
+            [attr.data-src]="pic.url"
+            [alt]="pic.name"
+            width="80%"
+            height="100%"
+          />
+        </div>
+      </mat-card-content>
+
+      <mat-card-footer>
+        <mat-card-actions class="justify-content-end">
+          <button (click)="deletePost(myPost)" class="bg-danger" mat-button>
+            Poszt törlése
+          </button>
+        </mat-card-actions>
+        <small>{{ myPost.timeStamp }}</small>
+        <ng-container *ngFor="let person of peopleLikedPost">
+          <div
+            *ngIf="person[0]?.displayName && myPost?.id === person[0]?.postId"
+            class="d-flex align-items-center justify-content-center w-100"
+          >
+            <p
+              (click)="showWhoLikedPost(person)"
+              class="d-flex align-items-center"
+            >
+              <mat-icon class="text-primary mx-2">thumb_up</mat-icon>
+              <span class="text-start"
+                >{{
+                  (myPost?.liked)!.length > 1
+                    ? person[0].displayName +
+                      ' és további ' +
+                      ((myPost?.liked)!.length - 1) +
+                      ' ember kedveli'
+                    : person[0]?.displayName + ' kedveli'
+                }}
+              </span>
+            </p>
+          </div>
+        </ng-container>
+      </mat-card-footer>
+      <mat-card-content>
+        <div *ngFor="let uP of userProfiles">
+          <div
+            class="d-flex align-items-center"
+            *ngFor="let comment of myPost.comments"
+          >
+            <ng-container *ngIf="uP.uid === comment.uid">
+              <img
+                width="25px"
+                height="25px"
+                class="rounded-circle mt-1"
+                [src]="uP.profilePicture"
+                alt="Profilkép"
+              />
+              <p class="m-0 mt-1 ms-2 d-flex align-items-center">
+                <b>{{ uP.displayName }}</b>
+              </p>
+              <p class="m-0 mt-1 ms-2 d-flex align-items-center">
+                {{ comment.text }}
+              </p>
+            </ng-container>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+<hr />
+<div class="row">
+  <div *ngFor="let sPost of sharedPosts" class="col">
+    <mat-card>
+      <mat-card-content>
+        {{ sPost.displayName }}
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

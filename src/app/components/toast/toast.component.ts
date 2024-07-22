@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
+import { NgbToast } from '@ng-bootstrap/ng-bootstrap';
 import { ToastService } from 'src/app/services/toast.service';
 
 @Component({
@@ -7,5 +8,11 @@ import { ToastService } from 'src/app/services/toast.service';
   styleUrl: './toast.component.scss',
 })
 export class ToastComponent {
+  notConfirmedSignedMe = input<boolean>();
+  confirmedFriend = output<string>();
   toastService = inject(ToastService);
+  confirmFriend(activeToast: NgbToast) {
+    this.confirmedFriend.emit(activeToast.header);
+    activeToast.hide();
+  }
 }

@@ -11,6 +11,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
+import { ToastService } from 'src/app/services/toast.service';
 
 @Component({
   selector: 'app-friend-profile',
@@ -41,7 +42,8 @@ export class FriendProfileComponent
     private base: BaseService,
 
     // paginator opciói
-    private pag: MatPaginatorIntl
+    private pag: MatPaginatorIntl,
+    private toastService: ToastService
   ) {}
 
   showPicBig(i: number) {
@@ -89,11 +91,11 @@ export class FriendProfileComponent
   }
 
   ngOnInit(): void {
-        // Click eseményre barát uid átküldve út paraméterként, feliratkozva rá
+    // Click eseményre barát uid átküldve út paraméterként, feliratkozva rá
     // BehaviorSubject küldi el a chat komponensből a barát profilját
-    this.actRoute.params.subscribe((uid) => {
+    this.actRoute.params.subscribe(uid => {
       this.friendProfileSubscription = this.base.friendProfileSubject.subscribe(
-        (frObj) => {
+        frObj => {
           if (frObj.uid) {
             this.friendProfile = frObj;
 
@@ -114,17 +116,17 @@ export class FriendProfileComponent
             // Barátok listája összegyűjtése és tömbbe helyezése
             this.userProfilesSubscription =
               this.base.userProfilesSubject.subscribe((uProfs: UserClass[]) => {
-                if(this.friendProfile.friends) {
+                if (this.friendProfile.friends) {
                   var friendsArr = Object.values(
                     this.friendProfile.friends as any
                   ).map((friend: any) => friend.friendId);
                 }
 
                 this.profilesOfFriendsArr = uProfs.filter((uP: UserClass) => {
-                  if (uP.age < 1 || !uP.age && uP.birthDate) {                 
-                    uP.age = (2024) - (+uP.birthDate.substring(0, 4)); 
+                  if (uP.age < 1 || (!uP.age && uP.birthDate)) {
+                    uP.age = 2024 - +uP.birthDate.substring(0, 4);
                   }
-                  if(friendsArr) return friendsArr.includes(uP.uid);
+                  if (friendsArr) return friendsArr.includes(uP.uid);
                 });
 
                 // paginator címke
@@ -142,9 +144,7 @@ export class FriendProfileComponent
     });
   }
 
-  ngAfterViewInit(): void {
-
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     // Subject leiratkozások

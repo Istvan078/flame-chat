@@ -35,6 +35,7 @@ export class FirestoreService {
   userKeySubject: Subject<string> = new Subject();
   private sharedPostsSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   testSubject: Subject<any> = new Subject();
+  sharedPostIdSubject: Subject<any> = new Subject();
 
   constructor(
     private fireStore: AngularFirestore,
@@ -97,12 +98,26 @@ export class FirestoreService {
     }
   }
 
-  refreshSharedPosts() {
-    return this.sharedPostRef.valueChanges('child_added');
+  // refreshSharedPosts() {
+  //   return this.sharedPostRef.valueChanges('child_added');
+  // }
+
+  refreshSharedWithMePosts() {
+    // const date = new Date().getTime();
+    // const newDate = new Date('2024-07-12').getTime();
+    return this.fireStore
+      .collection(`users/posts/shared`, ref =>
+        ref
+          .orderBy('newestTimeStamp', 'desc')
+          // .startAt(new Date().getTime())
+          // .endAt(newDate)
+          .limit(10)
+      )
+      .valueChanges(['child_changed']);
   }
 
   refreshPostsAfterLike() {
-    return this.sharedPostRef.valueChanges('child_added').pipe(
+    return this.sharedPostRef.valueChanges('child_changed').pipe(
       map((posts: any[]) =>
         posts.filter((post: Post) => post.isShared === 'yes')
       ),
@@ -112,13 +127,16 @@ export class FirestoreService {
   }
 
   refreshMyPosts(userKey: string) {
-    const myPostsRef = this.fireStore.collection(
-      `${this.myPostsRef}/${userKey}/my-posts`
-    );
-    return myPostsRef.valueChanges('child-added');
+    return this.fireStore
+      .collection(`${this.myPostsRef}/${userKey}/my-posts`, ref =>
+        ref.where('seen', '==', false).limit(10)
+      )
+      .valueChanges(['child_changed']);
+
+    // return myPostsRef.ref.where('seen', '==', false).limit(10).valueChanges('child-added');
   }
 
-  async createMyPost(post: MyPost, userKey: string) {
+  async createMyPost(post: any, userKey: string) {
     const myPostsRef = this.fireStore.collection(
       `${this.myPostsRef}/${userKey}/my-posts`
     );
@@ -236,6 +254,27 @@ export class FirestoreService {
       )
       .subscribe();
     return upload.percentageChanges();
+  }
+
+  async deletePost(
+    sharedPostId: string,
+    userKey: string,
+    myPostId?: string,
+    fileName?: string
+  ) {
+    if (fileName) {
+      const storageRef = this.fireStorage.ref(
+        `pictures/public-posts/${userKey}/${fileName}`
+      );
+      storageRef.delete().subscribe(() => console.log(`Sikeres törlés!`));
+    }
+    await this.sharedPostRef.doc(sharedPostId).delete();
+    if (myPostId) {
+      const myPostsRef = this.fireStore.collection(
+        `${this.myPostsRef}/${userKey}/my-posts`
+      );
+      await myPostsRef.doc(myPostId).delete();
+    }
   }
 
   deleteFilesFromStorage(path: string, fileName: any) {

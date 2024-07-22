@@ -28,6 +28,8 @@ import { NotificationsComponent } from './components/nav/notifications/notificat
 import { VisitedMeComponent } from './components/nav/notifications/visited-me/visited-me.component';
 import { FilesModalComponent } from './components/modals/files-modal/files-modal.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
+import { AdminComponent } from './components/admin/admin.component';
+import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
 
 @NgModule({
   declarations: [
@@ -43,6 +45,8 @@ import { ServiceWorkerModule } from '@angular/service-worker';
     NotificationsComponent,
     VisitedMeComponent,
     FilesModalComponent,
+    MatModalComponent,
+    AdminComponent,
   ],
   bootstrap: [AppComponent],
   imports: [

@@ -27,37 +27,33 @@
     }
   </mat-form-field>
   }
-  <div class="text-center" formArrayName="pictures">
-    <button
-      (click)="addPictures()"
-      color="accent"
-      mat-raised-button
-      type="button"
-    >
-      Fényképek hozzáadása <mat-icon matSuffix>photo</mat-icon>
-    </button>
-    <ng-container>
-      <div
-        *ngFor="let pictureControl of forFormArray(); let i = index"
-        class="input-group mb-2"
+  <div class="text-center">
+    <button class="text-center" color="accent" mat-raised-button type="button">
+      <label class="picture-input-label" for="add-pictures"
+        >Fényképek hozzáadása</label
       >
-        <input
-          (change)="selectedFiles($event)"
-          *ngIf="i < 1"
-          type="file"
-          multiple
-          class="form-control"
-          [formControlName]="i"
-        />
-      </div>
-    </ng-container>
+      <input
+        formArrayName="pictures"
+        (change)="addPictures($event)"
+        type="file"
+        class="picture-input"
+        multiple
+        id="add-pictures"
+      />
+      <mat-icon matSuffix>photo</mat-icon>
+    </button>
+    <h2 *ngIf="chosenFiles?.length" class="fw-bold mt-3 mb-0 pb-0">
+      Bejegyzéshez hozzácsatolt képek
+    </h2>
+    <hr class="mt-0" *ngIf="chosenFiles?.length" />
+    <h3 class="mt-2 mb-0" *ngFor="let file of chosenFiles">{{ file.name }}</h3>
   </div>
   <mat-form-field class="select-container mt-2">
     <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
-    <mat-label>Látható mások számára is</mat-label>
+    <mat-label>Láthatóság</mat-label>
     <mat-select formControlName="isShared" id="isShared">
       <mat-option (click)="notShared = false" ngClass="green" value="yes"
-        >Igen</mat-option
+        >Ismerősök</mat-option
       >
       <mat-option (click)="notShared = true" ngClass="yellow" value="no"
         >Csak nekem</mat-option

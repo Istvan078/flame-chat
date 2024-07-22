@@ -99,7 +99,6 @@ export class AlbumComponent implements OnInit, OnDestroy {
       this.utilsService
         .resizeImage(file, maxWidth, maxHeight, quality)
         .then(resizedBlob => {
-          console.log(resizedBlob);
           const resizedFile = new File([resizedBlob], file.name, {
             type: 'image/jpg',
           });

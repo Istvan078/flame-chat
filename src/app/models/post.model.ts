@@ -9,12 +9,11 @@ export interface SharedWithMe {
   timeStamp: number;
 }
 
-export interface MyPost {
-  fromPostId: string;
+export class MyPost {
   id?: string;
-  seen: boolean;
   liked?: string[];
   comments?: Comment[];
+  constructor(public fromPostId?: string, public seen?: boolean) {}
 }
 
 export class Post {

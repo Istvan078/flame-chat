@@ -85,10 +85,6 @@ export class NotificationsComponent implements AfterViewInit {
   }
 
   toMyPosts() {
-    setTimeout(() => {
-      console.log('TIMEOUTTTTTT');
-      this.base.isNavigatedToPostsSubject.next(true);
-    }, 1000);
     this.router.navigate(['/my-posts']);
   }
 }

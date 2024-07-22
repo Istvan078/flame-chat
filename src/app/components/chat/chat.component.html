@@ -1,22 +1,45 @@
-<app-toast aria-live="polite" aria-atomic="true"></app-toast>
-<h1 *ngIf="!isMessageOn" class="text-center">Flame Chat</h1>
-<mat-sidenav-container class="config-options-container">
-  <mat-sidenav> </mat-sidenav>
-  <mat-sidenav-content>
-    <ol>
-      <li>
-        <mat-slide-toggle
-          color="primary"
-          (change)="updateUserNotifications($event)"
-          #slideToggle
-          [(ngModel)]="subscribedForNotifications"
-        ></mat-slide-toggle>
-        <mat-icon class="align-middle">notifications</mat-icon>
-        <span class="align-middle">Értesítések</span>
-      </li>
-    </ol>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+<app-toast
+  *ngIf="notConfirmedSignedAsFriend"
+  aria-live="polite"
+  aria-atomic="true"
+></app-toast>
+<app-toast
+  *ngIf="!notConfirmedSignedAsFriend"
+  aria-live="polite"
+  aria-atomic="true"
+></app-toast>
+<div *ngIf="!isMessageOn" class="row justify-content-center align-items-center">
+  <div class="col-xs-2 col-sm-6 notif-container">
+    <mat-sidenav-container class="config-options-container">
+      <mat-sidenav> </mat-sidenav>
+      <mat-sidenav-content>
+        <ol>
+          <li>
+            <mat-slide-toggle
+              color="primary"
+              (change)="updateUserNotifications($event)"
+              #slideToggle
+              [(ngModel)]="subscribedForNotifications"
+            ></mat-slide-toggle>
+            <mat-icon class="align-middle">notifications</mat-icon>
+            <span class="align-middle">Értesítések</span>
+          </li>
+        </ol>
+      </mat-sidenav-content>
+    </mat-sidenav-container>
+  </div>
+  <div class="col-xs-8 col-sm-6 title-container">
+    <h2>
+      <mat-icon class="align-middle text-warning"
+        >local_fire_department</mat-icon
+      >
+      Flame Chat
+      <mat-icon class="align-middle text-warning"
+        >local_fire_department</mat-icon
+      >
+    </h2>
+  </div>
+</div>
 
 <div class="text-center friend-name-container">
   <h1 *ngIf="isMessageOn" class="friend-name">
@@ -71,7 +94,7 @@
         <ng-template matExpansionPanelContent>
           <div class="row">
             <div class="col">
-              <app-my-posts [userFriends]="userFriends!"></app-my-posts>
+              <app-my-posts></app-my-posts>
             </div>
           </div>
         </ng-template>
@@ -134,7 +157,7 @@
               type="button"
             >
               <mat-icon class="align-middle">message</mat-icon>
-              Új üzenet (ismerős kiválasztása)
+              Új üzenet (ismerős keresése)
             </button>
             <!-- MEGCSINÁLNI -->
             <ng-container *ngIf="showFriendsToChoose">
@@ -144,17 +167,28 @@
                 class="form-control my-2"
                 type="text"
               />
-              <h4 *ngFor="let mess of showFriendsMess | filter : friendSearch">
-                <h2 *ngIf="friendSearch">
-                  {{ mess.displayName }}
-                  <a
-                    (click)="firstMessageToFriend(mess)"
-                    class="btn btn-success text-white fs-5 mx-2"
-                    ><span>Üzenet írása </span
-                    ><mat-icon class="align-middle"> message </mat-icon>
-                  </a>
-                </h2>
-              </h4>
+              <ng-container
+                *ngFor="let mess of showFriendsMess | filter : friendSearch"
+              >
+                <h4 *ngIf="!mess.messaging">
+                  <h2 *ngIf="friendSearch">
+                    <img
+                      class="rounded-circle"
+                      width="50px"
+                      height="50px"
+                      [src]="mess.profilePicture"
+                      alt=""
+                    />
+                    {{ mess.displayName }}
+                    <a
+                      (click)="firstMessageToFriend(mess)"
+                      class="btn btn-success text-white fs-5 mx-2"
+                      ><span>Üzenet írása </span
+                      ><mat-icon class="align-middle"> message </mat-icon>
+                    </a>
+                  </h2>
+                </h4>
+              </ng-container>
             </ng-container>
             <button
               (click)="showAllFriends = !showAllFriends"
@@ -165,27 +199,32 @@
               Új üzenet (összes ismerős listázása)
             </button>
             <ng-container *ngIf="showAllFriends">
-              <div class="row justify-content-center">
-                <div
-                  class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2"
-                  *ngFor="let mess of showFriendsMess"
-                >
-                  <h4 class="mb-0 mt-2">{{ mess.displayName }}</h4>
-                  <img
-                    class="rounded-circle"
-                    width="50px"
-                    height="50px"
-                    [src]="mess.profilePicture"
-                    alt=""
-                  />
-                  <button
-                    (click)="firstMessageToFriend(mess)"
-                    class="btn btn-success fs-5 ms-2"
-                    type="button"
+              <div class="row justify-content-center showAllFriendsCont">
+                <ng-container *ngFor="let mess of showFriendsMess">
+                  <div
+                    class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2"
+                    *ngIf="!mess.messaging"
                   >
-                    Új üzenet
-                  </button>
-                </div>
+                    <h4 class="mb-0 mt-2">{{ mess.displayName }}</h4>
+                    <img
+                      class="rounded-circle"
+                      width="50px"
+                      height="50px"
+                      [src]="mess.profilePicture"
+                      alt=""
+                    />
+                    <button
+                      (click)="
+                        firstMessageToFriend(mess);
+                        showAllFriends = !showAllFriends
+                      "
+                      class="btn btn-success fs-5 ms-2"
+                      type="button"
+                    >
+                      Új üzenet
+                    </button>
+                  </div>
+                </ng-container>
               </div>
             </ng-container>
           </div>
@@ -203,7 +242,8 @@
                     <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
                   </div>
                   <div
-                    class="card text-white text-center mb-2"
+                    #messageCardCont
+                    class="card text-white text-center mb-2 messageCardCont"
                     [ngClass]="
                       mess.seen === false
                         ? 'newMessageColorOnCard'
@@ -244,7 +284,7 @@
                     </div>
                     <div class="card-footer">
                       <button
-                        (click)="getMessageUser(mess, i)"
+                        (click)="getMessageUser(mess)"
                         mat-raised-button
                         class="btn btn-sm ms-2 blue msg-button"
                         type="button"
@@ -339,7 +379,7 @@
                         </button>
                         <button
                           matIconSuffix
-                          (click)="removeFriend(friend.friendKey)"
+                          (click)="removeFriend(friend)"
                           class="btn btn-sm btn-danger"
                           type="button"
                         >
@@ -385,6 +425,16 @@
   *ngIf="!sendPrivateMessageOn && friendsOn"
 >
   <div
+    *ngIf="notConfirmedMeUsers.length"
+    class="col-12 col-md-6 col-lg-3 mb-2 mt-2 d-flex justify-content-center"
+  >
+    <app-toast
+      (confirmedFriend)="confirmedFriend($event)"
+      [notConfirmedSignedMe]="true"
+    >
+    </app-toast>
+  </div>
+  <div
     *ngFor="let notFriend of userNotFriends; let i = index"
     class="col-12 col-md-6 col-lg-3 mb-2 d-flex justify-content-center"
   >
@@ -393,11 +443,11 @@
         [id]="notFriend.uid"
         class="d-grid justify-content-center text-center mt-2"
         [autohide]="false"
-        [header]="notFriend.displayName"
+        [header]="notFriend?.displayName"
         #toastHeader
       >
         <img
-          [src]="notFriend.profilePicture"
+          [src]="notFriend?.profilePicture"
           width="50px"
           height="50px"
           alt="Profilkép"
@@ -414,7 +464,8 @@
               color="accent"
               type="button"
             >
-              <span class="icons"><mat-icon> person_add </mat-icon></span>
+              Ismerősnek jelölés
+              <mat-icon class="align-middle"> person_add </mat-icon>
             </button>
           </ng-container>
         </ng-container>
@@ -558,7 +609,7 @@
                     width="30px"
                     height="30px"
                     class="rounded-circle"
-                    [src]="msg.message.profilePhoto"
+                    [src]="selectedFriend.profilePicture"
                     alt="Profilkép"
                   />
                 </div>

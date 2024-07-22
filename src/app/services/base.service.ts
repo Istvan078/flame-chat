@@ -38,7 +38,7 @@ export class BaseService implements OnDestroy {
   refChats!: AngularFireList<Chat>;
   refUsers: AngularFireList<UserClass>;
   refUser!: AngularFireList<UserClass>;
-  refFriends!: AngularFireList<UserClass>;
+  // refFriends!: AngularFireList<UserClass>;
   apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
   userProfileSubject: BehaviorSubject<any> = new BehaviorSubject({});
   userProfilesSubject: BehaviorSubject<UserClass[]> = new BehaviorSubject<
@@ -50,10 +50,8 @@ export class BaseService implements OnDestroy {
   dbRef: AngularFireList<any>;
 
   profileSeenSubject: BehaviorSubject<any> = new BehaviorSubject([]);
-  userFriendsSubject: BehaviorSubject<any> = new BehaviorSubject({});
   selectedFriendSubject: BehaviorSubject<any> = new BehaviorSubject({});
   logicalSubject: BehaviorSubject<boolean> = new BehaviorSubject(false);
-  isNavigatedToPostsSubject: Subject<boolean> = new Subject();
   getAllMessagesSubject: BehaviorSubject<any> = new BehaviorSubject({});
   newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([]);
@@ -71,15 +69,6 @@ export class BaseService implements OnDestroy {
     this.refChats = realTimeDatabase.list(`/chats`);
     this.refUsers = realTimeDatabase.list('/users');
     this.dbRef = realTimeDatabase.list(this.basePath);
-
-    this.userKeySubjectSubscription = this.userKeySubject.subscribe(
-      (userKey: any) => {
-        this.userKey = userKey;
-        this.refFriends = this.realTimeDatabase.list(
-          `/users/${userKey}/friends`
-        );
-      }
-    );
   }
 
   ngOnDestroy(): void {
@@ -100,11 +89,12 @@ export class BaseService implements OnDestroy {
     this.refUsers.remove(userKey);
   }
 
-  // id: string,
-  addFriends(friend: any, friendKey: string) {
-    // return this.refFriends.push(friend);
+  addFriends(friend: any, friendKey: string, userKey: string) {
+    // this.realTimeDatabase
+    // .object(`users/${userKey}/friends/${friendKey}`)
+    // .update(friend);
     return this.realTimeDatabase
-      .object(`users/${this.userKey}/friends/${friendKey}`)
+      .object(`users/${userKey}/friends/${friendKey}`)
       .update(friend);
   }
 
@@ -131,14 +121,36 @@ export class BaseService implements OnDestroy {
   //     .update(friend);
   // }
 
-  updateFriend(friendKey: string, body: UserClass) {
+  updateFriend(friendKey: string, body: UserClass, userKey: string) {
+    const refFriends = this.realTimeDatabase.list(`users/${userKey}/friends`);
     return firebase
       .database()
-      .ref(`users/${this.userKey}/friends`)
+      .ref(`users/${userKey}/friends`)
       .once('value')
       .then(val => {
-        return this.refFriends.update(friendKey, body);
+        return refFriends.update(friendKey, body);
       });
+  }
+
+  updateFriendsFriend(friendKey: string, userProfKey: string, data: any) {
+    // const ref = firebase.database().ref(`users/${this.userKey}/friends`)
+    // return ref
+    // .once('value')
+    // .then(val => {
+    //   return ref.update(friendKey, body);
+    // });
+    const ref = this.realTimeDatabase.list(`users/${friendKey}/friends`);
+    return ref.update(userProfKey, data);
+  }
+
+  removeFriend(friendKey: string, userKey: string) {
+    const refFriends = this.realTimeDatabase.list(`users/${userKey}/friends`);
+    return refFriends.remove(friendKey);
+  }
+
+  removeFriendsFriend(friendKey: string, userProfKey: string) {
+    const ref = this.realTimeDatabase.list(`users/${friendKey}/friends`);
+    return ref.remove(userProfKey);
   }
 
   getUserMessagesRefactored(userUid: string, friendUid: string) {
@@ -191,29 +203,31 @@ export class BaseService implements OnDestroy {
       );
   }
 
-  removeFriend(friendKey: string) {
-    // this.refFriends = this.realTimeDatabase.list('/friends')
-    return this.refFriends.remove(friendKey);
-  }
-
-  getFriends(): Observable<Friend[]> {
-    if (this.userKey) {
-      return this.refFriends.snapshotChanges().pipe(
-        map(changes =>
-          changes.map(
-            c =>
-              <Friend>{
-                key: c.payload.key,
-                ...c.payload.val(),
-              }
+  getFriends(userProfKey: string): Observable<Friends[]> {
+    const refFriends = this.realTimeDatabase.list(
+      `users/${userProfKey}/friends`
+    );
+    if (userProfKey) {
+      return <Observable<Friends[]>>(
+        refFriends
+          .snapshotChanges(['child_changed', 'child_removed', 'child_added'])
+          .pipe(
+            map(changes =>
+              changes.map(
+                (c: any) =>
+                  <Friends>{
+                    key: c.payload.key,
+                    ...c.payload.val(),
+                  }
+              )
+            ),
+            catchError(errorRes => {
+              return throwError(errorRes);
+            })
           )
-        ),
-        catchError(errorRes => {
-          return throwError(errorRes);
-        })
       );
     }
-    const emptyArrObs: Observable<Friend[]> = of([]);
+    const emptyArrObs: Observable<Friends[]> = of([]);
     return emptyArrObs;
   }
 

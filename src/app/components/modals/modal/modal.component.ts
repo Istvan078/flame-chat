@@ -74,6 +74,7 @@ export class ModalComponent {
     //   this.post!
     //   // this.selectedFriend?.friendKey,
     // );
+    this.post.newestTimeStamp = new Date().getTime();
     if (this.selectedFriend?.friendKey) {
       const sharedWithMe = {
         byWhoKey: this.user.key,
@@ -103,7 +104,10 @@ export class ModalComponent {
         console.log('Még nincs megosztva senkivel');
         const sharedPostWithFriend = await this.firestoreService.updatePost(
           this.post.id,
-          { sharedWithMe: [sharedWithMe] }
+          {
+            sharedWithMe: [sharedWithMe],
+            newestTimeStamp: this.post.newestTimeStamp,
+          }
         );
         ////////////// LEÍRÁS  /////////
         // Már megvan osztva velem a poszt
@@ -114,7 +118,10 @@ export class ModalComponent {
         this.post.sharedWithMe.splice(num2, 1);
         const sharedPostWithFriend = await this.firestoreService.updatePost(
           this.post.id,
-          { sharedWithMe: [...this.post.sharedWithMe, sharedWithMe] }
+          {
+            sharedWithMe: [...this.post.sharedWithMe, sharedWithMe],
+            newestTimeStamp: this.post.newestTimeStamp,
+          }
         );
         this.post.sharedWithMe.push(sharedWithMe);
       } else {
@@ -122,7 +129,10 @@ export class ModalComponent {
         // Már megvan osztva valakivel a poszt, de nem velem
         const sharedPostWithFriend = await this.firestoreService.updatePost(
           this.post.id,
-          { sharedWithMe: [...this.post.sharedWithMe, sharedWithMe] }
+          {
+            sharedWithMe: [...this.post.sharedWithMe, sharedWithMe],
+            newestTimeStamp: this.post.newestTimeStamp,
+          }
         );
         this.post.sharedWithMe.push(sharedWithMe);
         this.post.userKeys.push(this.selectedFriend.friendKey);
@@ -151,11 +161,11 @@ export class ModalComponent {
         );
       }
 
-      // this.firestoreService.getMyPostsNotiSubj().next()
+      // this.firestoreService.getMyPostsNotiSubj().next();
     }
 
+    this.firestoreService.sharedPostIdSubject.next(this.post.id);
     this.baseService.selectedFriendSubject.next(this.selectedFriend);
-
     this.toastService.addToast(
       'Sikeres megosztás',
       this.selectedFriend?.displayName + ' nevű felhasználóval'
