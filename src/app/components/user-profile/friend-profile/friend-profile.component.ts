@@ -1,13 +1,7 @@
-import {
-  AfterViewInit,
-  Component,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatPaginator, MatPaginatorIntl } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
@@ -18,9 +12,7 @@ import { ToastService } from 'src/app/services/toast.service';
   templateUrl: './friend-profile.component.html',
   styleUrls: ['./friend-profile.component.scss'],
 })
-export class FriendProfileComponent
-  implements OnInit, AfterViewInit, OnDestroy
-{
+export class FriendProfileComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator, { static: false }) paginator!: MatPaginator;
   friendProfile: UserClass = new UserClass();
   friendProfileSubscription!: Subscription;
@@ -43,7 +35,8 @@ export class FriendProfileComponent
 
     // paginator opciói
     private pag: MatPaginatorIntl,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router
   ) {}
 
   showPicBig(i: number) {
@@ -103,14 +96,7 @@ export class FriendProfileComponent
             // 2 tömbben elmentem a képeket a slice metódus alkalmazásához
             // A this.allPicsArr-ben megmaradnak az eredeti képek
             if (this.friendProfile.pictures) {
-              const picturesArr = Object.values(this.friendProfile.pictures);
-              const picUrlsArr = picturesArr.map((pic: any) => pic.url);
-              this.friendProfile.pictures = picUrlsArr;
-              this.allPicsArr = picUrlsArr;
-              this.friendProfile.pictures = this.friendProfile.pictures.slice(
-                0,
-                3
-              );
+              this.setAndSlicePictures();
             }
 
             // Barátok listája összegyűjtése és tömbbe helyezése
@@ -144,7 +130,24 @@ export class FriendProfileComponent
     });
   }
 
-  ngAfterViewInit(): void {}
+  setAndSlicePictures() {
+    if (!Array.isArray(this.friendProfile.pictures)) {
+      const picturesArr = Object.values(this.friendProfile.pictures);
+      const picUrlsArr = picturesArr.map((pic: any) => pic?.url);
+      this.friendProfile.pictures = picUrlsArr;
+      this.allPicsArr = picUrlsArr;
+    } else this.allPicsArr = this.friendProfile.pictures;
+    this.friendProfile.pictures = this.friendProfile.pictures.slice(0, 3);
+  }
+
+  toChosenUserProfile(userUid: string) {
+    this.friendProfile = this.profilesOfFriendsArr.find(
+      prof => prof.uid === userUid
+    )!;
+    this.base.friendProfileSubject.next(this.friendProfile);
+    this.showFriends();
+    this.router.navigate([`/${userUid}/friend-profile`]);
+  }
 
   ngOnDestroy(): void {
     // Subject leiratkozások

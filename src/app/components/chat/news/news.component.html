@@ -38,10 +38,24 @@
   <div class="col text-center">
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
-        <mat-card-title>{{ post.displayName }}</mat-card-title>
+        <ng-container *ngFor="let sharer of postSharers"
+          ><div class="mb-4 space-div" *ngIf="post.id === sharer.postId">
+            <span class="shared-with-me-by section-visible section-1"
+              ><mat-icon class="align-middle">share</mat-icon> Megosztotta:
+              {{ sharer.displayName }}</span
+            >
+            <span class="shared-with-me-time section-visible section-2"
+              ><mat-icon class="align-middle">timer</mat-icon> Megosztva:
+              {{ sharer.timeStamp }}</span
+            >
+          </div></ng-container
+        >
+        <mat-card-title *ngIf="!post?.sharedPublicly?.length">{{
+          post.displayName
+        }}</mat-card-title>
       </mat-card-header>
 
-      <mat-card-content>{{ post.message }}</mat-card-content>
+      <mat-card-content class="post-text">{{ post.message }}</mat-card-content>
       <mat-card-content
         *ngIf="post.iFrame"
         style="height: 50vh; width: 100%"
@@ -136,7 +150,12 @@
               >edit_note</mat-icon
             >
           </button>
-          <button (click)="startPostSharing(post)" mat-button type="button">
+          <button
+            (click)="startPostSharing(post, i)"
+            class="share-button"
+            mat-button
+            type="button"
+          >
             Megosztás<mat-icon matPrefix>reply</mat-icon>
           </button>
         </div>

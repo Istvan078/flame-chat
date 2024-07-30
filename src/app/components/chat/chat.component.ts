@@ -290,13 +290,11 @@ export class ChatComponent implements OnInit, OnDestroy {
         subscriber.complete(); // megtisztítja a subscription-t, nem lesz további érték azt is mondom vele
         return;
       }
-      console.log('új érték kisugárzása');
       subscriber.next({ message: 'új érték' }); // itt azt állítjuk be MIKOR történjen meg a next esemény!!!
     }, 2000);
   });
 
   onAnimate() {
-    console.log(this.chatAnimationState);
     this.chatAnimationState =
       this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
   }
@@ -343,7 +341,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.userSubjectSub = this.utilService.userSubject.subscribe(user => {
       if (user.userProfiles) this.userProfiles = user.userProfiles;
-      if (user.userProfile) this.userProfile = user.userProfile;
+      if (user.userProfile) {
+        this.userProfile = user.userProfile;
+        // if (!this.userProfile.displayName) {
+        //   this.router.navigate([`/profile/${this.userProfile.uid}`]);
+        // }
+      }
       if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
       if (user.userFriends) this.userFriends = user.userFriends;
       if (user.notConfirmedMeUsers)
@@ -365,6 +368,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.authNull === null
           )
             if (user.uid) {
+              console.log(this.userProfiles);
               const profsObs = await this.utilService.getUserProfiles();
               this.allUserDetailsSub = profsObs.subscribe(
                 (allUserDetails: any) => {
@@ -376,7 +380,7 @@ export class ChatComponent implements OnInit, OnDestroy {
                     this.userProfiles;
 
                   if (this.userProfile && !this.userProfile.birthDate) {
-                    this.router.navigate(['profile/' + user.uid]);
+                    this.router.navigate(['/profile/' + user.uid]);
                   }
                   if (
                     (this.userProfile?.key &&
@@ -407,7 +411,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         });
     }).then(res => {
-      this.isSubscribedForNotSub = this.isSubscribedForNotifications()!;
+      if (this.userProfile.displayName)
+        this.isSubscribedForNotSub = this.isSubscribedForNotifications()!;
       if (this.isSubscribedForNotSub) this.isSubscribedForNotSub.unsubscribe();
       let docIdsArr: any[] = [];
       console.log(res);
@@ -790,7 +795,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   toUserProfile() {
     this.isUserProfileOn = true;
-    this.router.navigate([`profile/${this.userProfile.uid}`]);
+    if (this.userProfile.uid)
+      this.router.navigate([`profile/${this.userProfile.uid}`]);
   }
 
   getMessageUser(user: any) {
@@ -863,6 +869,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   updateSeenMessagesAndViewTime = (user: any) => {
     return new Promise((res, rej) => {
       this.updateSeenMessages();
+      console.log(this.showFriendsMess);
       // Üzenetek a kiválasztott baráttól tömb iteráció
       this.visibleMessages.map(mess => {
         //////////////// LEÍRÁS  ////////////////////////
@@ -1449,7 +1456,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
 
     promise.then(() => {
-      this.router.navigate(['/' + friendId + '/friend-profile']);
+      if (this.userProfile.uid)
+        this.router.navigate(['/' + friendId + '/friend-profile']);
     });
   }
 

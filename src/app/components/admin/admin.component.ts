@@ -81,7 +81,7 @@ export class AdminComponent implements OnInit {
         psWithMe => psWithMe.fromPostId === myPost.id
       );
       if (postSharedWithMe) {
-        const sharedWithMeBy = myPost.sharedWithMe?.find(
+        const sharedWithMeBy = myPost.sharedWith?.find(
           (sWithMe: any) => sWithMe.myKey === this.userProfile.key
         );
         const sharerFriendProfile = this.userFriends.find(
@@ -132,8 +132,8 @@ export class AdminComponent implements OnInit {
     let proba: any[] = [];
     this.renderIFrames();
     this.myPostsArr.map(myPost => {
-      if (myPost.sharedWithMe?.length)
-        myPost.sharedWithMe.map((sWithMe: any) => {
+      if (myPost.sharedWith?.length)
+        myPost.sharedWith.map((sWithMe: any) => {
           if (sWithMe.myKey === this.userProfile.key) {
             myPost['isSharedWithMe'] = true;
             if (myPost.timeStamp > sWithMe.timeStamp) {

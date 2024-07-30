@@ -85,6 +85,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   picturesArray: any[] = [];
   sharedPosts: Post[] = [];
   peopleLikedPost: any[] = [];
+  postSharers: any[] = [];
   iFrames!: HTMLCollectionOf<HTMLIFrameElement>;
   picturesSubscription!: Subscription;
   userProfilesSub!: Subscription;
@@ -161,11 +162,33 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   async init() {
     this.isLoading = true;
     this.peopleLikedPost = [];
+    this.postSharers = [];
     const posts = await this.firestoreService.getPosts(false);
     if (posts) this.sharedPosts = posts;
 
     this.getPostsData();
     this.startAnimate();
+    ///////////// MEGCSINÁLNI metódust megosztáshoz ///////////
+    this.sharedPosts.forEach((shPost, i) => {
+      if (shPost?.sharedPublicly) {
+        const lastPostSharer = this.userProfiles.find(uP => {
+          if (shPost?.sharedPublicly)
+            return (
+              uP.key ===
+              shPost.sharedPublicly[shPost.sharedPublicly.length - 1].byWhoKey
+            );
+        });
+        const dateLocaleString = new Date(
+          shPost.sharedPubliclyNewestTimeStamp!
+        ).toLocaleString();
+        const obj = {
+          ...lastPostSharer,
+          postId: shPost.id,
+          timeStamp: dateLocaleString,
+        };
+        this.postSharers.push(obj);
+      }
+    });
     this.isLoading = false;
   }
 
@@ -271,17 +294,16 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
         );
         if (sP.iFrame) {
           if (!this.iFrames[0]?.src) {
-            // setTimeout(() => {
-            //   console.log(sectionOne[0]);
-            //   if (
-            //     sectionOne[0].getBoundingClientRect().top <
-            //       window.innerHeight ||
-            //     sectionOne[1].getBoundingClientRect().top < window.innerHeight
-            //   ) {
-            //     sectionOne[0].classList.remove('section-hidden');
-            //     sectionOne[1].classList.remove('section-hidden');
-            //   }
-            // }, 1);
+            setTimeout(() => {
+              if (
+                sectionOne[0].getBoundingClientRect().top <
+                  window.innerHeight ||
+                sectionOne[1].getBoundingClientRect().top < window.innerHeight
+              ) {
+                sectionOne[0].classList.remove('section-hidden');
+                sectionOne[1].classList.remove('section-hidden');
+              }
+            }, 1);
             this.iFrames[0].src = sP.iFrame;
           }
           if (
@@ -308,6 +330,15 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     let proba: any[] = [];
     this.renderImages();
     this.renderIFrames();
+    this.sharedPosts.map(shPost => {
+      if (shPost.sharedPublicly?.length)
+        if (shPost.sharedPubliclyNewestTimeStamp) {
+          shPost.newestTimeStamp = shPost.sharedPubliclyNewestTimeStamp;
+        }
+      if (!shPost.sharedPublicly?.length) {
+        shPost.newestTimeStamp = shPost.timeStamp;
+      }
+    });
     const subscription = new Observable(obs => {
       const interval = setInterval(() => {
         if (this.sharedPosts.length) {
@@ -643,11 +674,31 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  startPostSharing(post: Post) {
+  async startPostSharing(post: Post, i: number) {
     const modalRef = this.ngbModal.open(ModalComponent, { centered: true });
     modalRef.componentInstance.post = post;
     modalRef.componentInstance.user = this.userProfile;
     modalRef.componentInstance.userFriends = this.userFriends;
+    const result = await modalRef.result;
+    if (result) {
+      this.refreshPostsAfterShare(result, post, i);
+    }
+  }
+
+  refreshPostsAfterShare(result: any, post: Post, i: number) {
+    const dateLocaleString = new Date(result).toLocaleString();
+    const postSharerIndex = this.postSharers.findIndex(
+      sh => sh.postId === post.id
+    );
+    this.postSharers.splice(postSharerIndex, 1);
+    const postSharerExtended = {
+      ...this.userProfile,
+      postId: post.id,
+      timeStamp: dateLocaleString,
+    };
+    this.postSharers.unshift(postSharerExtended);
+    this.sharedPosts.splice(i, 1);
+    this.sharedPosts.unshift(post);
   }
 
   ngOnDestroy(): void {

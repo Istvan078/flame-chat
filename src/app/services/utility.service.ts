@@ -57,7 +57,8 @@ export class UtilityService {
         this.userProfilesUidsArr = this.userProfiles.map(uP => uP.uid);
         const userProfile = uProfs.filter(uP => uP.uid === user.uid);
         Object.assign(this.userProfile, ...userProfile);
-        this.userFriends = Object.values(this.userProfile.friends as any);
+        if (this.userProfile?.friends?.length)
+          this.userFriends = Object.values(this.userProfile?.friends as any);
         this.setUserFriendsArray(this.userFriends);
         this.setUserNotFriendsArr();
         return {

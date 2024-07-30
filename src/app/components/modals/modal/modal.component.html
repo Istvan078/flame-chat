@@ -158,14 +158,15 @@
   <div class="modal-body">
     <form>
       <select
+        #whereToShareSelect
         (change)="onOptionSelected($event)"
         name="where-to-share"
         class="form-select"
         id="where-to-share"
         [(ngModel)]="selectedValue"
       >
-        @for(option of options; track option) {
-        <option [disabled]="option.disabled" [value]="option.value">
+        @for(option of options; track option.value) {
+        <option [value]="option.value">
           {{ option.label }}
         </option>
         } @if(selectedFriend?.displayName) {
@@ -179,11 +180,15 @@
   </div>
   <div class="modal-footer">
     <button
-      (click)="sharePostOnFriendProfile()"
+      (click)="
+        !isNewsSharing && this.selectedFriend
+          ? sharePostOnFriendProfile()
+          : sharePostPublicly()
+      "
       type="button"
       class="btn btn-success"
       data-bs-dismiss="modal"
-      [disabled]="!selectedFriend"
+      [disabled]="!selectedFriend && !isNewsSharing"
     >
       <span class="text-white align-middle"
         >Megosztás most

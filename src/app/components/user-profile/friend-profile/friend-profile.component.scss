@@ -6,13 +6,15 @@
   background-size: cover;
 }
 
-.tape .left:hover, .tape .right:hover {
+.tape .left:hover,
+.tape .right:hover {
   color: black;
   cursor: pointer;
   background-color: rgba(43, 148, 27, 0.8);
 }
 
-.tape .left, .tape .right {
+.tape .left,
+.tape .right {
   border-radius: 3px;
   display: flex;
   justify-content: center;
@@ -21,7 +23,8 @@
   background-color: rgba(26, 102, 15, 0.5);
   margin-right: 5px;
 }
-.tape .left span, .tape .right span {
+.tape .left span,
+.tape .right span {
   color: white;
   font-size: 50px;
 }
@@ -35,6 +38,14 @@ table {
   width: 100%;
 }
 
-td, th {
+td,
+th {
   width: 25%;
+}
+
+.user-name-cell {
+  cursor: pointer;
+}
+.user-name-cell:hover {
+  background: grey;
 }

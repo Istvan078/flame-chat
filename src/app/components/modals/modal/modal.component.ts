@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Environments } from 'src/app/environments';
 import { MyPost, Post } from 'src/app/models/post.model';
@@ -13,14 +13,15 @@ import { ToastService } from 'src/app/services/toast.service';
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss'],
 })
-export class ModalComponent {
+export class ModalComponent implements OnInit {
   usersApiUrl = Environments.API_URL;
   activeModal = inject(NgbActiveModal);
   isSelectFriend = false;
   selectedFriend?: Friends;
+  isNewsSharing = false;
   selectedValue: any = 'news';
   options = [
-    { value: 'news', label: 'Hírfolyam (Hamarosan)', disabled: true },
+    { value: 'news', label: 'Hírfolyam' },
     { value: 'friend-profile', label: 'Ismerős profiljában' },
   ];
   @Input() name: string = '';
@@ -42,6 +43,11 @@ export class ModalComponent {
     private toastService: ToastService,
     private baseService: BaseService
   ) {}
+
+  ngOnInit(): void {
+    if (this.selectedValue === 'news') this.isNewsSharing = true;
+    console.log(this.post);
+  }
 
   deleteUser() {
     this.http
@@ -99,42 +105,42 @@ export class ModalComponent {
       }
       ////////////// LEÍRÁS  /////////
       // Még nincs megosztva senkivel a poszt
-      if (!this.post.sharedWithMe?.length) {
-        this.post.sharedWithMe = [sharedWithMe];
+      if (!this.post.sharedWith?.length) {
+        this.post.sharedWith = [sharedWithMe];
         console.log('Még nincs megosztva senkivel');
         const sharedPostWithFriend = await this.firestoreService.updatePost(
           this.post.id,
           {
-            sharedWithMe: [sharedWithMe],
+            sharedWith: [sharedWithMe],
             newestTimeStamp: this.post.newestTimeStamp,
           }
         );
         ////////////// LEÍRÁS  /////////
         // Már megvan osztva velem a poszt
       } else if (this.post.userKeys.includes(this.selectedFriend.friendKey)) {
-        const num2 = this.post.sharedWithMe.findIndex(
+        const num2 = this.post.sharedWith.findIndex(
           sWithMe => sWithMe.myKey === this.selectedFriend?.friendKey
         );
-        this.post.sharedWithMe.splice(num2, 1);
+        this.post.sharedWith.splice(num2, 1);
         const sharedPostWithFriend = await this.firestoreService.updatePost(
           this.post.id,
           {
-            sharedWithMe: [...this.post.sharedWithMe, sharedWithMe],
+            sharedWith: [...this.post.sharedWith, sharedWithMe],
             newestTimeStamp: this.post.newestTimeStamp,
           }
         );
-        this.post.sharedWithMe.push(sharedWithMe);
+        this.post.sharedWith.push(sharedWithMe);
       } else {
         ////////////// LEÍRÁS  /////////
         // Már megvan osztva valakivel a poszt, de nem velem
         const sharedPostWithFriend = await this.firestoreService.updatePost(
           this.post.id,
           {
-            sharedWithMe: [...this.post.sharedWithMe, sharedWithMe],
+            sharedWith: [...this.post.sharedWith, sharedWithMe],
             newestTimeStamp: this.post.newestTimeStamp,
           }
         );
-        this.post.sharedWithMe.push(sharedWithMe);
+        this.post.sharedWith.push(sharedWithMe);
         this.post.userKeys.push(this.selectedFriend.friendKey);
       }
       const friendPosts = await this.firestoreService.getMyPosts(
@@ -173,11 +179,46 @@ export class ModalComponent {
     this.activeModal.close();
   }
 
+  // BEFEJEZNI A METÓDUST és Az új tartalmat! // LEÍRÁS
+  async sharePostPublicly() {
+    console.log(this.post);
+    const actualTime = new Date().getTime();
+    const forSharingPostPublicly = {
+      byWhoKey: this.user.key,
+      timeStamp: actualTime,
+    };
+    if (this.post.sharedPublicly?.length) {
+      const alreadySharedByUserInd = this.post.sharedPublicly?.findIndex(
+        sh => sh.byWhoKey === this.user.key
+      );
+      console.log(alreadySharedByUserInd);
+      if (alreadySharedByUserInd >= 0) {
+        this.post.sharedPublicly?.splice(alreadySharedByUserInd, 1);
+      }
+    }
+    await this.firestoreService.updatePost(this.post.id, {
+      sharedPubliclyNewestTimeStamp: actualTime,
+      sharedPublicly: this.post.sharedPublicly?.length
+        ? [...this.post.sharedPublicly, forSharingPostPublicly]
+        : [forSharingPostPublicly],
+    });
+    this.post.sharedPublicly?.push(forSharingPostPublicly);
+    this.toastService.addToast('', 'Sikeres megosztás');
+    this.activeModal.close(actualTime);
+  }
+
   onOptionSelected(event: any) {
     const selectElement = event.target as HTMLSelectElement;
     this.selectedValue = selectElement.value;
     if (this.selectedValue === 'friend-profile') {
       this.isSelectFriend = true;
+      this.isNewsSharing = false;
+      console.log(this.isSelectFriend);
+      console.log(this.isNewsSharing);
+    }
+    if (this.selectedValue === 'news') {
+      this.isNewsSharing = true;
+      this.isSelectFriend = false;
     }
   }
 }

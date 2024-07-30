@@ -6,7 +6,7 @@ import {
   RecaptchaVerifier,
   getAuth,
 } from '@angular/fire/auth';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, map, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FirebaseUser, UserClass } from '../models/user.model';
 import { SwPush } from '@angular/service-worker';
@@ -28,6 +28,7 @@ export class AuthService {
   notiSub: any;
 
   isSuperAdmin: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  private isAdmin: BehaviorSubject<boolean> = new BehaviorSubject(false);
   navDisappear: BehaviorSubject<boolean> = new BehaviorSubject(false);
   userClaimsSubj: BehaviorSubject<{}> = new BehaviorSubject({});
 
@@ -63,10 +64,6 @@ export class AuthService {
       }
     });
     this.subscribeToNotifications();
-
-    // this.swPush.notificationClicks.subscribe(event =>
-    //   console.log('rákattoltál a gombra', event)
-    // );
   }
 
   swPushh() {
@@ -75,18 +72,15 @@ export class AuthService {
 
   async subscribeToNotifications() {
     if (this.swPush.isEnabled) {
-      const myPushSub = await this.swPush.requestSubscription({
-        serverPublicKey: this.VAPID_PUBLIC_KEY,
-      });
-      this.notiSub = myPushSub;
-      console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
-      // .then(sub => {
-      //   console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
-      //   this.notiSub = sub;
-      // })
-      // .catch(err =>
-      //   console.error('NEM TUDTAM FELIRATKOZNI AZ ÉRTESÍTÉSEKRE', err)
-      // );
+      try {
+        const myPushSub = await this.swPush.requestSubscription({
+          serverPublicKey: this.VAPID_PUBLIC_KEY,
+        });
+        this.notiSub = myPushSub;
+        console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
+      } catch (err) {
+        console.error('NEM TUDTAM FELIRATKOZNI AZ ÉRTESÍTÉSEKRE', err);
+      }
     }
   }
 
@@ -102,6 +96,7 @@ export class AuthService {
           this.user.claims = claims;
           this.userLoggedInSubject.next(this.user);
           this.isSuperAdmin.next(this.user.claims?.superAdmin);
+          this.isAdmin.next(this.user.claims?.admin);
           this.userClaimsSubj.next(claims);
           this.getUsers().subscribe((users: any) => {
             this.usersSubject.next(users);
@@ -110,10 +105,26 @@ export class AuthService {
           if (this.user.uid) {
             this.setCustomClaims(this.user.uid, this.defaultClaims);
             this.userLoggedInSubject.next(this.user);
+            this.isAdmin.next(false);
             this.isSuperAdmin.next(false);
           }
         }
       });
+    });
+  }
+
+  getIsAdminSubj() {
+    return new Observable<boolean>(obs => {
+      const int = setInterval(() => {
+        if (this.isAdmin.value === true) {
+          obs.next(this.isAdmin.value);
+          clearInterval(int);
+        }
+      }, 20);
+      setTimeout(() => {
+        if (this.isAdmin.value === false) clearInterval(int);
+        obs.next(false);
+      }, 1000);
     });
   }
 
@@ -163,9 +174,18 @@ export class AuthService {
   }
 
   isLoggedInBoolean() {
-    if (this.user.uid) {
-      return true;
-    } else return false;
+    return new Observable<boolean>(obs => {
+      const int = setInterval(() => {
+        if (this.user.uid) {
+          clearInterval(int);
+          obs.next(true);
+        }
+      }, 20);
+      setTimeout(() => {
+        clearInterval(int);
+        if (!this.user.uid) obs.next(false);
+      }, 1000);
+    });
   }
 
   loginWithEmAndPa(email: string, password: string) {

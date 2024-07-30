@@ -56,7 +56,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   error: string = '';
   index: number = 0;
   isLeftArrow: boolean = false;
-  isRightArrow: boolean = true;
+  isRightArrow: boolean = false;
   profilePicsArr: any[] = [];
   filteredProfilePicsArr: any[] = [];
 
@@ -133,11 +133,12 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     this.updateChosenImageSub = new Observable(observer => {
       this.chosenProfilePicInterval = setInterval(() => {
         if (
-          this.chosenProfPic.nativeElement.src !==
-          this.chosenProfPicFromUploads.nativeElement.src
+          this.chosenProfPic?.nativeElement.src !==
+          this.chosenProfPicFromUploads?.nativeElement.src
         )
           (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
         console.log('fut az interval');
+        console.log(this.profilePicsArr);
       }, 1000);
     }).subscribe();
   }
@@ -148,34 +149,32 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
 
   saveProfile() {
     new Promise(res => {
-      this.auth.isLoggedIn().subscribe((user: FirebaseUser) => {
-        this.base.getUserProfiles().subscribe(async userProfiles => {
-          let userProfile = userProfiles.filter(
-            (userProfile: any) => userProfile.uid === user?.uid
-          );
-          if (!user?.displayName) {
-            await user?.updateProfile({
-              displayName: this.userProf.displayName,
-            });
-            console.log('SIKERES FELHASZNÁLÓI PROFIL FRISSÍTÉS');
-          }
-          if (user?.uid) this.userProf.uid = user?.uid;
-          this.userProf.key = userProfile[0].key;
-          // this.userProf.ageCalc();
-          if (this.profilePhotoUrl) {
-            this.userProf.profilePicture = this.profilePhotoUrl;
-          } else if (!this.userProf.profilePicture) {
-            this.userProf.profilePicture =
-              'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
-          } else {
-            this.userProf.profilePicture = userProfile[0].profilePicture;
-          }
-          res('Sikeres Profil frissítés');
-        });
+      this.auth.isLoggedIn().subscribe(async (user: FirebaseUser) => {
+        if (!user?.displayName) {
+          await user?.updateProfile({
+            displayName: this.userProf.displayName,
+          });
+          console.log('SIKERES FELHASZNÁLÓI PROFIL FRISSÍTÉS');
+        }
+        if (!this.userProf.age) this.userProf.ageCalc();
+        if (this.profilePhotoUrl) {
+          this.userProf.profilePicture = this.profilePhotoUrl;
+        } else if (!this.userProf.profilePicture) {
+          this.userProf.profilePicture =
+            'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
+        }
+        res('Sikeres Profil frissítés');
       });
     })
-      .then(res => {
-        this.base.updateUserData(this.userProf, this.userProf.key);
+      .then(async res => {
+        console.log(this.userProf.profilePicture);
+        await this.base.updateUserData(this.userProf, this.userProf.key);
+        if (this.userProf.displayName) {
+          this.utilityService.forUserSubject.userProfile = this.userProf;
+          this.utilityService.userSubject.next(
+            this.utilityService.forUserSubject
+          );
+        }
       })
       .then(() => this.route.navigate(['chat']));
   }

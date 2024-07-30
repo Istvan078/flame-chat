@@ -1,18 +1,11 @@
-import {
-  AnimationEvent,
-  animate,
-  group,
-  keyframes,
-  state,
-  style,
-  transition,
-  trigger,
-} from '@angular/animations';
 import { OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgbTooltipConfig } from '@ng-bootstrap/ng-bootstrap';
-import { Subscription, interval } from 'rxjs';
+import { Subscription } from 'rxjs';
+import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
+import { BaseService } from 'src/app/services/base.service';
 
 @Component({
   selector: 'app-home',
@@ -24,8 +17,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   @ViewChild('toast') toast: any;
   userLoggedIn: any = {};
   userLoggedInSub!: Subscription;
+  userProfile: UserClass = new UserClass();
 
-  constructor(private ngbTConfig: NgbTooltipConfig, private auth: AuthService) {
+  constructor(
+    private ngbTConfig: NgbTooltipConfig,
+    private auth: AuthService,
+    private base: BaseService,
+    private router: Router
+  ) {
     ngbTConfig.placement = 'bottom';
     ngbTConfig.tooltipClass = 'tooltippp';
     ngbTConfig.animation = true;
@@ -38,6 +37,13 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.userLoggedIn = user;
       if (this.userLoggedIn?.uid && user) {
         this.toastStyler('add');
+        this.base.getUserProfiles().subscribe(uProfs => {
+          this.userProfile = uProfs.find(
+            (uProf: UserClass) => uProf.uid === user.uid
+          );
+          if (!this.userProfile.displayName)
+            this.router.navigate(['/profile/' + this.userProfile.uid]);
+        });
       }
       if (!user) {
         this.toastStyler('remove');

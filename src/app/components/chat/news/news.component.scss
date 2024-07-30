@@ -38,8 +38,60 @@
   animation: loadingSpinner 1s linear infinite;
 }
 
+.section-hidden {
+  opacity: 0;
+  transform: translate(20rem, -20rem);
+}
+
+.section-visible {
+  transition: transform 2s, opacity 3s;
+}
+
+.share-button {
+  background: rgb(171, 171, 197);
+  mat-icon {
+    color: rgb(35, 117, 35);
+  }
+}
+
+.shared-with-me-by {
+  position: absolute;
+  font-size: 1.15rem;
+  left: 10px;
+  top: 5px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.post-text {
+  margin-bottom: 5px;
+  padding-top: 20px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.shared-with-me-time {
+  position: absolute;
+  font-size: 1.02rem;
+  right: 10px;
+  top: 5px;
+  font-style: italic;
+}
+
 @keyframes loadingSpinner {
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@media screen and (max-width: 770px) {
+  .space-div {
+    height: 50px;
+  }
+  .shared-with-me-time {
+    top: 50px;
+    left: 10px;
+  }
+  .section-hidden {
+    transform: translate(7rem, -20rem) !important;
   }
 }

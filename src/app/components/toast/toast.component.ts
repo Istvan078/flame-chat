@@ -9,6 +9,7 @@ import { ToastService } from 'src/app/services/toast.service';
 })
 export class ToastComponent {
   notConfirmedSignedMe = input<boolean>();
+  isPostSharing = input<boolean>();
   confirmedFriend = output<string>();
   toastService = inject(ToastService);
   confirmFriend(activeToast: NgbToast) {

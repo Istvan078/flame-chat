@@ -60,7 +60,13 @@
           </label>
         </div>
         <div class="d-flex justify-content-end">
-          <button color="primary" mat-flat-button matStepperNext type="button">
+          <button
+            [disabled]="!f.form.valid"
+            color="primary"
+            mat-flat-button
+            matStepperNext
+            type="button"
+          >
             Következő
           </button>
         </div>
@@ -82,6 +88,9 @@
               name="profilePicture"
             />
           </button>
+          <div class="text-primary mt-1" *ngIf="profilePhoto">
+            {{ profilePhoto.name }}
+          </div>
           <button
             [disabled]="!profilePhoto"
             (click)="addOrChangeProfilePic()"
@@ -91,9 +100,6 @@
             <mat-icon class="align-middle">upload</mat-icon>
             Profilkép Feltöltése
           </button>
-        </div>
-        <div class="text-primary mt-1" *ngIf="profilePhoto">
-          {{ profilePhoto.name }}
         </div>
         <div
           *ngIf="profilePhoto && percent && percent < 100"
@@ -111,6 +117,11 @@
             <h4 class="pt-2">{{ percent }}%</h4>
           </div>
         </div>
+        <div *ngIf="profilePhotoUrl" class="d-flex justify-content-center">
+          <div class="profilePicContainer">
+            <img [src]="profilePhotoUrl" alt="Profilkép" />
+          </div>
+        </div>
         <ng-container
           *ngIf="userProf.profilePicture === chosenProfPic?.nativeElement.src"
         >
@@ -121,7 +132,7 @@
             >arrow_downward</mat-icon
           >
         </ng-container>
-        <div class="slider">
+        <div *ngIf="profilePicsArr.length && !profilePhotoUrl" class="slider">
           <div class="mainContainer">
             <!-- <div *ngIf="isLoading" class="loadingSpinner">*</div> -->
             <!-- <ng-template [ngIf]="error">
@@ -144,22 +155,6 @@
                     alt="Profilkép"
                   />
                 </div>
-                <!-- <div class="under-prodpic-container">
-                  <h4>{{ product.name }}</h4>
-                  <span *ngIf="product.price">{{ product.price }} Ft</span>
-                  <p>{{ product.description }}</p>
-                </div>
-                <p *ngIf="product.available">Elérhető: {{ product.available }} db</p>
-                <div>
-                  <input
-                    placeholder="Db"
-                    class="order-quantity-input"
-                    name="order-quantity"
-                    [(ngModel)]="product.orderQuantity"
-                    type="number"
-                    min="1"
-                  />
-                </div> -->
               </div>
             </ng-container>
             <div class="right-arrow">

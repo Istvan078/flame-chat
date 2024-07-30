@@ -1,6 +1,6 @@
-@if (!notConfirmedSignedMe()) { @for (toast of toastService.toasts; track toast)
-{
+@if (isPostSharing()) { @for (toast of toastService.toasts; track toast) {
 <ngb-toast
+  *ngIf="toast?.body !== 'Ismerősnek jelölt téged'"
   class="toast-normal"
   [header]="toast.header"
   [autohide]="toast?.options?.autohide === false ? false : true"

@@ -23,4 +23,23 @@
     </button>
   </mat-dialog-actions>
 </ng-container>
+} @if(isUnauthorized) {
+<h2 class="text-danger" mat-dialog-title>
+  Nincs admin jogosultságod a tartalom megtekintéséhez!
+</h2>
+<mat-dialog-content class="mat-typography">
+  Vedd fel a kapcsolatot az adminokkal amennyiben kérdésed van ezzel
+  kapcsolatban.
+</mat-dialog-content>
+<mat-dialog-actions class="justify-content-center">
+  <button
+    cdkFocusInitial
+    mat-button
+    mat-dialog-close
+    routerLink="/home"
+    type="button"
+  >
+    Értettem
+  </button>
+</mat-dialog-actions>
 }

@@ -1,10 +1,10 @@
-<app-toast
+<!-- <app-toast
   *ngIf="notConfirmedSignedAsFriend"
   aria-live="polite"
   aria-atomic="true"
-></app-toast>
+></app-toast> -->
 <app-toast
-  *ngIf="!notConfirmedSignedAsFriend"
+  [isPostSharing]="true"
   aria-live="polite"
   aria-atomic="true"
 ></app-toast>
@@ -63,7 +63,10 @@
 <div class="row" *ngIf="!sendPrivateMessageOn">
   <div class="col">
     <mat-accordion>
-      <mat-expansion-panel class="mb-2">
+      <mat-expansion-panel
+        [disabled]="!userFriends?.length && !userProfile.uid"
+        class="mb-2"
+      >
         <mat-expansion-panel-header
           [@slide-in-out]
           (click)="getMyPosts()"
@@ -99,7 +102,10 @@
           </div>
         </ng-template>
       </mat-expansion-panel>
-      <mat-expansion-panel class="mb-2">
+      <mat-expansion-panel
+        [disabled]="!userFriends?.length && !userProfile.uid"
+        class="mb-2"
+      >
         <mat-expansion-panel-header
           [@slide-in-keyframed]
           (click)="getSharedPosts()"
@@ -126,7 +132,10 @@
           </div>
         </ng-template>
       </mat-expansion-panel>
-      <mat-expansion-panel class="mb-2">
+      <mat-expansion-panel
+        [disabled]="!userFriends?.length && !userProfile.uid"
+        class="mb-2"
+      >
         <mat-expansion-panel-header
           [@slide-in-keyframed]
           (click)="areFriendsOnline()"
@@ -200,7 +209,8 @@
             </button>
             <ng-container *ngIf="showAllFriends">
               <div class="row justify-content-center showAllFriendsCont">
-                <ng-container *ngFor="let mess of showFriendsMess">
+                @for(mess of showFriendsMess; track mess.friendId){
+                <ng-container>
                   <div
                     class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2"
                     *ngIf="!mess.messaging"
@@ -225,82 +235,85 @@
                     </button>
                   </div>
                 </ng-container>
+                }
               </div>
             </ng-container>
           </div>
-          <ng-container *ngFor="let mess of showFriendsMess; let i = index">
-            <div
-              *ngIf="mess.messaging || mess.seen === false"
-              class="col-12 col-md-4 col-lg-3 col-xl-2"
-            >
+          @for(mess of showFriendsMess; track mess.friendId){
+          <div
+            *ngIf="mess.messaging || mess.seen === false"
+            class="col-12 col-md-4 col-lg-3 col-xl-2"
+          >
+            <ng-container>
               <ng-container>
-                <ng-container>
-                  <div
-                    class="mt-2 text-center text-danger mb-0 pb-0"
-                    *ngIf="mess.seen === false"
-                  >
-                    <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
-                  </div>
-                  <div
-                    #messageCardCont
-                    class="card text-white text-center mb-2 messageCardCont"
-                    [ngClass]="
-                      mess.seen === false
-                        ? 'newMessageColorOnCard'
-                        : 'messageCardBg'
-                    "
-                  >
-                    <!-- <h5 class="card-header">
+                <div
+                  class="mt-2 text-center text-danger mb-0 pb-0"
+                  *ngIf="mess.seen === false"
+                >
+                  <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
+                </div>
+                <div
+                  #messageCardCont
+                  class="card text-white text-center mb-2 messageCardCont"
+                  [ngClass]="
+                    mess.seen === false
+                      ? 'newMessageColorOnCard'
+                      : 'messageCardBg'
+                  "
+                >
+                  <!-- <h5 class="card-header">
                             <h2>{{ mess.displayName }}</h2>
                           </h5> -->
-                    <div class="card-body mt-0">
-                      <h2>{{ mess.displayName }}</h2>
-                      <img
-                        [src]="mess.profilePicture"
-                        width="50px"
-                        height="50px"
-                        class="rounded-circle"
-                      />
-                      <div
-                        *ngIf="mess.online"
-                        class="card-text online-dot-container"
-                      >
-                        <div class="online-dot"></div>
-                        <div class="online-text">Elérhető</div>
-                      </div>
-                      <div
-                        *ngIf="!mess.online"
-                        class="card-text last-time-online-container"
-                      >
-                        <ng-container *ngIf="mess.seen !== false">
-                          <p class="mt-1 text-dark mb-0">
-                            <b>Utoljára elérhető:</b>
-                          </p>
-                          <p class="mb-0 my-0 text-success">
-                            {{ mess.lastTimeOnline }}
-                          </p>
-                        </ng-container>
-                      </div>
+                  <div class="card-body mt-0">
+                    <h2>{{ mess.displayName }}</h2>
+                    <img
+                      [src]="mess.profilePicture"
+                      width="50px"
+                      height="50px"
+                      class="rounded-circle"
+                    />
+                    <div
+                      *ngIf="mess.online"
+                      class="card-text online-dot-container"
+                    >
+                      <div class="online-dot"></div>
+                      <div class="online-text">Elérhető</div>
                     </div>
-                    <div class="card-footer">
-                      <button
-                        (click)="getMessageUser(mess)"
-                        mat-raised-button
-                        class="btn btn-sm ms-2 blue msg-button"
-                        type="button"
-                      >
-                        Üzenetek
-                        <mat-icon> chat </mat-icon>
-                      </button>
+                    <div
+                      *ngIf="!mess.online"
+                      class="card-text last-time-online-container"
+                    >
+                      <ng-container *ngIf="mess.seen !== false">
+                        <p class="mt-1 text-dark mb-0">
+                          <b>Utoljára elérhető:</b>
+                        </p>
+                        <p class="mb-0 my-0 text-success">
+                          {{ mess.lastTimeOnline }}
+                        </p>
+                      </ng-container>
                     </div>
                   </div>
-                </ng-container>
+                  <div class="card-footer">
+                    <button
+                      (click)="getMessageUser(mess)"
+                      mat-raised-button
+                      class="btn btn-sm ms-2 blue msg-button"
+                      type="button"
+                    >
+                      Üzenetek
+                      <mat-icon> chat </mat-icon>
+                    </button>
+                  </div>
+                </div>
               </ng-container>
-            </div>
-          </ng-container>
+            </ng-container>
+          </div>
+          } @empty {
+          <p>Válassz ki egy ismerőst új üzenet írásához!</p>
+          }
         </div>
       </mat-expansion-panel>
-      <mat-expansion-panel class="mb-2">
+      <mat-expansion-panel [disabled]="!userProfile.uid" class="mb-2">
         <mat-expansion-panel-header
           [@slide-in-keyframed]
           (click)="toAlbum()"
@@ -312,7 +325,7 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
       </mat-expansion-panel>
-      <mat-expansion-panel class="mb-2">
+      <mat-expansion-panel [disabled]="!userProfile.uid" class="mb-2">
         <mat-expansion-panel-header
           [@slide-in-keyframed]
           class="d-grid justify-content-center exp-panel-headers"
@@ -332,10 +345,8 @@
         </mat-expansion-panel-header>
 
         <div class="row justify-content-center">
-          <div
-            class="col-12 col-md-4 col-lg-3 col-xl-2"
-            *ngFor="let friend of userFriends; let i = index"
-          >
+          @for(friend of userFriends; let i = $index; track friend.friendId) {
+          <div class="col-12 col-md-4 col-lg-3 col-xl-2">
             <ng-container>
               <ng-container>
                 <mat-card
@@ -396,10 +407,11 @@
               </ng-container>
             </ng-container>
           </div>
+          }
         </div>
       </mat-expansion-panel>
 
-      <mat-expansion-panel class="mt-2">
+      <mat-expansion-panel [disabled]="!userProfile.uid" class="mt-2">
         <mat-expansion-panel-header
           [@slide-in-keyframed]
           (click)="toUserProfile()"
@@ -412,7 +424,9 @@
         </mat-expansion-panel-header>
         <div class="row">
           <div class="col">
-            <app-user-profile *ngIf="isUserProfileOn"></app-user-profile>
+            <app-user-profile
+              *ngIf="isUserProfileOn && userProfile.uid"
+            ></app-user-profile>
           </div>
         </div>
       </mat-expansion-panel>
@@ -434,10 +448,8 @@
     >
     </app-toast>
   </div>
-  <div
-    *ngFor="let notFriend of userNotFriends; let i = index"
-    class="col-12 col-md-6 col-lg-3 mb-2 d-flex justify-content-center"
-  >
+  @for(notFriend of userNotFriends; let i = $index; track notFriend.email){
+  <div class="col-12 col-md-6 col-lg-3 mb-2 d-flex justify-content-center">
     <ng-container>
       <ngb-toast
         [id]="notFriend.uid"
@@ -472,6 +484,7 @@
       </ngb-toast>
     </ng-container>
   </div>
+  }
 </div>
 
 <div

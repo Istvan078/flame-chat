@@ -60,10 +60,12 @@
 
         <span
           (click)="isMenuClicked = false"
-          *ngIf="user.uid"
+          *ngIf="user.uid && user?.displayName"
           class="nav-link me-3"
           routerLinkActive="active-link"
-          routerLink="/chat"
+          [routerLink]="
+            userProfile?.displayName ? '/chat' : '/chat/' + user.uid
+          "
           >Chat
         </span>
 

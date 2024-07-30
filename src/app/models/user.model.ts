@@ -67,27 +67,54 @@ export class UserClass {
   }
 
   ageCalc() {
-    const date = new Date().toLocaleDateString().split('/').reverse();
-    let birthDate;
+    const date = new Date().toLocaleDateString();
+    let dateArr: string[] = [];
+    if (date.includes('/')) {
+      dateArr = date.split('/').reverse();
+      const month = dateArr.pop();
+      const day = dateArr.pop();
+      dateArr.push(month!);
+      dateArr.push(day!);
+    }
+    if (date.includes('-')) dateArr = date.split('-');
+    if (date.includes('.')) dateArr = date.split('.');
+    let birthDate: any[] = [];
     if (this.birthDate.includes('-')) {
       birthDate = this.birthDate.trim().split('-');
     }
+    if (this.birthDate.includes('-'))
+      birthDate = this.birthDate.trim().split('-');
+    if (this.birthDate.includes('/')) {
+      birthDate = this.birthDate.trim().split('/').reverse();
+      const month = birthDate.pop();
+      const day = birthDate.pop();
+      birthDate.push(month!);
+      birthDate.push(day!);
+    }
 
+    if (this.birthDate.includes('.'))
+      birthDate = this.birthDate.trim().split('.');
+    console.log(dateArr);
+    console.log(birthDate);
     const actDateObj = {
-      year: Number(date[0].substring(0, 4)),
-      month: Number(date[2].substring(0, 2)),
-      day: Number(date[1].substring(0, 2)),
+      year: Number(dateArr[0].trim().substring(0, 4)),
+      month: Number(dateArr[1].trim().substring(0, 2)),
+      day: Number(dateArr[2].trim().substring(0, 2)),
     };
-    const birthDateObj = {
-      year: Number(birthDate![0]),
-      month: Number(birthDate![1]),
-      day: Number(birthDate![2]),
-    };
+    let birthDateObj: any = {};
+    if (birthDate?.length) {
+      birthDateObj = {
+        year: Number(birthDate[0]),
+        month: Number(birthDate[1]),
+        day: Number(birthDate[2]),
+      };
+    }
 
     this.age =
       actDateObj.year -
       birthDateObj.year -
       (birthDateObj.month * 30 - actDateObj.month * 30) / 360;
     this.age = Math.floor(this.age);
+    console.log(this.age);
   }
 }

@@ -1,4 +1,4 @@
-<ng-container *ngIf="userLoggedIn">
+<ng-container *ngIf="userLoggedIn && userProfile.displayName">
   <div class="row">
     <div
       class="toast-column col-12 mb-2 d-flex justify-content-center align-items-center"
@@ -13,7 +13,9 @@
           class="blueButton"
           positionTarget=".tooltipTarget2"
           ngbTooltip="Egy chat-app, ahol felhőtlen a beszélgetés!"
-          routerLink="/chat"
+          [routerLink]="
+            userProfile?.displayName ? '/chat' : '/chat/' + userProfile.uid
+          "
           mat-raised-button
           color="accent"
           type="button"

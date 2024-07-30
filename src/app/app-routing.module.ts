@@ -1,33 +1,11 @@
 import { NgModule } from '@angular/core';
-import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { PreloadAllModules, RouterModule } from '@angular/router';
+import { routes } from './app.routes';
 
-import { HomeComponent } from './components/home/home.component';
-import { SignupComponent } from './components/signup/signup.component';
-import { LoginComponent } from './components/login/login.component';
-import { UsersComponent } from './components/users/users.component';
-import { UserProfileComponent } from './components/user-profile/user-profile.component';
-import { loginGuardGuard } from './guards/login-guard.guard';
-import { MyPostsComponent } from './components/chat/my-posts/my-posts.component';
-import { AdminComponent } from './components/admin/admin.component';
-
-const routes: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: 'signup', component: SignupComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'users', component: UsersComponent },
-  { path: 'profile/:uid', component: UserProfileComponent },
-  { path: 'my-posts', component: MyPostsComponent },
-  { path: 'admin', component: AdminComponent },
-  {
-    path: '',
-    loadChildren: () =>
-      import('./components/chat/chat.module').then(m => m.ChatModule),
-  },
-];
-
+const allRoutes = routes;
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, {
+    RouterModule.forRoot(allRoutes, {
       preloadingStrategy: PreloadAllModules,
     }),
   ],

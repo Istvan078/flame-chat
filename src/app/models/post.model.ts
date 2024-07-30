@@ -2,10 +2,15 @@ interface Comment {
   uid: '';
   text: '';
 }
-export interface SharedWithMe {
+export interface SharedWith {
   byWhoKey: string;
   friendUid: string;
   myKey: string;
+  timeStamp: number;
+}
+
+export interface SharedPublicly {
+  byWhoKey: string;
   timeStamp: number;
 }
 
@@ -26,6 +31,7 @@ export class Post {
   message?: string;
   timeStamp: number;
   newestTimeStamp?: number;
+  sharedPubliclyNewestTimeStamp?: number; // nyilvános újramegosztásokhoz
   isShared: string;
   private: {
     isPrivate: boolean;
@@ -36,7 +42,8 @@ export class Post {
   liked?: string[];
   comments?: Comment[];
   iFrame?: string;
-  sharedWithMe?: SharedWithMe[];
+  sharedWith?: SharedWith[];
+  sharedPublicly?: SharedPublicly[]; // nyilvános újramegosztásokhoz
   userKeys?: string[];
   isSharedWithMe?: boolean;
   constructor() {

@@ -63,8 +63,10 @@ export class MyPostsComponent {
   async ngOnInit() {
     this.isLoading = true;
     this.route.url.subscribe(urlSegm => {
-      const [{ path }] = urlSegm;
-      if (path === 'my-posts') this.isOnMyPostRoute = true;
+      if (urlSegm.length) {
+        const [{ path }] = urlSegm;
+        if (path === 'my-posts') this.isOnMyPostRoute = true;
+      }
     });
     const AllUserDtlsRes = await this.utilService.getUserProfiles();
     this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
@@ -131,12 +133,13 @@ export class MyPostsComponent {
     this.postSharedWithMe = await this.firestoreService.getMyPosts(
       this.userProfile.key
     );
+
     this.myPostsArr.forEach((myPost, i) => {
       const postSharedWithMe = this.postSharedWithMe.find(
         psWithMe => psWithMe.fromPostId === myPost.id
       );
       if (postSharedWithMe) {
-        const sharedWithMeBy = myPost.sharedWithMe?.find(
+        const sharedWithMeBy = myPost.sharedWith?.find(
           sWithMe => sWithMe.myKey === this.userProfile.key
         );
         const sharerFriendProfile = this.userFriends.find(
@@ -305,8 +308,8 @@ export class MyPostsComponent {
     this.renderImages();
     this.renderIFrames();
     this.myPostsArr.map(myPost => {
-      if (myPost.sharedWithMe?.length)
-        myPost.sharedWithMe.map(sWithMe => {
+      if (myPost.sharedWith?.length)
+        myPost.sharedWith.map(sWithMe => {
           if (sWithMe.myKey === this.userProfile.key) {
             myPost['isSharedWithMe'] = true;
             if (myPost.timeStamp > sWithMe.timeStamp) {

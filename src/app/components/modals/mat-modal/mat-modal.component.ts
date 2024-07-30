@@ -8,4 +8,5 @@ import { Component, Input, input, InputSignal, ViewChild } from '@angular/core';
 export class MatModalComponent {
   @Input() isUpdateForApp: boolean = false;
   @Input() isPosted: boolean = false;
+  @Input() isUnauthorized: boolean = false;
 }

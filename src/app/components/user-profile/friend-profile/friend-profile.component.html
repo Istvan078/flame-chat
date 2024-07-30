@@ -15,7 +15,7 @@
       <mat-card-subtitle>{{ friendProfile.gender }}</mat-card-subtitle>
     </mat-card-header>
     <div
-      *ngIf="friendProfile.pictures"
+      *ngIf="friendProfile?.pictures"
       class="d-flex justify-content-center mb-1 bigImg mx-1"
     >
       <img
@@ -27,7 +27,7 @@
     </div>
 
     <div
-      *ngIf="friendProfile.pictures"
+      *ngIf="friendProfile?.pictures"
       class="d-flex flex-wrap justify-content-center align-items-center tape"
     >
       <div class="left ms-2">
@@ -36,7 +36,7 @@
       <img
         (mouseover)="showPicBig(i)"
         (click)="showPicBig(i)"
-        *ngFor="let pic of friendProfile.pictures; let i = index"
+        *ngFor="let pic of friendProfile?.pictures; let i = index"
         class="me-1 rounded flex-grow-1"
         style="min-width: 18%; max-width: 25%; max-height: 100px"
         mat-card-image
@@ -66,7 +66,6 @@
       >
         Ismerősei
       </button>
-      <button color="primary" mat-flat-button>Lájkolom</button>
     </mat-card-actions>
   </mat-card>
 </div>
@@ -84,8 +83,13 @@
         <mat-header-cell class="text-white" *matHeaderCellDef>
           Név
         </mat-header-cell>
-        <mat-cell class="text-white" *matCellDef="let friend">
-          {{ friend.displayName }}
+        <mat-cell
+          (click)="toChosenUserProfile(friend.uid)"
+          class="text-white user-name-cell"
+          *matCellDef="let friend"
+        >
+          @if(friend.displayName){ {{ friend.displayName }} } @else{Nem
+          megerősített profil}
         </mat-cell>
       </ng-container>
 
@@ -110,7 +114,8 @@
           Kor
         </mat-header-cell>
         <mat-cell class="text-white" *matCellDef="let friend">
-          {{ friend.age }} éves
+          @if(friend.age){
+          {{ friend.age }} éves } @else{Nincs megadott kor}
         </mat-cell>
       </ng-container>
 

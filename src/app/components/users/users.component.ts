@@ -81,12 +81,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   getUserProfiles() {
     this.base.getUserProfiles().subscribe(uPfs => (this.userProfiles = uPfs));
     this.userProfiles.forEach(uP => {
-      if (!uP.age && uP.birthDate) {
-        const uProf = new UserClass(uP.birthDate);
+      if (!uP?.age && uP.birthDate) {
+        const uProf = new UserClass('', uP.birthDate);
         uProf?.ageCalc();
         const updatedAge = { age: uProf.age };
         this.base.updateUserData(updatedAge, uP.key);
-        console.log(uProf);
       }
     });
   }
