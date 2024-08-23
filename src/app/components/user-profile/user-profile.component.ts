@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { Observable, Subscription, TimeInterval } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { FirebaseUser, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';

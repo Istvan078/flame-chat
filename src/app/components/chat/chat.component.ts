@@ -22,7 +22,6 @@ import { ToastService } from 'src/app/services/toast.service';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import {
   animate,
-  group,
   keyframes,
   state,
   style,
@@ -319,7 +318,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.isOnlineHandler = this.handleOnline.bind(this);
     this.isOfflineHandler = this.handleOffline.bind(this);
   }
-  ngOnInit() {
+  async ngOnInit() {
     this.isUserOnline();
     this.test();
     this.auth.authNullSubject.subscribe(authNull => {
@@ -368,7 +367,6 @@ export class ChatComponent implements OnInit, OnDestroy {
             this.authNull === null
           )
             if (user.uid) {
-              console.log(this.userProfiles);
               const profsObs = await this.utilService.getUserProfiles();
               this.allUserDetailsSub = profsObs.subscribe(
                 (allUserDetails: any) => {
@@ -442,8 +440,13 @@ export class ChatComponent implements OnInit, OnDestroy {
             // új üzenetek lekérése
             this.messSubscription = this.getNewMessages();
           },
-          complete: () => {
+          complete: async () => {
             console.log('***OBSERVABLE BEFEJEZŐDÖTT***');
+            await this.base.updateUserData(
+              { online: true },
+              this.userProfile?.key
+            );
+            this.isUserOnlineNow = true;
             this.auth.authNullSubject.next(2);
             if (this.getFriendsSub) this.getFriendsSub.unsubscribe();
           },
@@ -466,14 +469,17 @@ export class ChatComponent implements OnInit, OnDestroy {
             .getFriends()
             .subscribe(val => {
               observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
+              if (!this.seenMeSub)
+                this.seenMeSub = this.utilService
+                  .getFriendsForNotifUpdate()
+                  .subscribe(seenMeArr => {
+                    this.subjectValueTransfer(
+                      seenMeArr,
+                      this.base.profileSeenSubject
+                    );
+                    observer.complete();
+                  });
             });
-      if (!this.seenMeSub)
-        this.seenMeSub = this.utilService
-          .getFriendsForNotifUpdate()
-          .subscribe(seenMeArr => {
-            this.subjectValueTransfer(seenMeArr, this.base.profileSeenSubject);
-            observer.complete();
-          });
       setTimeout(() => {
         console.log(`TIMEOUT MEGJAVÍTANI`);
         this.setDefaultProfilePic();
@@ -1461,11 +1467,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  messagesAccordionTabCounter: number = 0;
   areFriendsOnline() {
+    if (this.messagesAccordionTabCounter < 2)
+      this.messagesAccordionTabCounter++;
     setTimeout(() => {
       this.onAnimate();
     }, 100);
-    const interval = setInterval(() => {
+    const initInterval = setInterval(() => {
       this.userFriends?.map(fr => {
         return this.userProfiles.map(uP => {
           if (uP.uid === fr.friendId) {
@@ -1474,7 +1483,24 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         });
       });
-      clearInterval(interval);
+      // clearInterval(interval);
+      console.log(this.messagesAccordionTabCounter);
+      const repeatingInterval = setInterval(() => {
+        this.userFriends?.map(fr => {
+          return this.userProfiles.map(uP => {
+            if (uP.uid === fr.friendId) {
+              fr.online = uP.online;
+              fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+            }
+          });
+        });
+        if (this.messagesAccordionTabCounter === 2) {
+          this.messagesAccordionTabCounter = 1;
+          clearInterval(repeatingInterval);
+          console.log(this.messagesAccordionTabCounter);
+        }
+      }, 60000);
+      clearInterval(initInterval);
     }, 1000);
   }
 
@@ -1518,7 +1544,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     return this.firestore
       .refreshSharedWithMePosts()
       .subscribe((sPosts: any[]) => {
-        console.log(sPosts);
         sPosts.map(sPost => {
           if (
             sPost.notSeen?.includes(this.userProfile?.uid) &&
@@ -1573,6 +1598,19 @@ export class ChatComponent implements OnInit, OnDestroy {
     window.addEventListener('focus', this.isOnlineHandler);
     // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
     window.addEventListener('blur', this.isOfflineHandler);
+    setInterval(async () => {
+      if (this.isUserOnlineNow) {
+        await this.base.updateUserData(
+          { online: false },
+          this.userProfile?.key
+        );
+        await this.base.updateUserData(
+          { lastTimeOnline: new Date().getTime() },
+          this.userProfile?.key
+        );
+        this.isUserOnlineNow = false;
+      }
+    }, 300 * 1000);
   }
 
   ngOnDestroy(): void {

@@ -71,6 +71,7 @@
 
         <span
           *ngIf="!user.uid"
+          (click)="isMenuClicked = false"
           class="nav-link me-3"
           routerLink="/signup"
           routerLinkActive="active-link"
@@ -80,6 +81,7 @@
 
         <span
           *ngIf="!user.uid"
+          (click)="isMenuClicked = false"
           class="nav-link me-3"
           routerLinkActive="active-link"
           [routerLinkActiveOptions]="{ exact: true }"

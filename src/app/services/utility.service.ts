@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { ForUserSubject, Friends, UserClass } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { BaseService } from './base.service';
-import { BehaviorSubject, map, Observable, Subject, Subscription } from 'rxjs';
+import { BehaviorSubject, map, Observable, Subject } from 'rxjs';
 import { Form } from '../models/utils/form.model';
 import deepmerge from 'deepmerge';
 

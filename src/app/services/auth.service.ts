@@ -6,7 +6,7 @@ import {
   RecaptchaVerifier,
   getAuth,
 } from '@angular/fire/auth';
-import { BehaviorSubject, map, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FirebaseUser, UserClass } from '../models/user.model';
 import { SwPush } from '@angular/service-worker';
@@ -43,6 +43,7 @@ export class AuthService {
   userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(
     new UserClass()
   );
+  // isLoggedInSub!: Subscription;
 
   constructor(
     private aFireAuth: AngularFireAuth,
@@ -58,7 +59,7 @@ export class AuthService {
       }
       if (!user) {
         this.user = new UserClass();
-        console.log('Ön kijelentkezett');
+        // this.isLoggedInSub.unsubscribe();
         this.userLoggedInSubject.next(new UserClass());
         this.router.navigate(['/home']);
       }
@@ -77,9 +78,9 @@ export class AuthService {
           serverPublicKey: this.VAPID_PUBLIC_KEY,
         });
         this.notiSub = myPushSub;
-        console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
+        // console.log('SIKERES FELIRATKOZÁS AZ ÉRTESÍTÉSEKRE');
       } catch (err) {
-        console.error('NEM TUDTAM FELIRATKOZNI AZ ÉRTESÍTÉSEKRE', err);
+        // console.error('NEM TUDTAM FELIRATKOZNI AZ ÉRTESÍTÉSEKRE', err);
       }
     }
   }
@@ -95,6 +96,14 @@ export class AuthService {
         if (claims) {
           this.user.claims = claims;
           this.userLoggedInSubject.next(this.user);
+          // this.isLoggedInSub = this.myCustomObservable({
+          //   successCondition: this.user.uid,
+          //   failureCondition: !this.user.uid,
+          //   failureData: this.user,
+          //   nextData: this.user,
+          //   failureTimeOut: 5000,
+          //   intervalCheckTime: 200,
+          // }).subscribe();
           this.isSuperAdmin.next(this.user.claims?.superAdmin);
           this.isAdmin.next(this.user.claims?.admin);
           this.userClaimsSubj.next(claims);
@@ -125,6 +134,32 @@ export class AuthService {
         if (this.isAdmin.value === false) clearInterval(int);
         obs.next(false);
       }, 1000);
+    });
+  }
+
+  myCustomObservable(options: {
+    successCondition: any;
+    failureCondition: any;
+    nextData: any;
+    failureData: any;
+    intervalCheckTime: number;
+    failureTimeOut: number;
+  }) {
+    return new Observable(obs => {
+      const interval = setInterval(() => {
+        if (options.successCondition) {
+          console.log(options.nextData);
+          clearInterval(interval);
+          obs.next(options.nextData);
+        }
+      }, options.intervalCheckTime);
+      setTimeout(() => {
+        if (options.failureCondition) {
+          console.log(options.failureData);
+          clearInterval(interval);
+          obs.next(options.failureData);
+        }
+      }, options.failureTimeOut);
     });
   }
 
@@ -171,21 +206,6 @@ export class AuthService {
 
   isLoggedIn() {
     return this.aFireAuth.authState;
-  }
-
-  isLoggedInBoolean() {
-    return new Observable<boolean>(obs => {
-      const int = setInterval(() => {
-        if (this.user.uid) {
-          clearInterval(int);
-          obs.next(true);
-        }
-      }, 20);
-      setTimeout(() => {
-        clearInterval(int);
-        if (!this.user.uid) obs.next(false);
-      }, 1000);
-    });
   }
 
   loginWithEmAndPa(email: string, password: string) {

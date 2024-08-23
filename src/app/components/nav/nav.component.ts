@@ -1,4 +1,3 @@
-
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subscription } from 'rxjs';
@@ -35,12 +34,19 @@ export class NavComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.userLoggedInSubjSub = this.authService.userLoggedInSubject.subscribe(
       usr => {
-        if (usr.uid || usr.claims.basic) {
+        if (!usr.uid) this.user = new UserClass();
+        if (usr.uid) {
           this.user = usr;
+          this.base.getUserProfiles().subscribe({
+            next: uProfs => {
+              this.userProfile = uProfs.find(
+                (uP: any) => uP.uid === this.user.uid
+              );
+            },
+            error: err =>
+              console.log('Kérlek jelentkezz be a tartalom megtekintéséhez!'),
+          });
         }
-        this.base.getUserProfiles().subscribe(uProfs => {
-          this.userProfile = uProfs.find((uP: any) => uP.uid === this.user.uid);
-        });
       }
     );
     this.isSuperAdminSub = this.authService.isSuperAdmin.subscribe(
@@ -52,14 +58,13 @@ export class NavComponent implements OnInit, OnDestroy {
 
   signOut() {
     this.authService.authNullSubject.next(null);
+    this.isMenuClicked = false;
     this.isSuperAdmin = false;
     // jelenlegi feliratkozás a push értesítésekre
     const myPushSubscription: PushSubscription = this.authService.swPushh();
     // törölni a firestore-ból a push notifications-t az adott eszközről
     if (myPushSubscription && this.userProfile.displayName) {
       let JSONed = myPushSubscription.toJSON();
-      console.log(JSONed);
-      console.log(this.userProfile);
       if (this.userProfile)
         this.fireStoreService
           .deleteUserNotiSubscription(this.userProfile['key'], JSONed.endpoint!)
@@ -82,6 +87,7 @@ export class NavComponent implements OnInit, OnDestroy {
   }
 
   navDisappear() {
+    this.isMenuClicked = false;
     this.authService.navDisappear.next(true);
     this.authService.navDisappear.subscribe((isTrue: boolean) => {
       this.isNavDisappeared = isTrue;

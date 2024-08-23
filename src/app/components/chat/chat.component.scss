@@ -15,6 +15,14 @@
   );
 }
 
+// mat-expansion-panel-header:hover {
+//   background: rgb(42, 42, 135) !important;
+// }
+
+.exp-panel-headers:hover {
+  background: rgb(42, 42, 135, 0.7) !important;
+}
+
 .newMessage {
   background-color: rgba(255, 166, 0, 0.7) !important;
 }

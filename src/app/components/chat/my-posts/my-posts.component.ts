@@ -1,10 +1,9 @@
-import { Component, computed, Input, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { MyPost, Post } from 'src/app/models/post.model';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
-import { AuthService } from 'src/app/services/auth.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Observable, Subscription } from 'rxjs';

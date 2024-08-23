@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 import {
   AngularFireDatabase,
@@ -32,7 +32,7 @@ interface Friend {
 @Injectable({
   providedIn: 'root',
 })
-export class BaseService implements OnDestroy {
+export class BaseService {
   profilePicUrlSubject: Subject<string> = new Subject();
   picturesSubject: Subject<string[]> = new Subject();
   refChats!: AngularFireList<Chat>;
@@ -71,18 +71,15 @@ export class BaseService implements OnDestroy {
     this.dbRef = realTimeDatabase.list(this.basePath);
   }
 
-  ngOnDestroy(): void {
-    this.userKeySubjectSubscription.unsubscribe();
-  }
-
   getUserProfiles(): Observable<any> {
-    return this.refUsers
-      .snapshotChanges()
-      .pipe(
-        map(changes =>
-          changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
-        )
-      );
+    return this.refUsers.snapshotChanges().pipe(
+      map(changes =>
+        changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
+      ),
+      catchError((err, caught) => {
+        throw err;
+      })
+    );
   }
 
   removeUserProfile(userKey: string) {

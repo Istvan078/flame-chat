@@ -124,6 +124,10 @@ export class UsersComponent implements OnInit, OnDestroy {
     actModal.result.then(() => this.getUsers()).catch(err => console.log(err));
   }
 
+  showNavAgain() {
+    this.authService.navDisappear.next(false);
+  }
+
   ngOnDestroy(): void {
     this.authService.navDisappear.next(false);
   }

@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { BaseService } from './services/base.service';
 import { Subscription } from 'rxjs';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
 

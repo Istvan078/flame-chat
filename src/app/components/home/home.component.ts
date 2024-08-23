@@ -37,12 +37,15 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.userLoggedIn = user;
       if (this.userLoggedIn?.uid && user) {
         this.toastStyler('add');
-        this.base.getUserProfiles().subscribe(uProfs => {
-          this.userProfile = uProfs.find(
-            (uProf: UserClass) => uProf.uid === user.uid
-          );
-          if (!this.userProfile.displayName)
-            this.router.navigate(['/profile/' + this.userProfile.uid]);
+        this.base.getUserProfiles().subscribe({
+          next: uProfs => {
+            this.userProfile = uProfs.find(
+              (uProf: UserClass) => uProf.uid === user.uid
+            );
+            if (!this.userProfile.displayName)
+              this.router.navigate(['/profile/' + this.userProfile.uid]);
+          },
+          error: err => console.error(err),
         });
       }
       if (!user) {

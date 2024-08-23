@@ -6,6 +6,7 @@ import { FirestoreService } from 'src/app/services/firestore.service';
 import { UtilityService } from 'src/app/services/utility.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-admin',
@@ -16,6 +17,7 @@ export class AdminComponent implements OnInit {
   utilService = inject(UtilityService);
   firestoreService = inject(FirestoreService);
   ngbModal = inject(NgbModal);
+  authService = inject(AuthService);
 
   userProfile: UserClass = new UserClass();
   userProfilesUidsArr: Partial<UserClass[]> | any[] = [];
@@ -293,5 +295,8 @@ export class AdminComponent implements OnInit {
         this.userProfile.key,
         (post as any)?.pictures[0]?.name
       );
+  }
+  showNavAgain() {
+    this.authService.navDisappear.next(false);
   }
 }

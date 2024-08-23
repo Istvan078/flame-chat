@@ -1,7 +1,7 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Subscription, map, tap } from 'rxjs';
+import { Subscription, map } from 'rxjs';
 import { BaseService } from 'src/app/services/base.service';
 import { FilesModalComponent } from '../../modals/files-modal/files-modal.component';
 import { FirestoreService } from 'src/app/services/firestore.service';
