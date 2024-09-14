@@ -434,6 +434,10 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       if (iFrame?.includes('live')) {
         modifiedIFrame = iFrame.replace('live', 'embed');
       }
+      if (iFrame?.includes('persist_app')) {
+        const indexForSlice = iFrame.indexOf('&');
+        modifiedIFrame = iFrame.slice(0, indexForSlice);
+      }
     }
     this.userProfilesUidsArr = this.userProfilesUidsArr.filter(
       uid => uid !== this.userProfile.uid

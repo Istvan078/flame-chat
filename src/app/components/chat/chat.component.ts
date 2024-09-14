@@ -210,6 +210,10 @@ export class ChatComponent implements OnInit, OnDestroy {
   // ISMERŐS KERESÉSE //
   friendSearch: string = '';
 
+  // KERESÉS //
+  userSearched: string = '';
+  userSearchedProfiles: UserClass[] & Friends[] = [];
+
   // ÜZENET KERESÉSE //
   searchWord: string = '';
 
@@ -1611,6 +1615,13 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.isUserOnlineNow = false;
       }
     }, 300 * 1000);
+  }
+
+  searchUser() {
+    this.userSearchedProfiles = (this.userProfiles as any).filter((uP: any) =>
+      uP.displayName?.toLowerCase().includes(this.userSearched)
+    );
+    if (!this.userSearched) this.userSearchedProfiles = [];
   }
 
   ngOnDestroy(): void {

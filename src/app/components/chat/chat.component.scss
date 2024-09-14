@@ -112,6 +112,14 @@ mat-expansion-panel-header:hover {
   }
 }
 
+.user-searched-container {
+  cursor: pointer;
+  width: fit-content;
+}
+.user-searched-container:hover {
+  background: grey;
+}
+
 .left {
   background-color: rgba(23, 23, 143, 0.5);
   color: white;

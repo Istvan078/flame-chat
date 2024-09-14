@@ -8,6 +8,52 @@
   aria-live="polite"
   aria-atomic="true"
 ></app-toast>
+<ng-container *ngIf="!isMessageOn">
+  <div class="d-flex justify-content-center">
+    <input
+      [(ngModel)]="userSearched"
+      (keyup)="searchUser()"
+      placeholder="Felhasználó keresése"
+      type="text"
+      class="form-control w-50"
+    />
+  </div>
+  @for(user of userSearchedProfiles; track user) {
+  <div class="d-flex justify-content-center my-2">
+    <div
+      (click)="toFriendProfile(user.uid)"
+      class="d-flex justify-content-center align-items-center user-searched-container rounded"
+    >
+      <p class="text-center mb-0 me-2 fw-bold">
+        {{ user.displayName }}
+      </p>
+      <div>
+        <img
+          class="rounded"
+          width="50px"
+          height="50px"
+          [src]="user.profilePicture"
+          alt="profilkép"
+        />
+      </div>
+    </div>
+    <ng-container *ngFor="let notFriend of userNotFriends">
+      <div class="ms-2 d-flex justify-content-center align-items-center">
+        <button
+          *ngIf="notFriend.friendId === user.uid"
+          (click)="signAsAFriend(notFriend)"
+          mat-raised-button
+          color="accent"
+          type="button"
+        >
+          Ismerősnek jelölés
+          <mat-icon class="align-middle"> person_add </mat-icon>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+  }
+</ng-container>
 <div *ngIf="!isMessageOn" class="row justify-content-center align-items-center">
   <div class="col-xs-2 col-sm-6 notif-container">
     <mat-sidenav-container class="config-options-container">
