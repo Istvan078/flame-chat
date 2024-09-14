@@ -403,6 +403,10 @@ export class MyPostsComponent {
       if (iFrame?.includes('live')) {
         modifiedIFrame = iFrame.replace('live', 'embed');
       }
+      if (iFrame?.includes('persist_app')) {
+        const indexForSlice = iFrame.indexOf('&');
+        modifiedIFrame = iFrame.slice(0, indexForSlice);
+      }
     }
     this.publishForm.patchValue({
       timeStamp: date.getTime(),
