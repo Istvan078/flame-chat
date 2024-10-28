@@ -41,13 +41,14 @@ export class AppComponent implements OnInit, OnDestroy {
         if (val.type === 'NO_NEW_VERSION_DETECTED') swUpdateSub.unsubscribe();
         if (val.type === 'VERSION_READY') {
           swUpdateSub.unsubscribe();
-          const matDialogRef = this.matDialog.open(MatModalComponent, {
-            enterAnimationDuration: 2000,
-          });
-          matDialogRef.componentInstance.isUpdateForApp = true;
-          matDialogRef.afterClosed().subscribe(res => {
-            if (res === true) window.location.reload();
-          });
+          // const matDialogRef = this.matDialog.open(MatModalComponent, {
+          //   enterAnimationDuration: 2000,
+          // });
+          // matDialogRef.componentInstance.isUpdateForApp = true;
+          // matDialogRef.afterClosed().subscribe(res => {
+          //   if (res === true) window.location.reload();
+          // });
+          window.location.reload();
         }
       });
     }

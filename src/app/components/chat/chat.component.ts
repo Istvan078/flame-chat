@@ -246,6 +246,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   selectedFiles: any[] = [];
   filesArr: any[] = [];
   sentFilesArr: any[] = [];
+  voiceMessages: any[] = [];
   uploadFinished: boolean = true;
 
   // PUSH NOTIFICATIONS-EL KAPCSOLATOS //
@@ -347,7 +348,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (user.userProfile) {
         this.userProfile = user.userProfile;
         // if (!this.userProfile.displayName) {
-        //   this.router.navigate([`/profile/${this.userProfile.uid}`]);
+        //   this.router.navigate([`/profile/${this.userProfile.uid}`])
         // }
       }
       if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
@@ -1482,26 +1483,30 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.userFriends?.map(fr => {
         return this.userProfiles.map(uP => {
           if (uP.uid === fr.friendId) {
-            fr.online = uP.online;
-            fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+            if (uP.visibility) {
+              fr.online = uP.online;
+              fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+              fr.visibility = true;
+            }
           }
         });
       });
       // clearInterval(interval);
-      console.log(this.messagesAccordionTabCounter);
       const repeatingInterval = setInterval(() => {
         this.userFriends?.map(fr => {
           return this.userProfiles.map(uP => {
             if (uP.uid === fr.friendId) {
-              fr.online = uP.online;
-              fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+              if (uP.visibility) {
+                fr.online = uP.online;
+                fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
+                fr.visibility = true;
+              }
             }
           });
         });
         if (this.messagesAccordionTabCounter === 2) {
           this.messagesAccordionTabCounter = 1;
           clearInterval(repeatingInterval);
-          console.log(this.messagesAccordionTabCounter);
         }
       }, 60000);
       clearInterval(initInterval);
@@ -1622,6 +1627,79 @@ export class ChatComponent implements OnInit, OnDestroy {
       uP.displayName?.toLowerCase().includes(this.userSearched)
     );
     if (!this.userSearched) this.userSearchedProfiles = [];
+  }
+
+  setVisibilityOn() {
+    this.userProfile.visibility = true;
+    this.base.updateUserData(
+      { visibility: this.userProfile.visibility },
+      this.userProfile.key
+    );
+  }
+  setVisibilityOff() {
+    this.userProfile.visibility = false;
+    this.base.updateUserData(
+      { visibility: this.userProfile.visibility },
+      this.userProfile.key
+    );
+  }
+
+  generateNameForFile(fileFormat: string) {
+    // const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    const timeId = new Date().getTime();
+    const fileName =
+      this.selectedFriend.displayName + '_' + timeId + '.' + fileFormat;
+    // for(let i= 0; i<7; i++) {
+    //   fileName += idString.charAt(Math.round(Math.random() * 30))
+    // }
+    return fileName;
+  }
+
+  audioStream!: MediaStream;
+  audioChunks: Blob[] = [];
+  mediaRecorder!: MediaRecorder;
+
+  async recordVoiceMessage() {
+    this.audioStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+    this.mediaRecorder = new MediaRecorder(this.audioStream);
+    this.mediaRecorder.start();
+    console.log(`felvétel elidult`);
+  }
+
+  async stopRecordingVoiceMessage() {
+    // let recordedAudio: Blob;
+    this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+      this.audioChunks.push(event.data);
+      // recordedAudio = new Blob(this.audioChunks, { type: 'audio/x-m4a' });
+      const nameForFile = this.generateNameForFile('m4a');
+      const recordedAudioFile = new File(this.audioChunks, nameForFile, {
+        type: 'audio/x-m4a',
+      });
+      const mp3 = new File(this.audioChunks, 'proba.mp3', {
+        type: 'audio/mpeg',
+      });
+      // const url = URL.createObjectURL(recordedAudioFile);
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = 'felvetel.m4a';
+      // document.body.appendChild(a);
+      // a.click();
+      // document.body.removeChild(a);
+      // URL.revokeObjectURL(url);
+      // console.log(recordedAudioFile);
+      this.audioChunks = [];
+      this.selectedFiles.push(recordedAudioFile);
+      this.uploadFiles();
+      this.message.message.voiceMessage = nameForFile;
+      this.voiceMessages.push(mp3);
+      console.log(this.voiceMessages);
+    };
+    this.mediaRecorder.stop();
+    this.audioStream.getTracks().forEach(track => {
+      track.stop();
+    });
   }
 
   ngOnDestroy(): void {

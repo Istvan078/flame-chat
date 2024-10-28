@@ -1,9 +1,10 @@
 export class Chat {
-  public key: string = "";
+  public key: string = '';
   public participants: [string, string];
   public message: {
     senderId: string;
     message: string;
+    voiceMessage?: string;
     timeStamp: string;
     displayName: string;
     profilePhoto: string;

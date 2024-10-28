@@ -401,4 +401,10 @@ export class FirestoreService {
       rej('Már van ilyen nevű fájl feltöltve az adatbázisban');
     });
   }
+
+  getFilesFromChats(user: any, fileName: string) {
+    const filePath = `fromChats/${user.email}/files/${fileName}`;
+    const storageRef = this.fireStorage.ref(filePath);
+    return storageRef.getDownloadURL();
+  }
 }

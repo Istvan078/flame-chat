@@ -22,6 +22,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { NgbModalModule, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FilterPipe } from 'src/app/pipes/filter.pipe';
@@ -65,6 +66,7 @@ import { Environments } from 'src/app/environments';
     MatPaginatorModule,
     MatBadgeModule,
     MatSnackBarModule,
+    MatMenuModule,
     NgbModalModule,
 
     AngularFireModule.initializeApp(Environments.firebaseConfig),
@@ -104,6 +106,7 @@ import { Environments } from 'src/app/environments';
     MatDialogModule,
     MatBadgeModule,
     MatSnackBarModule,
+    MatMenuModule,
     NgbModalModule,
   ],
 })

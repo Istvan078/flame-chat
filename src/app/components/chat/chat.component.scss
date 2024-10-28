@@ -18,7 +18,15 @@
 // mat-expansion-panel-header:hover {
 //   background: rgb(42, 42, 135) !important;
 // }
-
+.dot-menu {
+  display: inline-block;
+  transform: rotate(90deg);
+  color: darkblue;
+  font-size: 2em;
+  font-family: 'Times New Roman', Times, serif;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
 .exp-panel-headers:hover {
   background: rgb(42, 42, 135, 0.7) !important;
 }

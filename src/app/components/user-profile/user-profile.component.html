@@ -13,6 +13,28 @@
     >
       <mat-step [stepControl]="f.form.value" label="Alapadatok">
         <mat-form-field class="me-2">
+          <mat-label for="email">Vezetéknév</mat-label>
+          <input
+            matInput
+            [(ngModel)]="userProf.surname"
+            type="text"
+            name="surname"
+            required
+            #surname="ngModel"
+          />
+        </mat-form-field>
+        <mat-form-field class="me-2">
+          <mat-label for="email">Keresztnév</mat-label>
+          <input
+            matInput
+            [(ngModel)]="userProf.firstname"
+            type="text"
+            name="firstname"
+            required
+            #firstname="ngModel"
+          />
+        </mat-form-field>
+        <mat-form-field class="me-2">
           <mat-label for="email">Email</mat-label>
           <input
             matInput

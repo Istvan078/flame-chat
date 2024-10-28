@@ -19,6 +19,7 @@ export interface Friends {
   lastTimeOnline?: any;
   confirmed: boolean;
   areFriends?: boolean;
+  visibility: boolean;
 }
 
 export class ForUserSubject {
@@ -52,11 +53,14 @@ export class UserClass {
   public uid: string = '';
   public pushNotificationsOn?: boolean;
   constructor(
+    public surname: string = '',
+    public firstname: string = '',
     public displayName?: string,
     public birthDate: string = '',
     public gender: string = '',
     public pictures: { name: string; url: string }[] = [],
-    public profilePicture: string = ''
+    public profilePicture: string = '',
+    public visibility: boolean = true
   ) {
     this.claims = {
       basic: true,

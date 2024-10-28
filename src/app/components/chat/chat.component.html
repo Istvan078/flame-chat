@@ -3,6 +3,11 @@
   aria-live="polite"
   aria-atomic="true"
 ></app-toast> -->
+@for(rec of voiceMessages; track rec) { @if(rec.name){
+<audio controls>
+  <source [src]="rec" type="audio/mpeg" />
+</audio>
+} }
 <app-toast
   [isPostSharing]="true"
   aria-live="polite"
@@ -75,15 +80,54 @@
     </mat-sidenav-container>
   </div>
   <div class="col-xs-8 col-sm-6 title-container">
-    <h2>
+    <h2 class="text-center">
       <mat-icon class="align-middle text-warning"
         >local_fire_department</mat-icon
       >
       Flame Chat
-      <mat-icon class="align-middle text-warning"
+      <mat-icon class="align-middle text-warning d-inline-block me-3 my-2"
         >local_fire_department</mat-icon
       >
+      <span class="dot-menu align-middle" [mat-menu-trigger-for]="menu"
+        >...</span
+      >
     </h2>
+    <mat-menu #menu="matMenu">
+      <button [mat-menu-trigger-for]="visibilityMenu" mat-menu-item>
+        <mat-icon>visibility</mat-icon>
+        <span>Elérhető állapot</span>
+      </button>
+    </mat-menu>
+
+    <mat-menu #visibilityMenu="matMenu">
+      <button
+        (click)="setVisibilityOn()"
+        [ngClass]="userProfile.visibility ? 'bg-success' : ''"
+        mat-menu-item
+      >
+        <mat-icon>visibility</mat-icon>
+        <div>
+          <span class="d-inline-block me-2">Bekapcsolva</span>
+          @if(userProfile.visibility) {<mat-icon class="align-middle"
+            >check</mat-icon
+          >
+          }
+        </div>
+      </button>
+      <button
+        (click)="setVisibilityOff()"
+        [ngClass]="!userProfile.visibility ? 'bg-danger' : ''"
+        mat-menu-item
+      >
+        <mat-icon>visibility_off</mat-icon>
+        <div>
+          <span class="d-inline-block me-2">Kikapcsolva</span>
+          @if(!userProfile.visibility){<mat-icon class="align-middle"
+            >check</mat-icon
+          >}
+        </div>
+      </button>
+    </mat-menu>
   </div>
 </div>
 
@@ -319,7 +363,7 @@
                       class="rounded-circle"
                     />
                     <div
-                      *ngIf="mess.online"
+                      *ngIf="mess.online && mess.visibility"
                       class="card-text online-dot-container"
                     >
                       <div class="online-dot"></div>
@@ -329,7 +373,9 @@
                       *ngIf="!mess.online"
                       class="card-text last-time-online-container"
                     >
-                      <ng-container *ngIf="mess.seen !== false">
+                      <ng-container
+                        *ngIf="mess.seen !== false && mess.visibility"
+                      >
                         <p class="mt-1 text-dark mb-0">
                           <b>Utoljára elérhető:</b>
                         </p>
@@ -604,6 +650,25 @@
           />
         </button>
       </div>
+
+      <div>
+        <button
+          (click)="recordVoiceMessage()"
+          class="me-2 mb-1 bg-danger"
+          type="button"
+          mat-raised-button
+        >
+          <mat-icon class="align-middle">microphone</mat-icon>
+        </button>
+        <button
+          (click)="stopRecordingVoiceMessage()"
+          class="me-2 mb-1 bg-danger"
+          type="button"
+          mat-raised-button
+        >
+          <mat-icon class="align-middle">microphone</mat-icon>
+        </button>
+      </div>
     </mat-card-content>
     <mat-card-content>
       <div class="text-center" *ngFor="let file of selectedFiles">
@@ -726,6 +791,11 @@
                     >
                       <b>{{ msg.message.message }}</b>
                     </p>
+                    <!-- @for(rec of voiceMessages; track rec) { @if(rec.name){
+                    <audio controls>
+                      <source [src]="rec.name" type="audio/mpeg" />
+                    </audio>
+                    } } -->
                   </ng-container>
                   <div class="seenDiv">
                     <mat-card-subtitle

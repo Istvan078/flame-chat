@@ -102,7 +102,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
             this.filteredProfilePicsArr = (await this.base.getProfilePictures(
               this.userProf.email!
             )) as any[];
-            console.log(this.profilePicsArr);
             this.init();
             if (!this.userProf.birthDate) {
               this.registeredSuccessfully = true;
@@ -138,7 +137,8 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
         )
           (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
         console.log('fut az interval');
-        console.log(this.profilePicsArr);
+        if (this.index < this.filteredProfilePicsArr.length - 1)
+          this.isRightArrow = true;
       }, 1000);
     }).subscribe();
   }
