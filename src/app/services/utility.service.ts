@@ -92,12 +92,16 @@ export class UtilityService {
             (fr.profilePicture = friendProf?.profilePicture),
             (fr.email = friendProf?.email),
             (fr.online = friendProf?.online);
+          fr.lastTimeOnlineUnix = friendProf?.lastTimeOnline
+            ? (fr.lastTimeOnlineUnix = friendProf?.lastTimeOnline)
+            : 0;
           if (!this.friendsUids.includes(fr.friendId))
             this.friendsUids.push(fr.friendId);
         } else this.signedAsFriendUids.push(fr.friendId);
         return fr;
       })
-      .filter(fr => fr?.confirmed !== false && fr.areFriends !== false);
+      .filter(fr => fr?.confirmed !== false && fr.areFriends !== false)
+      .sort((a: any, b: any) => b.lastTimeOnlineUnix - a.lastTimeOnlineUnix);
   }
 
   setUserNotFriendsArr() {

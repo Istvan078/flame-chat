@@ -1145,8 +1145,14 @@ export class ChatComponent implements OnInit, OnDestroy {
         });
     });
 
-    this.firestore.filesSubject.subscribe((files: {}) => {
-      this.filesArr.push(files);
+    this.firestore.filesSubject.subscribe((file: any) => {
+      this.filesArr.push(file);
+      console.log(this.filesArr);
+      if (file.fileName.includes(this.selectedFriend.displayName)) {
+        this.message.message.voiceMessage = file.url;
+        this.message.message.message = '';
+        console.log(`SIKERRRRRRRR`);
+      }
     });
   }
 
@@ -1196,6 +1202,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     }).then(res => {
       this.base.updateMessage(this.message['key'], this.message).then(() => {
         this.message.message.message = '';
+        this.message.message.voiceMessage = undefined;
         console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
       });
     });
@@ -1665,7 +1672,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
     this.mediaRecorder = new MediaRecorder(this.audioStream);
     this.mediaRecorder.start();
-    console.log(`felvétel elidult`);
+    this.message.message.voiceMessage = 'recording-started';
   }
 
   async stopRecordingVoiceMessage() {
@@ -1676,9 +1683,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       const nameForFile = this.generateNameForFile('m4a');
       const recordedAudioFile = new File(this.audioChunks, nameForFile, {
         type: 'audio/x-m4a',
-      });
-      const mp3 = new File(this.audioChunks, 'proba.mp3', {
-        type: 'audio/mpeg',
       });
       // const url = URL.createObjectURL(recordedAudioFile);
       // const a = document.createElement('a');
@@ -1692,9 +1696,16 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.audioChunks = [];
       this.selectedFiles.push(recordedAudioFile);
       this.uploadFiles();
-      this.message.message.voiceMessage = nameForFile;
-      this.voiceMessages.push(mp3);
-      console.log(this.voiceMessages);
+      // this.firestore.filesSubject
+
+      // setTimeout(() => {
+      //   const sub = this.firestore
+      //     .getFilesFromChats(this.userProfile, nameForFile)
+      //     .subscribe(url => {
+      //       this.voiceMessages.push(url);
+      //       sub.unsubscribe();
+      //     });
+      // }, 2000);
     };
     this.mediaRecorder.stop();
     this.audioStream.getTracks().forEach(track => {

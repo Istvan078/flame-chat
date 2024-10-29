@@ -17,6 +17,7 @@ export interface Friends {
   profilePicture?: string;
   online?: boolean;
   lastTimeOnline?: any;
+  lastTimeOnlineUnix?: number;
   confirmed: boolean;
   areFriends?: boolean;
   visibility: boolean;

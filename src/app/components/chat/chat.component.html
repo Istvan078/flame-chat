@@ -3,11 +3,6 @@
   aria-live="polite"
   aria-atomic="true"
 ></app-toast> -->
-@for(rec of voiceMessages; track rec) { @if(rec.name){
-<audio controls>
-  <source [src]="rec" type="audio/mpeg" />
-</audio>
-} }
 <app-toast
   [isPostSharing]="true"
   aria-live="polite"
@@ -608,6 +603,7 @@
             [(ngModel)]="message.message.message"
             matInput
             rows="2"
+            [disabled]="message.message.voiceMessage !== undefined"
           ></textarea>
         </mat-form-field>
       </mat-card-title>
@@ -620,14 +616,17 @@
         *ngIf="message.message"
         class="me-2 mb-1"
         color="accent"
-        [disabled]="uploadFinished == false"
+        [disabled]="
+          uploadFinished == false ||
+          message.message.voiceMessage === 'recording-started'
+        "
         (click)="addMessage(); messageButtonClicked = false"
         mat-raised-button
       >
-        {{ 'Küldés' }}
+        {{ !message.message.voiceMessage ? 'Küldés' : 'Hangüzenet elküldése' }}
         <mat-icon>send</mat-icon>
       </button>
-      <div>
+      <div *ngIf="!message.message.voiceMessage">
         <button
           (click)="!uploadFinished ? uploadFiles() : ''"
           class="me-2 mb-1 fileButton"
@@ -651,22 +650,29 @@
         </button>
       </div>
 
-      <div>
+      <div
+        *ngIf="
+          !message.message.voiceMessage ||
+          message.message.voiceMessage === 'recording-started'
+        "
+      >
         <button
-          (click)="recordVoiceMessage()"
+          (click)="
+            message.message.voiceMessage !== 'recording-started'
+              ? recordVoiceMessage()
+              : stopRecordingVoiceMessage()
+          "
           class="me-2 mb-1 bg-danger"
           type="button"
           mat-raised-button
         >
-          <mat-icon class="align-middle">microphone</mat-icon>
-        </button>
-        <button
-          (click)="stopRecordingVoiceMessage()"
-          class="me-2 mb-1 bg-danger"
-          type="button"
-          mat-raised-button
-        >
-          <mat-icon class="align-middle">microphone</mat-icon>
+          <mat-icon class="align-middle"
+            >{{
+              message.message.voiceMessage !== 'recording-started'
+                ? 'mic'
+                : 'mic_off'
+            }}mic</mat-icon
+          >
         </button>
       </div>
     </mat-card-content>
@@ -744,6 +750,9 @@
                     <ng-container *ngIf="file.chatId === msg.key">
                       <div *ngFor="let pic of file.files; let i = index">
                         <img
+                          *ngIf="
+                            !pic.fileName.includes(selectedFriend.displayName)
+                          "
                           (click)="fileModalOpen(file.files, i)"
                           style="margin-left: 40px"
                           class="me-1 mb-1 rounded"
@@ -751,7 +760,8 @@
                           [src]="pic.url"
                           alt=""
                         />
-                        @if(file.senderId === userProfile.uid) {
+                        @if(file.senderId === userProfile.uid &&
+                        !pic.fileName.includes(selectedFriend.displayName)) {
                         <button
                           (click)="deleteFile(file.files, file.docId, ind)"
                           mat-raised-button
@@ -780,22 +790,26 @@
                     </p>
                   </ng-container>
                   <ng-container *ngFor="let tmsg of textMessages">
-                    <p
+                    @if(tmsg.key === msg.key) {
+                    <div
                       [ngClass]="
                         msg.message.senderId === userProfile.uid
                           ? 'left myMessageRight'
                           : 'right myMessageLeft'
                       "
                       class="d-inline-block ms-2 mb-0"
-                      *ngIf="tmsg.key === msg.key"
                     >
                       <b>{{ msg.message.message }}</b>
-                    </p>
-                    <!-- @for(rec of voiceMessages; track rec) { @if(rec.name){
-                    <audio controls>
-                      <source [src]="rec.name" type="audio/mpeg" />
-                    </audio>
-                    } } -->
+                      @if(msg.message.voiceMessage){
+                      <div class="mt-1">
+                        <audio
+                          [src]="msg.message.voiceMessage"
+                          controls
+                        ></audio>
+                      </div>
+                      }
+                    </div>
+                    }
                   </ng-container>
                   <div class="seenDiv">
                     <mat-card-subtitle
