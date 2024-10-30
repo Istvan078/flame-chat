@@ -102,10 +102,6 @@ mat-expansion-panel-header:hover {
 .messageInput {
   width: 80vw;
 }
-.messageCard {
-  width: 80vw;
-  height: 30vh;
-}
 
 .searchContainer {
   width: 100%;
@@ -193,12 +189,13 @@ mat-expansion-panel-header:hover {
 }
 
 .messageCardDiv {
-  position: fixed;
+  position: absolute;
   bottom: 0%;
   left: 50%;
   z-index: 2;
   transform: translate(-50%, 40%);
-  height: 45vh;
+  // height: 45vh;
+  width: 100vw;
 }
 
 .grey {
@@ -354,15 +351,8 @@ ol {
   .mainDiv {
     width: 85%;
   }
-  .messageCardDiv {
-    height: 55vh;
-  }
   .messageInput {
     width: 80vw;
-  }
-  .messageCard {
-    width: 100vw;
-    height: 35vh;
   }
   .timeDivRight {
     justify-content: start !important;
@@ -419,15 +409,8 @@ ol {
   .mainDiv {
     width: 85%;
   }
-  .messageCardDiv {
-    height: 70vh;
-  }
   .messageInput {
     width: 80vw;
-  }
-  .messageCard {
-    width: 100vw;
-    height: 45vh;
   }
 }
 
@@ -441,15 +424,8 @@ ol {
   .mainDiv {
     width: 85%;
   }
-  .messageCardDiv {
-    height: 55vh;
-  }
   .messageInput {
     width: 80vw;
-  }
-  .messageCard {
-    width: 100vw;
-    height: 60vh;
   }
   .mainDivUsers {
     margin-left: 8vw;
@@ -470,15 +446,8 @@ ol {
   .mainDiv {
     width: 85%;
   }
-  .messageCardDiv {
-    height: 35vh;
-  }
   .messageInput {
     width: 80vw;
-  }
-  .messageCard {
-    width: 100vw;
-    height: 60vh;
   }
   .mainDivUsers {
     margin-left: 8vw;
@@ -495,16 +464,9 @@ ol {
   .mainDiv {
     width: 85%;
   }
-  .messageCardDiv {
-    height: 40vh;
-  }
   .messageInput {
     width: 80vw;
     height: 15vh;
-  }
-  .messageCard {
-    width: 100vw;
-    height: 60vh;
   }
   .mainDivUsers {
     margin-left: 8vw;
@@ -521,16 +483,9 @@ ol {
   .mainDiv {
     width: 85%;
   }
-  .messageCardDiv {
-    height: 30vh;
-  }
   .messageInput {
     width: 80vw;
     height: 12vh;
-  }
-  .messageCard {
-    width: 100vw;
-    height: 30vh;
   }
   .mainDivUsers {
     margin-left: 10vw;

@@ -1,0 +1,243 @@
+.allMessagesContainer {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 60vh !important;
+}
+
+.reducedHeight {
+  height: 40vh;
+}
+
+.mainDivUser {
+  margin-bottom: 10px;
+  margin-left: 45px;
+  max-width: 60vw !important;
+}
+
+.mainDivUsers {
+  margin-bottom: 10px;
+  width: 70vw !important;
+}
+.mainDiv {
+  height: fit-content;
+}
+
+.card {
+  height: fit-content;
+}
+
+.msgsCard {
+  width: 80vw !important;
+}
+
+.cardBg {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none;
+}
+
+.timeDivRight {
+  width: 55vw !important;
+  justify-content: center !important;
+}
+
+.emailDateDiv {
+  margin-left: 40px;
+  text-align: left;
+  width: fit-content;
+  overflow: auto;
+  justify-content: start;
+  mat-card-subtitle {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+}
+
+.left {
+  background-color: rgba(23, 23, 143, 0.5);
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.right {
+  background-color: rgba(255, 255, 255, 0.952);
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.myMessageRight {
+  margin-left: 40px !important;
+  max-width: 60vw !important;
+}
+
+.myMessageLeft {
+  margin-left: 8px !important;
+  max-width: 60vw !important;
+}
+
+.seenDiv {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-right: 0px;
+  margin-bottom: 0;
+  margin-left: 1px;
+}
+.seen {
+  color: rgb(6, 60, 6);
+  padding: 2px;
+  width: fit-content;
+}
+
+@media screen and (max-width: 400px) {
+  .right {
+    width: fit-content;
+  }
+  .left {
+    width: fit-content;
+    justify-content: start;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .timeDivRight {
+    justify-content: start !important;
+    margin-left: 37px;
+  }
+  .card-footer {
+    height: 8vh !important;
+  }
+  .config-options-container {
+    ol {
+      overflow: hidden;
+      height: fit-content;
+      margin: 0;
+      padding: 0px 0px 0px 5px;
+    }
+    height: fit-content;
+    span {
+      display: none;
+    }
+  }
+}
+
+.my-posts-header {
+  background: rgb(78, 90, 162, 0.7) !important;
+}
+
+.exp-panel-headers {
+  background: rgba(141, 148, 190, 0.7) !important;
+}
+
+.album-icon {
+  color: rgb(46, 46, 219);
+}
+.feeds-icon {
+  color: green;
+}
+.messages-icon {
+  color: rgb(177, 80, 19);
+}
+.friends-icon {
+  color: rgb(88, 21, 88);
+}
+.profile-icon {
+  color: rgb(177, 40, 40);
+}
+@media screen and (max-height: 614px) {
+  .right {
+    width: fit-content;
+  }
+  .left {
+    width: fit-content;
+    justify-content: start;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+}
+
+@media screen and (min-width: 400px) and (max-width: 800px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .mainDivUsers {
+    margin-left: 8vw;
+  }
+  .timeDivRight {
+    justify-content: start !important;
+    margin-left: 100px;
+  }
+}
+
+@media screen and (min-width: 800px) and (max-width: 1250px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageInput {
+    width: 80vw;
+  }
+  .mainDivUsers {
+    margin-left: 8vw;
+  }
+}
+
+@media screen and (min-width: 1250px) and (max-width: 1900px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageInput {
+    width: 80vw;
+    height: 15vh;
+  }
+  .mainDivUsers {
+    margin-left: 8vw;
+  }
+}
+
+@media screen and (min-width: 1900px) {
+  .right {
+    width: 50vw;
+  }
+  .left {
+    width: 50vw;
+  }
+  .mainDiv {
+    width: 85%;
+  }
+  .messageInput {
+    width: 80vw;
+    height: 12vh;
+  }
+  .mainDivUsers {
+    margin-left: 10vw;
+  }
+}

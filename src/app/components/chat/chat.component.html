@@ -576,9 +576,9 @@
 
 <div
   *ngIf="sendPrivateMessageOn"
-  class="messageCardDiv d-grid justify-content-center"
+  class="messageCardDiv d-flex flex-cols flex-wrap align-items-center justify-content-center"
 >
-  <mat-card *ngIf="messageButtonClicked" class="messageCard">
+  <mat-card *ngIf="messageButtonClicked">
     <mat-card-header class="justify-content-center">
       <mat-card-title>
         <button
@@ -634,6 +634,7 @@
           mat-raised-button
           type="button"
         >
+          <mat-icon class="align-middle">attach_file</mat-icon>
           <label *ngIf="!uploadFinished" for="fileUpload"
             >Fájlok feltöltése</label
           >
@@ -651,6 +652,8 @@
       </div>
 
       <div
+        id="mic-container"
+        class="mic-container"
         *ngIf="
           !message.message.voiceMessage ||
           message.message.voiceMessage === 'recording-started'
@@ -666,7 +669,7 @@
           type="button"
           mat-raised-button
         >
-          <mat-icon class="align-middle"
+          <mat-icon class="align-middle m-0"
             >{{
               message.message.voiceMessage !== 'recording-started'
                 ? 'mic'
@@ -748,28 +751,29 @@
                     *ngFor="let file of sentFilesArr; let ind = index"
                   >
                     <ng-container *ngIf="file.chatId === msg.key">
-                      <div *ngFor="let pic of file.files; let i = index">
-                        <img
-                          *ngIf="
-                            !pic.fileName.includes(selectedFriend.displayName)
-                          "
-                          (click)="fileModalOpen(file.files, i)"
-                          style="margin-left: 40px"
-                          class="me-1 mb-1 rounded"
-                          mat-card-sm-image
-                          [src]="pic.url"
-                          alt=""
-                        />
-                        @if(file.senderId === userProfile.uid &&
-                        !pic.fileName.includes(selectedFriend.displayName)) {
-                        <button
-                          (click)="deleteFile(file.files, file.docId, ind)"
-                          mat-raised-button
-                          type="button"
-                        >
-                          Kép törlése
-                        </button>
-                        }
+                      <div class="d-flex justify-content-center flex-wrap">
+                        <div *ngFor="let pic of file.files; let i = index">
+                          <img
+                            *ngIf="
+                              !pic.fileName.includes(selectedFriend.displayName)
+                            "
+                            (click)="fileModalOpen(file.files, i)"
+                            class="me-1 mb-1 rounded"
+                            mat-card-sm-image
+                            [src]="pic.url"
+                            [alt]="pic.fileName"
+                          />
+                          <!-- @if(file.senderId === userProfile.uid &&
+                          !pic.fileName.includes(selectedFriend.displayName)) {
+                          <button
+                            (click)="deleteFile(file.files, file.docId, ind)"
+                            mat-raised-button
+                            type="button"
+                          >
+                            Kép törlése
+                          </button>
+                          } -->
+                        </div>
                       </div>
                     </ng-container>
                   </ng-container>
@@ -790,7 +794,8 @@
                     </p>
                   </ng-container>
                   <ng-container *ngFor="let tmsg of textMessages">
-                    @if(tmsg.key === msg.key) {
+                    @if(tmsg.key === msg.key && (msg.message.message ||
+                    msg.message.voiceMessage)) {
                     <div
                       [ngClass]="
                         msg.message.senderId === userProfile.uid
@@ -868,6 +873,15 @@
   </ng-container>
 </div>
 
+<app-message
+  [textMessages]="textMessages"
+  [sentFilesArr]="sentFilesArr"
+  [selectedFriend]="selectedFriend"
+  [visibleMessages]="visibleMessages"
+  [urlText]="urlText"
+  *ngIf="userMessages"
+></app-message>
+
 <div
   *ngIf="sendPrivateMessageOn"
   class="d-flex flex-wrap justify-content-center sendMessageOpenButton"
@@ -886,7 +900,7 @@
   <button
     class="ms-2 mt-2"
     *ngIf="!messageButtonClicked"
-    (click)="messageButtonClicked = true"
+    (click)="messageButtonClicked = true; scrollToWriteMsgArea()"
     mat-raised-button
     color="accent"
     type="button"

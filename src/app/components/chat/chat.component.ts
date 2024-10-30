@@ -832,6 +832,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     }).then(res => {
       console.log(res);
       this.updateSeenMessagesAndViewTime(user);
+      this.router.navigate(['/message/' + this.selectedFriend.friendId], {
+        queryParams: { visibleMessages: this.visibleMessages },
+      });
+      this.routerfdghdfhhfd;
     });
 
     //////////////////// LEÍRÁS ///////////////////////////
@@ -1711,6 +1715,19 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.audioStream.getTracks().forEach(track => {
       track.stop();
     });
+  }
+
+  scrollToWriteMsgArea() {
+    const micContainer = document.getElementsByClassName('mic-container');
+    const interval = setInterval(() => {
+      if (micContainer) {
+        const micContainerPosition = micContainer
+          .item(0)
+          ?.getBoundingClientRect().bottom;
+        scrollTo(0, micContainerPosition!);
+        clearInterval(interval);
+      }
+    }, 200);
   }
 
   ngOnDestroy(): void {

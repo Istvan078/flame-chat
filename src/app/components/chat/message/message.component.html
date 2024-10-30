@@ -1,0 +1,143 @@
+<div
+  [@fade-in]="chatAnimationState"
+  class="allMessagesContainer"
+  [ngClass]="messageButtonClicked ? 'reducedHeight' : ''"
+>
+  <ng-container *ngIf="userProfile?.uid">
+    <div
+      [ngClass]="
+        msg.message.senderId === userProfile.uid
+          ? 'justify-content-start mainDivUser'
+          : 'justify-content-end mainDivUsers'
+      "
+      class="d-grid mainDiv"
+      *ngFor="let msg of visibleMessages | filter : searchWord; let i = index"
+    >
+      <mat-card class="card msgsCard cardBg">
+        <ng-container
+          *ngIf="
+            (msg.message.senderId === selectedFriend.friendId &&
+              msg.participants[1] === userProfile?.uid) ||
+            (msg.message.senderId == userProfile?.uid &&
+              msg.participants[1] === selectedFriend.friendId)
+          "
+        >
+          <div class="mt-0 mb-0 pb-0 ms-2">
+            <mat-card-content class="mt-0 mb-0 pb-0 pt-0">
+              <div
+                *ngIf="userProfile?.uid"
+                [ngClass]="
+                  msg.message.senderId === userProfile.uid ? 'timeDivRight' : ''
+                "
+                class="emailDateDiv d-grid"
+              >
+                <mat-card-subtitle
+                  >{{ msg.message.viewTimeStamp }}:
+                </mat-card-subtitle>
+              </div>
+              <div
+                *ngIf="userProfile?.uid"
+                class="d-flex ms-2 mb-0"
+                [ngClass]="
+                  msg.message.senderId === userProfile.uid
+                    ? 'justify-content-center'
+                    : 'justify-content-start'
+                "
+              >
+                <div>
+                  <img
+                    *ngIf="msg.message.senderId === selectedFriend.friendId"
+                    width="30px"
+                    height="30px"
+                    class="rounded-circle"
+                    [src]="selectedFriend.profilePicture"
+                    alt="Profilkép"
+                  />
+                </div>
+                <div class="d-grid">
+                  <ng-container
+                    *ngFor="let file of sentFilesArr; let ind = index"
+                  >
+                    <ng-container *ngIf="file.chatId === msg.key">
+                      <div class="d-flex justify-content-center flex-wrap">
+                        <div *ngFor="let pic of file.files; let i = index">
+                          <img
+                            *ngIf="
+                              !pic.fileName.includes(selectedFriend.displayName)
+                            "
+                            (click)="fileModalOpen(file.files, i)"
+                            class="me-1 mb-1 rounded"
+                            mat-card-sm-image
+                            [src]="pic.url"
+                            [alt]="pic.fileName"
+                          />
+                        </div>
+                      </div>
+                    </ng-container>
+                  </ng-container>
+                  <ng-container *ngFor="let url of urlText">
+                    <p
+                      [ngClass]="
+                        msg.message.senderId === userProfile.uid
+                          ? 'left myMessageRight'
+                          : 'right myMessageLeft'
+                      "
+                      class="d-inline-block ms-2"
+                      *ngIf="url.chatId == msg.key"
+                    >
+                      {{ url.text1stHalf }}
+                      <a target="_blank" [href]="url.url"
+                        ><b>{{ url.url }}</b></a
+                      >{{ url.text2ndHalf }}
+                    </p>
+                  </ng-container>
+                  <ng-container *ngFor="let tmsg of textMessages">
+                    @if(tmsg.key === msg.key && (msg.message.message ||
+                    msg.message.voiceMessage)) {
+                    <div
+                      [ngClass]="
+                        msg.message.senderId === userProfile.uid
+                          ? 'left myMessageRight'
+                          : 'right myMessageLeft'
+                      "
+                      class="d-inline-block ms-2 mb-0"
+                    >
+                      <b>{{ msg.message.message }}</b>
+                      @if(msg.message.voiceMessage){
+                      <div class="mt-1">
+                        <audio
+                          [src]="msg.message.voiceMessage"
+                          controls
+                        ></audio>
+                      </div>
+                      }
+                    </div>
+                    }
+                  </ng-container>
+                  <div class="seenDiv">
+                    <mat-card-subtitle
+                      class="seen fs-6"
+                      *ngIf="
+                        msg.message.senderId === userProfile.uid &&
+                        msg.message.seen === true
+                      "
+                    >
+                      látta
+                      <img
+                        width="15px"
+                        height="15px"
+                        class="overflow-auto rounded-circle"
+                        [src]="selectedFriend.profilePicture"
+                        alt="Profilkép"
+                      />
+                    </mat-card-subtitle>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </div>
+        </ng-container>
+      </mat-card>
+    </div>
+  </ng-container>
+</div>
