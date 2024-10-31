@@ -1,0 +1,154 @@
+<div
+  [@slide-in-keyframed-3]="chatAnimationState"
+  class="row justify-content-center"
+>
+  <div class="text-center mt-2">
+    <button
+      (click)="showFriendsToChoose = !showFriendsToChoose"
+      class="btn btn-primary"
+      type="button"
+    >
+      <mat-icon class="align-middle">message</mat-icon>
+      Új üzenet (ismerős keresése)
+    </button>
+    <!-- MEGCSINÁLNI -->
+    <ng-container *ngIf="showFriendsToChoose">
+      <input
+        [(ngModel)]="friendSearch"
+        placeholder="Ismerős neve"
+        class="form-control my-2"
+        type="text"
+      />
+      <ng-container
+        *ngFor="let mess of showFriendsMess | filter : friendSearch"
+      >
+        <h4 *ngIf="!mess.messaging">
+          <h2 *ngIf="friendSearch">
+            <img
+              class="rounded-circle"
+              width="50px"
+              height="50px"
+              [src]="mess.profilePicture"
+              alt=""
+            />
+            {{ mess.displayName }}
+            <a
+              (click)="firstMessageToFriend(mess)"
+              class="btn btn-success text-white fs-5 mx-2"
+              ><span>Üzenet írása </span
+              ><mat-icon class="align-middle"> message </mat-icon>
+            </a>
+          </h2>
+        </h4>
+      </ng-container>
+    </ng-container>
+    <button
+      (click)="showAllFriends = !showAllFriends"
+      class="btn btn-success my-2 mx-2"
+      type="button"
+    >
+      <mat-icon class="align-middle">message</mat-icon>
+      Új üzenet (összes ismerős listázása)
+    </button>
+    <ng-container *ngIf="showAllFriends">
+      <div class="row justify-content-center showAllFriendsCont">
+        @for(mess of showFriendsMess; track mess.friendId){
+        <ng-container>
+          <div
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2"
+            *ngIf="!mess.messaging"
+          >
+            <h4 class="mb-0 mt-2">{{ mess.displayName }}</h4>
+            <img
+              class="rounded-circle"
+              width="50px"
+              height="50px"
+              [src]="mess.profilePicture"
+              alt=""
+            />
+            <button
+              (click)="
+                firstMessageToFriend(mess); showAllFriends = !showAllFriends
+              "
+              class="btn btn-success fs-5 ms-2"
+              type="button"
+            >
+              Új üzenet
+            </button>
+          </div>
+        </ng-container>
+        }
+      </div>
+    </ng-container>
+  </div>
+  @for(mess of showFriendsMess; track mess.friendId){
+  <div
+    *ngIf="mess.messaging || mess.seen === false"
+    class="col-12 col-md-4 col-lg-3 col-xl-2"
+  >
+    <ng-container>
+      <ng-container>
+        <div
+          class="mt-2 text-center text-danger mb-0 pb-0"
+          *ngIf="mess.seen === false"
+        >
+          <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
+        </div>
+        <div
+          #messageCardCont
+          class="card text-white text-center mb-2 messageCardCont"
+          [ngClass]="
+            mess.seen === false ? 'newMessageColorOnCard' : 'messageCardBg'
+          "
+        >
+          <!-- <h5 class="card-header">
+                            <h2>{{ mess.displayName }}</h2>
+                          </h5> -->
+          <div class="card-body mt-0">
+            <h2>{{ mess.displayName }}</h2>
+            <img
+              [src]="mess.profilePicture"
+              width="50px"
+              height="50px"
+              class="rounded-circle"
+            />
+            <div
+              *ngIf="mess.online && mess.visibility"
+              class="card-text online-dot-container"
+            >
+              <div class="online-dot"></div>
+              <div class="online-text">Elérhető</div>
+            </div>
+            <div
+              *ngIf="!mess.online"
+              class="card-text last-time-online-container"
+            >
+              <ng-container *ngIf="mess.seen !== false && mess.visibility">
+                <p class="mt-1 text-dark mb-0">
+                  <b>Utoljára elérhető:</b>
+                </p>
+                <p class="mb-0 my-0 text-success">
+                  {{ mess.lastTimeOnline }}
+                </p>
+              </ng-container>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button
+              (click)="getMessageUser(mess)"
+              mat-raised-button
+              class="btn btn-sm ms-2 blue msg-button"
+              type="button"
+            >
+              Üzenetek
+              <mat-icon> chat </mat-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+  } @empty {
+  <p>Válassz ki egy ismerőst új üzenet írásához!</p>
+  }
+</div>

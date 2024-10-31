@@ -175,10 +175,13 @@ app.route('/message').post((req, res) => {
       vibrate: [100, 50, 100],
       data: {
         onActionClick: {
-          default: { operation: 'openWindow' },
+          default: {
+            operation: 'focusLastFocusedOrOpen',
+            url: 'https://project0781.web.app/message/' + msg.friendId,
+          },
           navigate: {
             operation: 'focusLastFocusedOrOpen',
-            url: '/chat',
+            url: 'https://project0781.web.app/message/' + msg.friendId,
           },
         },
       },

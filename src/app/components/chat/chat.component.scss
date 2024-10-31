@@ -2,22 +2,14 @@
   background-color: rgba(21, 154, 255, 0.1);
 }
 
-.messageCardBg {
-  background-color: rgba(93, 93, 237, 0.3);
-}
-
-.newMessageColorOnCard {
-  // background-color: rgba(53, 132, 35, 0.7);
-  background-image: linear-gradient(
-    to right,
-    rgba(39, 86, 29, 1),
-    rgba(53, 132, 35, 0.7)
-  );
-}
-
 // mat-expansion-panel-header:hover {
 //   background: rgb(42, 42, 135) !important;
 // }
+.audio-container {
+  audio {
+    width: 55vw;
+  }
+}
 .dot-menu {
   display: inline-block;
   transform: rotate(90deg);
@@ -103,19 +95,6 @@ mat-expansion-panel-header:hover {
   width: 80vw;
 }
 
-.searchContainer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  div input {
-    background-color: rgba(125, 32, 212, 0.3);
-    overflow: auto;
-  }
-  div input:focus {
-    background-color: rgba(125, 32, 212, 0.5);
-  }
-}
-
 .user-searched-container {
   cursor: pointer;
   width: fit-content;
@@ -135,24 +114,6 @@ mat-expansion-panel-header:hover {
   background-color: rgba(255, 255, 255, 0.952);
   padding: 5px;
   border-radius: 5px;
-}
-
-.online-dot-container {
-  margin-top: 5px;
-  display: flex;
-  justify-content: center;
-  .online-dot {
-    margin-top: 2.5px;
-    height: 13px;
-    width: 13px;
-    border-radius: 50%;
-    background-color: green;
-    margin-right: 5px;
-  }
-  .online-text {
-    color: blue;
-    font-weight: bold;
-  }
 }
 
 .buttonCont {
@@ -250,23 +211,6 @@ mat-expansion-panel-header:hover {
   background-color: rgba(8, 8, 156, 0.6) !important;
 }
 
-.friend-name-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.friend-name {
-  width: fit-content;
-  color: rgb(13, 18, 107);
-  text-shadow: 1px 1px 1px white;
-  border: 2px solid green;
-  border-radius: 10px;
-  padding: 2px;
-  box-shadow: 3px 3px 3px black;
-  font-weight: bold;
-}
-
 .card {
   position: relative;
 }
@@ -277,15 +221,6 @@ mat-expansion-panel-header:hover {
   mat-icon {
     font-size: 1.2rem;
   }
-}
-
-.msg-button {
-  color: white !important;
-  font-size: 1.2rem;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-55%, -50%);
 }
 
 .sendMessageOpenButton {
@@ -373,6 +308,11 @@ ol {
       display: none;
     }
   }
+  .audio-container {
+    audio {
+      width: 55vw;
+    }
+  }
 }
 
 .my-posts-header {
@@ -421,6 +361,11 @@ ol {
   .left {
     width: 50vw;
   }
+  .audio-container {
+    audio {
+      width: 45vw;
+    }
+  }
   .mainDiv {
     width: 85%;
   }
@@ -443,6 +388,11 @@ ol {
   .left {
     width: 50vw;
   }
+  .audio-container {
+    audio {
+      width: 45vw;
+    }
+  }
   .mainDiv {
     width: 85%;
   }
@@ -460,6 +410,11 @@ ol {
   }
   .left {
     width: 50vw;
+  }
+  .audio-container {
+    audio {
+      width: 45vw;
+    }
   }
   .mainDiv {
     width: 85%;
@@ -479,6 +434,11 @@ ol {
   }
   .left {
     width: 50vw;
+  }
+  .audio-container {
+    audio {
+      width: 45vw;
+    }
   }
   .mainDiv {
     width: 85%;

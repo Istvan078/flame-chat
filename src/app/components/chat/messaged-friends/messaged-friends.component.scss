@@ -1,0 +1,42 @@
+.newMessageColorOnCard {
+  // background-color: rgba(53, 132, 35, 0.7);
+  background-image: linear-gradient(
+    to right,
+    rgba(39, 86, 29, 1),
+    rgba(53, 132, 35, 0.7)
+  );
+}
+
+.messageCardBg {
+  background-color: rgba(93, 93, 237, 0.3);
+}
+
+.online-dot-container {
+  margin-top: 5px;
+  display: flex;
+  justify-content: center;
+  .online-dot {
+    margin-top: 2.5px;
+    height: 13px;
+    width: 13px;
+    border-radius: 50%;
+    background-color: green;
+    margin-right: 5px;
+  }
+  .online-text {
+    color: blue;
+    font-weight: bold;
+  }
+}
+.blue {
+  background-color: rgba(8, 8, 156, 0.6) !important;
+}
+
+.msg-button {
+  color: white !important;
+  font-size: 1.2rem;
+  // position: absolute;
+  // left: 50%;
+  // top: 50%;
+  // transform: translate(-55%, -50%);
+}

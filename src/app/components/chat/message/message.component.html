@@ -1,9 +1,141 @@
+<div class="text-center friend-name-container">
+  <h1 class="friend-name">
+    {{ selectedFriend?.displayName }}
+  </h1>
+</div>
+
+<div *ngIf="sendPrivateMessageOn" class="text-center searchContainer">
+  <div class="mb-2 w-50">
+    <input
+      [(ngModel)]="searchWord"
+      type="text"
+      class="form-control"
+      id="floatingInput"
+      name="search"
+      placeholder="Üzenet keresése"
+    />
+  </div>
+</div>
+
+<div
+  *ngIf="sendPrivateMessageOn"
+  class="messageCardDiv d-flex flex-cols flex-wrap align-items-center justify-content-center"
+>
+  <mat-card *ngIf="messageButtonClicked">
+    <mat-card-header class="justify-content-center">
+      <mat-card-title>
+        <button
+          (click)="
+            messageButtonClicked
+              ? (messageButtonClicked = false)
+              : backToUsers();
+            messageButtonClicked = false
+          "
+          class="green ms-2 me-2 mb-2"
+          type="button"
+          mat-raised-button
+        >
+          <mat-icon>
+            {{ messageButtonClicked ? 'arrow_downward' : 'keyboard_backspace' }}
+          </mat-icon>
+          {{ messageButtonClicked ? 'Bezár' : 'Vissza' }}
+        </button>
+        <mat-form-field class="messageInput">
+          <mat-label>Üzenet írása</mat-label>
+          <textarea
+            [(ngModel)]="message.message.message"
+            matInput
+            rows="2"
+            [disabled]="message.message.voiceMessage !== undefined"
+          ></textarea>
+        </mat-form-field>
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content
+      class="text-center d-flex justify-content-center flex-wrap"
+    >
+      <button
+        *ngIf="message.message"
+        class="me-2 mb-1"
+        color="accent"
+        [disabled]="
+          uploadFinished == false ||
+          message.message.voiceMessage === 'recording-started'
+        "
+        (click)="addMessage(); messageButtonClicked = false"
+        mat-raised-button
+      >
+        {{ !message.message.voiceMessage ? 'Küldés' : 'Hangüzenet elküldése' }}
+        <mat-icon>send</mat-icon>
+      </button>
+      <div *ngIf="!message.message.voiceMessage">
+        <button
+          (click)="!uploadFinished ? uploadFiles() : ''"
+          class="me-2 mb-1 fileButton"
+          [ngClass]="[uploadFinished ? 'bg-primary' : 'bg-success']"
+          mat-raised-button
+          type="button"
+        >
+          <mat-icon class="align-middle">attach_file</mat-icon>
+          <label *ngIf="!uploadFinished" for="fileUpload"
+            >Fájlok feltöltése</label
+          >
+          <label *ngIf="uploadFinished" for="picUploadInput"
+            >Fájlok csatolása</label
+          >
+          <input
+            *ngIf="uploadFinished"
+            (change)="uploadFinished ? selectedFs($event) : ''"
+            id="picUploadInput"
+            multiple
+            type="file"
+          />
+        </button>
+      </div>
+
+      <div
+        id="mic-container"
+        class="mic-container"
+        *ngIf="
+          !message.message.voiceMessage ||
+          message.message.voiceMessage === 'recording-started'
+        "
+      >
+        <button
+          (click)="
+            message.message.voiceMessage !== 'recording-started'
+              ? recordVoiceMessage()
+              : stopRecordingVoiceMessage()
+          "
+          class="me-2 mb-1 bg-danger"
+          type="button"
+          mat-raised-button
+        >
+          <mat-icon class="align-middle m-0"
+            >{{
+              message.message.voiceMessage !== 'recording-started'
+                ? 'mic'
+                : 'mic_off'
+            }}mic</mat-icon
+          >
+        </button>
+      </div>
+    </mat-card-content>
+    <mat-card-content>
+      <div class="text-center" *ngFor="let file of selectedFiles">
+        {{ file.name }}
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
 <div
   [@fade-in]="chatAnimationState"
   class="allMessagesContainer"
   [ngClass]="messageButtonClicked ? 'reducedHeight' : ''"
 >
-  <ng-container *ngIf="userProfile?.uid">
+  <ng-container *ngIf="userProfile?.uid && selectedFriendId">
     <div
       [ngClass]="
         msg.message.senderId === userProfile.uid
@@ -14,14 +146,7 @@
       *ngFor="let msg of visibleMessages | filter : searchWord; let i = index"
     >
       <mat-card class="card msgsCard cardBg">
-        <ng-container
-          *ngIf="
-            (msg.message.senderId === selectedFriend.friendId &&
-              msg.participants[1] === userProfile?.uid) ||
-            (msg.message.senderId == userProfile?.uid &&
-              msg.participants[1] === selectedFriend.friendId)
-          "
-        >
+        <ng-container>
           <div class="mt-0 mb-0 pb-0 ms-2">
             <mat-card-content class="mt-0 mb-0 pb-0 pt-0">
               <div
@@ -46,7 +171,7 @@
               >
                 <div>
                   <img
-                    *ngIf="msg.message.senderId === selectedFriend.friendId"
+                    *ngIf="msg.message.senderId === selectedFriendId"
                     width="30px"
                     height="30px"
                     class="rounded-circle"
@@ -140,4 +265,31 @@
       </mat-card>
     </div>
   </ng-container>
+</div>
+
+<div
+  *ngIf="sendPrivateMessageOn"
+  class="d-flex flex-wrap justify-content-center sendMessageOpenButton"
+>
+  <button
+    *ngIf="!messageButtonClicked"
+    (click)="backToUsers()"
+    class="green ms-2 me-2 mt-2"
+    type="button"
+    mat-raised-button
+  >
+    <mat-icon> keyboard_backspace </mat-icon>
+
+    Vissza
+  </button>
+  <button
+    class="ms-2 mt-2"
+    *ngIf="!messageButtonClicked"
+    (click)="messageButtonClicked = true; scrollToWriteMsgArea()"
+    mat-raised-button
+    color="accent"
+    type="button"
+  >
+    Üzenet írása
+  </button>
 </div>

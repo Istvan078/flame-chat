@@ -30,13 +30,6 @@ import {
 } from '@angular/animations';
 import { UtilityService } from 'src/app/services/utility.service';
 
-type Notification = {
-  displayName: string;
-  message: string;
-  profilePhoto: string;
-  timeStamp: string;
-};
-
 @Component({
   selector: 'app-chat',
   templateUrl: './chat.component.html',
@@ -138,49 +131,6 @@ type Notification = {
         ),
       ]),
     ]),
-    trigger('slide-in-keyframed-3', [
-      state(
-        'normal',
-        style({
-          transform: 'translateX(0) scale(0)',
-          opacity: 0,
-        })
-      ),
-      state(
-        'in-2',
-        style({
-          transform: 'translateX(0) scale(1)',
-          opacity: 1,
-        })
-      ),
-      transition('normal => in-2', [
-        animate(
-          2000,
-          keyframes([
-            style({
-              opacity: 0,
-              transform: 'translateX(-50%) scale(0)',
-              offset: 0,
-            }),
-            style({
-              transform: 'translateX(-25%) scale(0.5)',
-              opacity: 0.5,
-              offset: 0.3,
-            }),
-            style({
-              transform: 'translateX(-10%)',
-              opacity: 1,
-              offset: 0.6,
-            }),
-            style({
-              transform: 'translateX(0) scale(1)',
-              opacity: 1,
-              offset: 1,
-            }),
-          ])
-        ),
-      ]),
-    ]),
   ],
 })
 export class ChatComponent implements OnInit, OnDestroy {
@@ -199,16 +149,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   seenMeArr: any[] = []; // KIK NÉZTÉK MEG A PROFILOM
   userProfile: UserClass = new UserClass();
   signAsFriend: UserClass = new UserClass();
-  selectedFriend: any = {};
   isSAdmin: boolean = false;
   isUserProfileOn: boolean = false;
   showFriendsToChoose: boolean = false;
-  showAllFriends: boolean = false;
   friendsOn: boolean = false;
   isUserOnlineNow: boolean = false;
-
-  // ISMERŐS KERESÉSE //
-  friendSearch: string = '';
 
   // KERESÉS //
   userSearched: string = '';
@@ -219,13 +164,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // ÜZENETEKKEL KAPCSOLATOS //
   messages: Chat[] = [];
-  allChatsArray: any[] = [];
-  visibleMessages: any[] = [];
-  haventSeenMessagesArr?: any[] = [];
   messFromSelFriendArr: any[] = [];
-  showFriendsMess: any[] = [];
   urlText: any[] = [];
-  textMessages: any[] = [];
   message: Chat = new Chat();
   editMessage: boolean = false;
   sendPrivateMessageOn: boolean = false;
@@ -235,6 +175,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   areMyPostsOn: boolean = false;
   isMessageOn: boolean = false;
   subscribedForNotifications: boolean = false;
+  fromChatComponent: boolean = false;
+  haventSeenMessagesArr: any[] = [];
 
   // POSZTOKKAL KAPCSOLATOS //
   postsNotificationNumber: number = 0;
@@ -267,9 +209,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   usersSubscription: Subscription = Subscription.EMPTY;
   userFriendSubjectSub: Subscription = Subscription.EMPTY;
   getAllMessagesSubjectSub: Subscription = Subscription.EMPTY;
-  filesBehSubjectSub: Subscription = Subscription.EMPTY;
   haventSeenMsgsArrSubjSub: Subscription = Subscription.EMPTY;
-  messSubscription: Subscription = Subscription.EMPTY;
   postsNotiSub: Subscription = Subscription.EMPTY;
   isSubscribedForNotSub: Subscription = Subscription.EMPTY;
   getFriendsSub: Subscription = Subscription.EMPTY;
@@ -303,12 +243,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
   }
 
-  animateMessages() {
-    console.log(this.chatAnimationState);
-    this.chatAnimationState =
-      this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
-  }
-
   constructor(
     private auth: AuthService,
     private base: BaseService,
@@ -325,23 +259,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
   async ngOnInit() {
     this.isUserOnline();
-    this.test();
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
     });
-    this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
-      obj => {
-        if (obj.allChatsArray) this.allChatsArray = obj.allChatsArray;
-        if (obj.showFriendsMess) this.showFriendsMess = obj.showFriendsMess;
-        if (obj.haventSeenMessagesArr)
-          this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
-      }
-    );
-    this.haventSeenMsgsArrSubjSub = this.base.haventSeenMsgsArr.subscribe(
-      hSMArr => {
-        this.haventSeenMessagesArr = hSMArr;
-      }
-    );
 
     this.userSubjectSub = this.utilService.userSubject.subscribe(user => {
       if (user.userProfiles) this.userProfiles = user.userProfiles;
@@ -391,7 +311,7 @@ export class ChatComponent implements OnInit, OnDestroy {
                         .length) ||
                     this.authNull === null
                   ) {
-                    this.subjectValueTransfer(
+                    this.utilService.subjectValueTransfer(
                       this.utilService.forUserSubject,
                       this.utilService.userSubject
                     );
@@ -442,8 +362,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.getFriendsSub = this.getFriendsAndNotFriends().subscribe({
           next: (res: any) => {
             console.log(res);
-            // új üzenetek lekérése
-            this.messSubscription = this.getNewMessages();
           },
           complete: async () => {
             console.log('***OBSERVABLE BEFEJEZŐDÖTT***');
@@ -478,7 +396,7 @@ export class ChatComponent implements OnInit, OnDestroy {
                 this.seenMeSub = this.utilService
                   .getFriendsForNotifUpdate()
                   .subscribe(seenMeArr => {
-                    this.subjectValueTransfer(
+                    this.utilService.subjectValueTransfer(
                       seenMeArr,
                       this.base.profileSeenSubject
                     );
@@ -590,14 +508,10 @@ export class ChatComponent implements OnInit, OnDestroy {
           nFr => nFr.friendKey !== user.friendKey
         );
         this.utilService.forUserSubject.userNotFriends = this.userNotFriends;
-        this.subjectValueTransfer(
+        this.utilService.subjectValueTransfer(
           this.utilService.forUserSubject,
           this.utilService.userSubject
         );
-        this.filterShowFriendsMessArr();
-        this.base.getAllMessagesSubject.next({
-          showFriendsMess: this.showFriendsMess,
-        });
       });
     const forSignedInFriendsProf = {
       friendId: this.userProfile.uid,
@@ -629,7 +543,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         if (uP.displayName === friend) return uP.displayName !== friend;
         if (uP.email === friend) return uP.email !== friend;
       });
-    this.subjectValueTransfer(
+    this.utilService.subjectValueTransfer(
       this.utilService.forUserSubject,
       this.utilService.userSubject
     );
@@ -678,7 +592,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.utilService.forUserSubject.userFriends = this.userFriends!;
       this.utilService.forUserSubject.userNotFriends = this.userNotFriends;
       if (this.notConfirmedMeUsers.length)
-        this.subjectValueTransfer(
+        this.utilService.subjectValueTransfer(
           this.utilService.forUserSubject,
           this.utilService.userSubject
         );
@@ -696,10 +610,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (this.toastVal.uid == friend.friendId) {
         modalRef.componentInstance.friendName = this.toastVal.displayName;
       }
-      this.filterShowFriendsMessArr();
-      this.base.getAllMessagesSubject.next({
-        showFriendsMess: this.showFriendsMess,
-      });
     });
   }
 
@@ -711,18 +621,6 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.base.updateUserData({ profilePicture: uP.profilePicture }, uP.key);
       }
     });
-  }
-
-  changeTimeStampFormatForAllMessages() {
-    // this.base.getMessages().subscribe((mess: any) => {
-    //   mess.map((msg: Chat) => {
-    //     if (msg.message)
-    //       (msg.message.timeStamp as any) = new Date(
-    //         msg.message?.timeStamp as any
-    //       ).getTime();
-    //     this.base.updateMessage(msg.key, msg);
-    //   });
-    // });
   }
 
   isSubscribedForNotifications() {
@@ -810,356 +708,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.router.navigate([`profile/${this.userProfile.uid}`]);
   }
 
-  getMessageUser(user: any) {
-    this.selectedFriend = user; // objektum
-    this.sendPrivateMessageOn = true;
-    this.userMessages = true;
-    this.isMessageOn = true;
-    new Promise((res, rej) => {
-      if (this.userProfile.uid)
-        this.base
-          .getUserMessagesRefactored(
-            this.userProfile.uid,
-            this.selectedFriend.friendId
-          )
-          ?.then(msgs => {
-            this.allChatsArray = msgs;
-            this.runMessagesSubjectValueTransfer();
-            this.getVisibleMessagesForSelectedFriend();
-            res('-----ÜZENETEK LEKÉRVE-----');
-            this.animateMessages();
-          });
-    }).then(res => {
-      console.log(res);
-      this.updateSeenMessagesAndViewTime(user);
-      this.router.navigate(['/message/' + this.selectedFriend.friendId], {
-        queryParams: { visibleMessages: this.visibleMessages },
-      });
-      this.routerfdghdfhhfd;
-    });
-
-    //////////////////// LEÍRÁS ///////////////////////////
-    // Fájlok feltöltéséhez használt Subject, elküldöttfájlok tömb
-    // adatainak beállítása subject segítségével
-    this.filesBehSubjectSub = this.firestore.filesBehSubject.subscribe(
-      flArr => (this.sentFilesArr = flArr)
-    );
-
-    //////////////////// LEÍRÁS ///////////////////////////
-    // elküldött fájlok tömbből kiszűri az adott barátnak küldött
-    // fájlokat és a barát által nekem küldött fájlokat
-    this.sentFilesArr = this.sentFilesArr.filter(file => {
-      return (
-        (file.receiverId === this.selectedFriend.friendId &&
-          file.files.length !== 0) ||
-        file.senderId === this.selectedFriend.friendId
-      );
-    });
-  }
-
-  deleteFile(files: any[], docId: string, i: number) {
-    files.forEach((file: any) =>
-      this.firestore.deleteFilesFromStorage(
-        `fromChats/${this.userProfile.email}/files`,
-        file.fileName
-      )
-    );
-    this.firestore
-      .deleteFilesFromFirestore(docId, this.userProfile.key)
-      .then(val => {
-        this.sentFilesArr.splice(i, 1);
-        console.log('----FÁJL TÖRÖLVE----', val);
-        this.firestore.filesBehSubject.next(this.sentFilesArr);
-      });
-    // this.sentFilesArr
-    //   .flatMap(fStoreDoc => fStoreDoc.files)
-    //   .forEach(file =>
-    //     this.firestore.deleteFilesFromStorage(
-    //       `fromChats/${this.userProfile.email}/files`,
-    //       file.fileName
-    //     )
-    //   );
-  }
-
-  updateSeenMessagesAndViewTime = (user: any) => {
-    return new Promise((res, rej) => {
-      this.updateSeenMessages();
-      console.log(this.showFriendsMess);
-      // Üzenetek a kiválasztott baráttól tömb iteráció
-      this.visibleMessages.map(mess => {
-        //////////////// LEÍRÁS  ////////////////////////
-        // Ha van új üzenet és ez a legelső üzenet a baráttól, akkor frissítsük
-        // az adatbázisban a baráttal való messaging tulajdonságot true értékre.
-        if (mess.message.seen === false) {
-          if (user.messaging === undefined) {
-            const startMessaging = { messaging: true };
-            this.base
-              .updateFriend(
-                user.friendKey,
-                startMessaging as any,
-                this.userProfile.key
-              )
-              .then(() => {
-                for (const usr of this.showFriendsMess) {
-                  if (usr.friendKey === user.friendKey) {
-                    usr.messaging = true;
-                  }
-                }
-              });
-          }
-        }
-      });
-      res('Baráttól származó üzenetek beállítása megtörtént.');
-    }).then(res => {
-      /////////////////// LEÍRÁS ////////////////////////
-      // Mikor írta az üzenetet beállítása a calcMinutesPassed() //
-      // metódus segítségével(formázva)) //
-      this.allChatsArray = this.allChatsArray.map(mess => {
-        if (!mess.message.viewTimeStamp || mess.message.viewTimeStamp == '') {
-          mess.message.viewTimeStamp = this.calcMinutesPassed(
-            mess.message.timeStamp
-          );
-        }
-        // az iteráció végén visszaad minden üzenetet(módosítva)
-        return mess;
-      });
-    });
-  };
-
-  getVisibleMessagesForSelectedFriend(): any[] {
-    // Kiszűröm a kiválasztott felhasználóhoz tartozó üzeneteket
-    const selectedFriendMessages = this.allChatsArray.filter((message: any) => {
-      return (
-        (message.message.senderId === this.selectedFriend.friendId &&
-          message.participants[1] === this.userProfile.uid) ||
-        (message.message.senderId === this.userProfile.uid &&
-          message.participants[1] === this.selectedFriend.friendId)
-      );
-    });
-
-    selectedFriendMessages.map(mess => {
-      mess.message.viewTimeStamp = this.calcMinutesPassed(
-        mess.message.timeStamp
-      );
-      mess.message.timeStamp = new Date(mess.message.timeStamp).getTime();
-    });
-
-    selectedFriendMessages.sort((a: any, b: any) => {
-      if (a.message.timeStamp < b.message.timeStamp) return 1;
-      else return -1;
-    });
-
-    // Kiválasztom az első 5 üzenetet
-    this.visibleMessages = selectedFriendMessages.slice(0, 15);
-    // Leszűröm az urlt tartalmazó üzeneteket és elmentem egy tömbbe
-    const urlMessages: Chat[] = this.visibleMessages.filter(mess =>
-      mess.message.message.includes('https://')
-    );
-    // Leszűröm a csak szöveget tartalmazó üzeneteket és elmentem egy tömbbe
-    this.textMessages = this.visibleMessages.filter(
-      mess => !mess.message.message.includes('https://')
-    );
-
-    // kiszedem csak az url-t tartalmazó részt mindegyik üzenetből a szövegből és belerakom egy tömbbe
-    urlMessages.map((mess, i) => {
-      if (
-        !this.urlText.includes(mess.key) &&
-        mess.message.message.includes(' ')
-      ) {
-        const transformedUrl = mess.message.message.slice(
-          mess.message.message.indexOf('https://'),
-          mess.message.message.indexOf(
-            ' ',
-            mess.message.message.indexOf('https://')
-          )
-        );
-        const formattedText1stHalf = mess.message.message.slice(
-          0,
-          mess.message.message.indexOf(transformedUrl)
-        );
-        const formattedText2ndHalf = mess.message.message.slice(
-          mess.message.message.indexOf(
-            ' ',
-            mess.message.message.indexOf(transformedUrl)
-          )
-        );
-        this.urlText.push(
-          {
-            url: transformedUrl,
-            text1stHalf: formattedText1stHalf,
-            text2ndHalf: formattedText2ndHalf,
-            chatId: mess.key,
-          },
-          mess.key
-        );
-      } else if (
-        !mess.message.message.includes(' ') &&
-        !this.urlText.includes(mess.key)
-      ) {
-        this.urlText.push(
-          { url: mess.message.message, chatId: mess.key },
-          mess.key
-        );
-      }
-    });
-    return this.visibleMessages;
-  }
-
-  updateSeenMessages() {
-    // látott üzenetek kiszűrése a tömbből
-    console.log(this.haventSeenMessagesArr);
-    this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
-      if (mess.message.senderId === this.selectedFriend.friendId) {
-        console.log(mess);
-        mess.message.seen = true;
-        this.base.updateMessage(mess.key, mess);
-        return undefined;
-      }
-      if (mess.message.senderId !== this.selectedFriend.friendId) {
-        return mess;
-      }
-    });
-    this.haventSeenMessagesArr = this.haventSeenMessagesArr?.filter(
-      mess => mess !== undefined
-    );
-    this.filterShowFriendsMessArr();
-    this.subjectValueTransfer(
-      this.haventSeenMessagesArr,
-      this.base.newMessageNotiSubject
-    );
-    this.runMessagesSubjectValueTransfer();
-  }
-
-  getNewMessages() {
-    const userProfile = this.userProfile;
-    return this.base.getNewMessages().subscribe(mess => {
-      this.filterShowFriendsMessArr();
-      let msgArr: any[] = [];
-      if (mess.length) {
-        msgArr = mess;
-        let keyArr: any[] = [];
-        this.allChatsArray.map((jSM: any) => {
-          keyArr.push(jSM.key);
-        });
-        msgArr = msgArr.filter(
-          msg =>
-            !keyArr.includes(msg.key) &&
-            msg.message.seen === false &&
-            msg.message.senderId != userProfile?.uid &&
-            msg.participants[1] === userProfile?.uid
-        );
-      }
-
-      for (let msg of msgArr) {
-        msg.message.viewTimeStamp = this.calcMinutesPassed(
-          new Date(msg.message.timeStamp)
-        );
-        if (msg.participants[1] === userProfile?.uid) {
-          this.haventSeenMessagesArr?.push(msg);
-          this.allChatsArray.unshift(msg);
-          this.filterShowFriendsMessArr();
-        }
-      }
-      if (this.userMessages) this.updateSeenMessages();
-      this.subjectValueTransfer(
-        this.haventSeenMessagesArr,
-        this.base.newMessageNotiSubject
-      );
-      this.runMessagesSubjectValueTransfer();
-      this.getVisibleMessagesForSelectedFriend();
-    });
-  }
-
-  ////////////////  LEÍRÁS  /////////////
-  // Ha még nincs levelezés a 2 ember között beállítom hogy legyen //
-  async firstMessageToFriend(mess: any) {
-    const startMessaging = { messaging: true };
-    await this.base.updateFriend(
-      mess.friendKey as string,
-      startMessaging as any,
-      this.userProfile.key
-    );
-    this.showFriendsToChoose = false;
-    mess.messaging = true;
-    setTimeout(() => {
-      const messageCardElements = this.element.nativeElement.querySelectorAll(
-        '.messageCardCont div h2'
-      );
-      // const showAllFriendsCont = this.element.nativeElement.querySelector(
-      //   '.showAllFriendsCont'
-      // );
-
-      messageCardElements.forEach((el: any) => {
-        if (mess.displayName === el.innerText) {
-          console.log(el);
-          const container = el.parentNode.parentNode;
-          window.scrollTo(
-            el.getBoundingClientRect().x,
-            el.getBoundingClientRect().y
-            // showAllFriendsCont.getBoundingClientRect().height
-          );
-          if (mess.messaging) {
-            container.classList.add('hidden');
-            console.log(container.classList.contains('hidden'));
-            setTimeout(() => {
-              container.classList.remove('hidden');
-              container.classList.add('fade-in');
-              container.style.backgroundColor = 'darkGreen';
-              console.log(container.classList.contains('fade-in'));
-            }, 50);
-          }
-        }
-      });
-    }, 5);
-  }
-
-  selectedFs($event: any) {
-    this.uploadFinished = false;
-    this.selectedFiles = Array.from($event.target.files);
-  }
-
-  uploadFiles() {
-    let arr: any = [];
-    this.selectedFiles.map((file: any) => {
-      const promise = this.firestore
-        .addFilesFromMessages(this.userProfile, file)
-        ?.then((val: any) => {
-          arr.push(val.metadata.name);
-          if (arr.length === this.selectedFiles.length) {
-            this.selectedFiles = [];
-            const fileModal = this.ngbModal.open(FilesModalComponent, {
-              centered: true,
-            });
-            fileModal.componentInstance.uploadTrue = true;
-            this.uploadFinished = true;
-          }
-        })
-        .catch(err => {
-          arr.push('Meglévő fájl');
-          console.log('Már van ilyen fájl az adatbázisban');
-
-          if (arr.length === this.selectedFiles.length) {
-            this.selectedFiles = [];
-            const fileModal = this.ngbModal.open(FilesModalComponent, {
-              centered: true,
-            });
-            fileModal.componentInstance.uploadTrue = true;
-            this.uploadFinished = true;
-          }
-        });
-    });
-
-    this.firestore.filesSubject.subscribe((file: any) => {
-      this.filesArr.push(file);
-      console.log(this.filesArr);
-      if (file.fileName.includes(this.selectedFriend.displayName)) {
-        this.message.message.voiceMessage = file.url;
-        this.message.message.message = '';
-        console.log(`SIKERRRRRRRR`);
-      }
-    });
-  }
-
   deleteUserData(id: any) {
     const toDeleteProfiles = this.userProfiles.filter(uP => {
       return uP.uid === 'NRQ2kFyKrpN1rTSRJ0gcna1DzdK2';
@@ -1167,240 +715,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     toDeleteProfiles.map(prof => {
       this.base.deleteUserData(prof.key);
     });
-  }
-
-  test() {}
-
-  addMessage() {
-    new Promise((res, rej) => {
-      const actualTime = new Date().getTime();
-      console.log(actualTime);
-      if (this.userProfile.uid)
-        this.message.message.senderId = this.userProfile.uid;
-      this.message.message.timeStamp = actualTime as any;
-      this.message.participants[0] =
-        this.userProfile.uid + '-' + new Date().getTime();
-      this.message.participants[1] = this.selectedFriend.friendId;
-      this.message.participants[2 as any] =
-        this.userProfile.uid +
-        this.selectedFriend.friendId +
-        '-' +
-        new Date().getTime();
-      this.message.message.displayName = this.userProfile.displayName!;
-      this.message.message.email = this.userProfile.email as string;
-      this.message.message.profilePhoto = this.userProfile.profilePicture;
-      if (this.message.message)
-        this.base.sendMessNotificationEmail(
-          this.selectedFriend,
-          this.message,
-          this.userProfile
-        );
-      this.message._setKey = this.userProfile.uid + this.randomIdGenerator();
-      const messageCopy = deepMerge.all([this.message]);
-      this.allChatsArray.unshift(messageCopy);
-      this.getVisibleMessagesForSelectedFriend();
-      this.base.getAllMessagesSubject.next({
-        allChatsArray: this.allChatsArray,
-      });
-      res('Üzenet tulajdonságai beállítva, üzenet objektum lemásolva.');
-    }).then(res => {
-      this.base.updateMessage(this.message['key'], this.message).then(() => {
-        this.message.message.message = '';
-        this.message.message.voiceMessage = undefined;
-        console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
-      });
-    });
-
-    if (this.filesArr.length) {
-      const selectedFriend = this.userProfiles.find(
-        usr => usr.uid === this.selectedFriend.friendId
-      );
-
-      const dataForFiles = {
-        files: this.filesArr,
-        chatId: this.message.key,
-        senderId: this.userProfile.uid,
-        receiverId: this.selectedFriend.friendId,
-      };
-      this.firestore
-        .addFilesToChat(dataForFiles, this.userProfile.key as string)
-        .then(() => {
-          this.firestore.filesSubject.unsubscribe();
-          this.firestore
-            .addFilesToChat(dataForFiles, selectedFriend?.key as string)
-            .then(() => {
-              this.firestore.filesSubject = new Subject();
-              this.filesArr = [];
-            });
-        });
-    }
-    this.sendMessNotifications();
-  }
-
-  deleteMessage(message: Chat) {
-    this.base.deleteMessage(message).then(() => {
-      this.urlText = [];
-      this.allChatsArray = this.allChatsArray.filter(
-        mess => mess.key !== message.key
-      );
-      this.getVisibleMessagesForSelectedFriend();
-    });
-  }
-
-  sendMessNotifications() {
-    const apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
-    let friend = this.userProfiles.find(
-      uP => uP.uid === this.selectedFriend.friendId
-    );
-
-    const msg: Notification = {
-      displayName: this.message.message.displayName,
-      message: this.message.message.message,
-      profilePhoto: this.message.message.profilePhoto,
-      timeStamp: this.message.message.timeStamp,
-    };
-
-    new Promise((res, rej) => {
-      this.firestore.getUserNotiSubscription(friend!.key).subscribe(sub => {
-        this.friendPushSub = sub;
-        if (this.friendPushSub !== undefined) {
-          res(this.friendPushSub);
-        }
-      });
-    }).then(pushSub => {
-      this.http
-        .post(apiUrl + 'message', { msg: msg, sub: pushSub })
-        .subscribe(res => console.log(res));
-    });
-  }
-
-  backToUsers() {
-    this.sendPrivateMessageOn = false;
-    this.userMessages = false;
-    this.isMessageOn = false;
-    this.firestore.filesSubject.unsubscribe();
-    this.filesArr = [];
-    this.firestore.filesSubject = new Subject();
-    this.urlText = [];
-  }
-
-  calcMinutesPassed(sentMessDate: any) {
-    const newDate = new Date().getTime();
-    sentMessDate = new Date(sentMessDate).getTime();
-    // A különbség milliszekundumokban
-    const diffMilliseconds = newDate - sentMessDate;
-    // A különbség percekben
-    const passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
-    let hours: number = 0;
-    for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
-      hours += 1;
-    }
-
-    let days: number = 0;
-    for (
-      let i = 1440;
-      passedMinsSMessSent >= 1440 && i <= passedMinsSMessSent;
-      i += 1440
-    ) {
-      days += 1;
-    }
-
-    if (passedMinsSMessSent < 60)
-      return `${passedMinsSMessSent} perccel ezelőtt`;
-
-    if (hours < 24) return `${hours} órával ezelőtt`;
-
-    if (hours >= 24) return `${days} nappal ezelőtt`;
-  }
-
-  runMessagesSubjectValueTransfer() {
-    this.base.getAllMessagesSubject.next({
-      haventSeenMessagesArr: this.haventSeenMessagesArr,
-      allChatsArray: this.allChatsArray,
-      showFriendsMess: this.showFriendsMess,
-    });
-  }
-
-  /**
-   * subject és a next értékének egymás utáni sorrendben kell lenni
-   * ha több subject-et adsz át a funkciónak
-   * @param {any} nextValue - Next értéke.
-   * @param {Subject} subject - Választott subject.
-   * @param {number} nextValuesArr - Nextértékek tömb
-   * @param {number} subjectsArr - Subjects tömb
-   */
-  subjectValueTransfer(
-    nextValue: any,
-    subject: Subject<any> | BehaviorSubject<any>,
-    nextValuesArr?: any[],
-    ...subjectsArr: Subject<any>[] | BehaviorSubject<any>[]
-  ) {
-    if (subject) subject.next(nextValue);
-    if (subjectsArr.length && nextValuesArr?.length) {
-      subjectsArr.forEach((sub, i) => sub.next(nextValuesArr[i]));
-    }
-  }
-
-  randomIdGenerator() {
-    const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let chatId = 'chat_id_';
-    let friendId = 'friend_id_';
-    for (let i = 0; i <= 4; i++) {
-      if (this.message.message.timeStamp) {
-        chatId += idString.charAt(Math.round(Math.random() * 30));
-      } else {
-        friendId += idString.charAt(Math.round(Math.random() * 30));
-      }
-    }
-    if (this.message.message.timeStamp) return '_' + chatId;
-    else return friendId;
-  }
-
-  fileModalOpen(picturesArr: [], i: number) {
-    const modalRef = this.ngbModal.open(FilesModalComponent, {
-      centered: true,
-    });
-    modalRef.componentInstance.picturesArr = picturesArr;
-    modalRef.componentInstance.viewIndex = i;
-  }
-
-  /////////////////////// LEÍRÁS //////////////////////////////
-  // A ShowFriendsMessArr tömb értékeit állítja be //
-  // új üzenetnél és mikor elolvassuk az üzenetet //
-  filterShowFriendsMessArr() {
-    // a nemlátott üzenetek tömböt iterálja, kiszűri a baráttól való
-    // eddig nem láttott üzeneteket és kap egy
-    // seen:false property-t + az adott barát összes többi tulajdonságát
-    const messSenderIds = this.haventSeenMessagesArr?.map(
-      mess => mess?.message?.senderId
-    );
-    // const friendNewMessageFrom: any = this.haventSeenMessagesArr?.flatMap(
-    //   mess => {
-    //     return this.userFriends
-    //       // ?.filter(fr => fr.friendId === mess.message.senderId)
-    //       ?.filter(fr => prob?.includes(fr.friendId))
-    //       .map(fr => ({ ...fr, seen: false }));
-    //   }
-    // );
-    const friendNewMessageFrom: any = this.userFriends
-      ?.filter(fr => messSenderIds?.includes(fr.friendId))
-      .map(fr => ({ ...fr, seen: false }));
-    const allFriendsAndNMessFromArr = [
-      ...friendNewMessageFrom,
-      ...(this.userFriends || ''),
-    ];
-    // objektum ami segít kiszűrni a duplikációkat a tömbből
-    const seenFriendIds: any = {};
-    const filteredFriendsArr = allFriendsAndNMessFromArr.filter((fr, i) => {
-      // Ha ez az első alkalom, hogy találkozunk ezzel a friendId-val, akkor visszatérünk igazzal, hogy a barát objektumot a szűrt tömbbe tegyük
-      if (!seenFriendIds[fr.friendId]) {
-        seenFriendIds[fr.friendId] = true;
-        return true;
-      }
-      return false;
-    });
-
-    this.showFriendsMess = filteredFriendsArr;
   }
 
   getNewPostsNotification() {
@@ -1481,47 +795,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (this.userProfile.uid)
         this.router.navigate(['/' + friendId + '/friend-profile']);
     });
-  }
-
-  messagesAccordionTabCounter: number = 0;
-  areFriendsOnline() {
-    if (this.messagesAccordionTabCounter < 2)
-      this.messagesAccordionTabCounter++;
-    setTimeout(() => {
-      this.onAnimate();
-    }, 100);
-    const initInterval = setInterval(() => {
-      this.userFriends?.map(fr => {
-        return this.userProfiles.map(uP => {
-          if (uP.uid === fr.friendId) {
-            if (uP.visibility) {
-              fr.online = uP.online;
-              fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
-              fr.visibility = true;
-            }
-          }
-        });
-      });
-      // clearInterval(interval);
-      const repeatingInterval = setInterval(() => {
-        this.userFriends?.map(fr => {
-          return this.userProfiles.map(uP => {
-            if (uP.uid === fr.friendId) {
-              if (uP.visibility) {
-                fr.online = uP.online;
-                fr.lastTimeOnline = this.calcMinutesPassed(uP.lastTimeOnline);
-                fr.visibility = true;
-              }
-            }
-          });
-        });
-        if (this.messagesAccordionTabCounter === 2) {
-          this.messagesAccordionTabCounter = 1;
-          clearInterval(repeatingInterval);
-        }
-      }, 60000);
-      clearInterval(initInterval);
-    }, 1000);
   }
 
   refreshMyPosts() {
@@ -1655,81 +928,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     );
   }
 
-  generateNameForFile(fileFormat: string) {
-    // const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    const timeId = new Date().getTime();
-    const fileName =
-      this.selectedFriend.displayName + '_' + timeId + '.' + fileFormat;
-    // for(let i= 0; i<7; i++) {
-    //   fileName += idString.charAt(Math.round(Math.random() * 30))
-    // }
-    return fileName;
-  }
-
-  audioStream!: MediaStream;
-  audioChunks: Blob[] = [];
-  mediaRecorder!: MediaRecorder;
-
-  async recordVoiceMessage() {
-    this.audioStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
-    this.mediaRecorder = new MediaRecorder(this.audioStream);
-    this.mediaRecorder.start();
-    this.message.message.voiceMessage = 'recording-started';
-  }
-
-  async stopRecordingVoiceMessage() {
-    // let recordedAudio: Blob;
-    this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-      this.audioChunks.push(event.data);
-      // recordedAudio = new Blob(this.audioChunks, { type: 'audio/x-m4a' });
-      const nameForFile = this.generateNameForFile('m4a');
-      const recordedAudioFile = new File(this.audioChunks, nameForFile, {
-        type: 'audio/x-m4a',
-      });
-      // const url = URL.createObjectURL(recordedAudioFile);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = 'felvetel.m4a';
-      // document.body.appendChild(a);
-      // a.click();
-      // document.body.removeChild(a);
-      // URL.revokeObjectURL(url);
-      // console.log(recordedAudioFile);
-      this.audioChunks = [];
-      this.selectedFiles.push(recordedAudioFile);
-      this.uploadFiles();
-      // this.firestore.filesSubject
-
-      // setTimeout(() => {
-      //   const sub = this.firestore
-      //     .getFilesFromChats(this.userProfile, nameForFile)
-      //     .subscribe(url => {
-      //       this.voiceMessages.push(url);
-      //       sub.unsubscribe();
-      //     });
-      // }, 2000);
-    };
-    this.mediaRecorder.stop();
-    this.audioStream.getTracks().forEach(track => {
-      track.stop();
-    });
-  }
-
-  scrollToWriteMsgArea() {
-    const micContainer = document.getElementsByClassName('mic-container');
-    const interval = setInterval(() => {
-      if (micContainer) {
-        const micContainerPosition = micContainer
-          .item(0)
-          ?.getBoundingClientRect().bottom;
-        scrollTo(0, micContainerPosition!);
-        clearInterval(interval);
-      }
-    }, 200);
-  }
-
   ngOnDestroy(): void {
     if (this.userLoggedInSubscription) {
       this.userLoggedInSubscription.unsubscribe();
@@ -1748,12 +946,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
     if (this.userFriendSubjectSub) {
       this.userFriendSubjectSub.unsubscribe();
-    }
-    if (this.filesBehSubjectSub) {
-      this.filesBehSubjectSub.unsubscribe();
-    }
-    if (this.messSubscription) {
-      this.messSubscription.unsubscribe();
     }
     if (this.postsNotiSub) {
       this.postsNotiSub.unsubscribe();

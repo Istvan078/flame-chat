@@ -5,6 +5,7 @@ import { BaseService } from './base.service';
 import { BehaviorSubject, map, Observable, Subject } from 'rxjs';
 import { Form } from '../models/utils/form.model';
 import deepmerge from 'deepmerge';
+import { Chat } from '../models/chat.model';
 
 interface AllUserDetails {
   userProfiles: UserClass[];
@@ -57,8 +58,8 @@ export class UtilityService {
         this.userProfilesUidsArr = this.userProfiles.map(uP => uP.uid);
         const userProfile = uProfs.filter(uP => uP.uid === user.uid);
         Object.assign(this.userProfile, ...userProfile);
-        if (this.userProfile?.friends?.length)
-          this.userFriends = Object.values(this.userProfile?.friends as any);
+        // if (this.userProfile?.friends?.length)
+        this.userFriends = Object.values(this.userProfile?.friends as any);
         this.setUserFriendsArray(this.userFriends);
         this.setUserNotFriendsArr();
         return {
@@ -169,6 +170,41 @@ export class UtilityService {
     );
   }
 
+  /////////////////////// LEÍRÁS //////////////////////////////
+  // A ShowFriendsMessArr tömb értékeit állítja be //
+  // új üzenetnél és mikor elolvassuk az üzenetet //
+  filterShowFriendsMessArr(
+    haventSeenMessagesArr: any[],
+    showFriendsMess: any[]
+  ) {
+    // a nemlátott üzenetek tömböt iterálja, kiszűri a baráttól való
+    // eddig nem láttott üzeneteket és kap egy
+    // seen:false property-t + az adott barát összes többi tulajdonságát
+    const messSenderIds = haventSeenMessagesArr?.map(
+      mess => mess?.message?.senderId
+    );
+    const friendNewMessageFrom: any = this.userFriends
+      ?.filter(fr => messSenderIds?.includes(fr.friendId))
+      .map(fr => ({ ...fr, seen: false }));
+    const allFriendsAndNMessFromArr = [
+      ...friendNewMessageFrom,
+      ...(this.userFriends || ''),
+    ];
+    // objektum ami segít kiszűrni a duplikációkat a tömbből
+    const seenFriendIds: any = {};
+    const filteredFriendsArr = allFriendsAndNMessFromArr.filter((fr, i) => {
+      // Ha ez az első alkalom, hogy találkozunk ezzel a friendId-val, akkor visszatérünk igazzal, hogy a barát objektumot a szűrt tömbbe tegyük
+      if (!seenFriendIds[fr.friendId]) {
+        seenFriendIds[fr.friendId] = true;
+        return true;
+      }
+      return false;
+    });
+
+    showFriendsMess = filteredFriendsArr;
+    return showFriendsMess;
+  }
+
   getFormDataForPosts() {
     return this.postsFormData;
   }
@@ -220,5 +256,69 @@ export class UtilityService {
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  randomIdGenerator(message?: Chat) {
+    const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let chatId = 'chat_id_';
+    let friendId = 'friend_id_';
+    for (let i = 0; i <= 8; i++) {
+      if (message?.message.timeStamp) {
+        chatId += idString.charAt(Math.round(Math.random() * 30));
+      } else {
+        friendId += idString.charAt(Math.round(Math.random() * 30));
+      }
+    }
+    if (message?.message.timeStamp) return '_' + chatId;
+    else return friendId;
+  }
+
+  /**
+   * subject és a next értékének egymás utáni sorrendben kell lenni
+   * ha több subject-et adsz át a funkciónak
+   * @param {any} nextValue - Next értéke.
+   * @param {Subject} subject - Választott subject.
+   * @param {number} nextValuesArr - Nextértékek tömb
+   * @param {number} subjectsArr - Subjects tömb
+   */
+  subjectValueTransfer(
+    nextValue: any,
+    subject: Subject<any> | BehaviorSubject<any>,
+    nextValuesArr?: any[],
+    ...subjectsArr: Subject<any>[] | BehaviorSubject<any>[]
+  ) {
+    if (subject) subject.next(nextValue);
+    if (subjectsArr.length && nextValuesArr?.length) {
+      subjectsArr.forEach((sub, i) => sub.next(nextValuesArr[i]));
+    }
+  }
+
+  calcMinutesPassed(sentMessDate: any) {
+    const newDate = new Date().getTime();
+    sentMessDate = new Date(sentMessDate).getTime();
+    // A különbség milliszekundumokban
+    const diffMilliseconds = newDate - sentMessDate;
+    // A különbség percekben
+    const passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
+    let hours: number = 0;
+    for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
+      hours += 1;
+    }
+
+    let days: number = 0;
+    for (
+      let i = 1440;
+      passedMinsSMessSent >= 1440 && i <= passedMinsSMessSent;
+      i += 1440
+    ) {
+      days += 1;
+    }
+
+    if (passedMinsSMessSent < 60)
+      return `${passedMinsSMessSent} perccel ezelőtt`;
+
+    if (hours < 24) return `${hours} órával ezelőtt`;
+
+    if (hours >= 24) return `${days} nappal ezelőtt`;
   }
 }

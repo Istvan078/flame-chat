@@ -6,13 +6,19 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
-import { Component, Input, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Subject, Subscription } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { UtilityService } from 'src/app/services/utility.service';
 import { FilesModalComponent } from '../../modals/files-modal/files-modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Chat } from 'src/app/models/chat.model';
+import * as deepMerge from 'deepmerge';
+import { FirestoreService } from 'src/app/services/firestore.service';
+import { Notification } from 'src/app/models/notification.model';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-message',
@@ -59,7 +65,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
     ]),
   ],
 })
-export class MessageComponent implements OnInit {
+export class MessageComponent implements OnInit, OnDestroy {
   @Input() visibleMessages: any[] = [];
   @Input() selectedFriend: any;
   @Input() sentFilesArr: any[] = [];
@@ -69,47 +75,494 @@ export class MessageComponent implements OnInit {
   // ANIMÁCIÓVAL KAPCSOLATOS //
   chatAnimationState: string = 'normal';
 
+  // ÜZENETEK //
   allChatsArray: any[] = [];
+  sendPrivateMessageOn: boolean = true;
+  message: Chat = new Chat();
+  showFriendsMess: any[] = [];
+  haventSeenMessagesArr: any[] = [];
 
+  // FELHASZNÁLÓ //
+  selectedFriendId?: string;
   userProfiles: UserClass[] = [];
   userProfile: UserClass = new UserClass();
 
+  // FÁJLOK //
+  filesArr: any[] = [];
+  selectedFiles: any[] = [];
+  uploadFinished: boolean = true;
+
   searchWord: string = '';
 
-  getAllMessagesSubjectSub!: Subscription;
-  userSubjectSub!: Subscription;
+  // ROUTING //
+  isOnMessageRoute: boolean = false;
+
+  // PUSH ÉRTESÍTÉS //
+  friendPushSub: any;
+
+  // HANGFELVÉTEL //
+  audioStream!: MediaStream;
+  audioChunks: Blob[] = [];
+  mediaRecorder!: MediaRecorder;
+
+  // FELIRATKOZÁSOK //
+  userProfilesSub: Subscription = Subscription.EMPTY;
+  getAllMessagesSubjectSub: Subscription = Subscription.EMPTY;
+  userSubjectSub: Subscription = Subscription.EMPTY;
+  filesBehSubjectSub: Subscription = Subscription.EMPTY;
 
   constructor(
     private utilService: UtilityService,
     private base: BaseService,
-    private ngbModal: NgbModal
+    private firestore: FirestoreService,
+    private ngbModal: NgbModal,
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private router: Router
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit() {
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
       obj => {
         if (obj.allChatsArray) this.allChatsArray = obj.allChatsArray;
+        if (obj.showFriendsMess) this.showFriendsMess = obj.showFriendsMess;
+        if (obj.haventSeenMessagesArr)
+          this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
+        console.log(obj);
       }
     );
-
-    this.userSubjectSub = this.utilService.userSubject.subscribe(user => {
-      if (user.userProfiles) this.userProfiles = user.userProfiles;
-      if (user.userProfile) {
-        this.userProfile = user.userProfile;
-        // if (!this.userProfile.displayName) {
-        //   this.router.navigate([`/profile/${this.userProfile.uid}`])
-        // }
+    this.route.url.subscribe(urlSegm => {
+      if (urlSegm.length) {
+        const [{ path }] = urlSegm;
+        if (urlSegm.length > 1) {
+          const { path: friendId } = urlSegm[1];
+          this.selectedFriendId = friendId;
+        }
+        if (path === 'message/') this.isOnMessageRoute = true;
       }
-      // if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
-      // if (user.userFriends) this.userFriends = user.userFriends;
-      // if (user.notConfirmedMeUsers)
-      //   this.notConfirmedMeUsers = user.notConfirmedMeUsers;
-      // if (user.subscription) user.subscription.unsubscribe();
-      // if (!this.notConfirmedMeUsers.length) this.confirmFriend();
-      // if (this.notConfirmedMeUsers.length || this.userNotFriends.length)
-      //   this.friendsOn = true;
     });
+    const AllUserDtlsRes = await this.utilService.getUserProfiles();
+    this.userProfilesSub = AllUserDtlsRes.subscribe(async AllUserDtls => {
+      this.userProfiles = AllUserDtls.userProfiles;
+      this.userProfile = AllUserDtls.userProfile;
+      // this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
+      // this.userFriends = AllUserDtls.userFriends!;
+      this.selectedFriend = this.userProfiles.find(
+        uP => uP.uid === this.selectedFriendId
+      );
+      this.allChatsArray = await this.base.getUserMessagesRefactored(
+        this.userProfile.uid,
+        this.selectedFriendId!
+      );
+      this.getVisibleMessagesForSelectedFriend();
+      console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
+      this.userProfilesSub.unsubscribe();
+    });
+
     this.animateMessages();
+  }
+
+  addMessage() {
+    new Promise((res, rej) => {
+      const actualTime = new Date().getTime();
+      if (this.userProfile.uid) {
+        this.message.message.senderId_receiverId = `${this.userProfile.uid}_${this.selectedFriend.friendId}`;
+        this.message.message.senderId = this.userProfile.uid;
+      }
+      this.message.message.timeStamp = actualTime as any;
+      this.message.participants[0] =
+        this.userProfile.uid + '-' + new Date().getTime();
+      this.message.participants[1] = this.selectedFriend.friendId;
+      this.message.participants[2 as any] =
+        this.userProfile.uid +
+        this.selectedFriend.friendId +
+        '-' +
+        new Date().getTime();
+      this.message.message.displayName = this.userProfile.displayName!;
+      this.message.message.email = this.userProfile.email as string;
+      this.message.message.profilePhoto = this.userProfile.profilePicture;
+      if (this.message.message)
+        this.base.sendMessNotificationEmail(
+          this.selectedFriend,
+          this.message,
+          this.userProfile
+        );
+      this.message._setKey =
+        this.userProfile.uid + this.utilService.randomIdGenerator();
+      const messageCopy = deepMerge.all([this.message]);
+      this.allChatsArray.unshift(messageCopy);
+      this.getVisibleMessagesForSelectedFriend();
+      this.base.getAllMessagesSubject.next({
+        allChatsArray: this.allChatsArray,
+      });
+      res('Üzenet tulajdonságai beállítva, üzenet objektum lemásolva.');
+    }).then(res => {
+      this.base.updateMessage(this.message['key'], this.message).then(() => {
+        this.message = new Chat();
+        console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
+      });
+    });
+
+    if (this.filesArr.length) {
+      const selectedFriend = this.userProfiles.find(
+        usr => usr.uid === this.selectedFriend.friendId
+      );
+
+      const dataForFiles = {
+        files: this.filesArr,
+        chatId: this.message.key,
+        senderId: this.userProfile.uid,
+        receiverId: this.selectedFriend.friendId,
+      };
+      this.firestore
+        .addFilesToChat(dataForFiles, this.userProfile.key as string)
+        .then(() => {
+          this.firestore.filesSubject.unsubscribe();
+          this.firestore
+            .addFilesToChat(dataForFiles, selectedFriend?.key as string)
+            .then(() => {
+              this.firestore.filesSubject = new Subject();
+              this.filesArr = [];
+            });
+        });
+    }
+    this.sendMessNotifications();
+  }
+
+  deleteMessage(message: Chat) {
+    this.base.deleteMessage(message).then(() => {
+      this.urlText = [];
+      this.allChatsArray = this.allChatsArray.filter(
+        mess => mess.key !== message.key
+      );
+      this.getVisibleMessagesForSelectedFriend();
+    });
+  }
+
+  deleteFile(files: any[], docId: string, i: number) {
+    files.forEach((file: any) =>
+      this.firestore.deleteFilesFromStorage(
+        `fromChats/${this.userProfile.email}/files`,
+        file.fileName
+      )
+    );
+    this.firestore
+      .deleteFilesFromFirestore(docId, this.userProfile.key)
+      .then(val => {
+        this.sentFilesArr.splice(i, 1);
+        console.log('----FÁJL TÖRÖLVE----', val);
+        this.firestore.filesBehSubject.next(this.sentFilesArr);
+      });
+  }
+
+  sendMessNotifications() {
+    const apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
+    let friend = this.userProfiles.find(
+      uP => uP.uid === this.selectedFriend.friendId
+    );
+
+    const msg: Notification = {
+      displayName: this.message.message.displayName,
+      message: this.message.message.message,
+      profilePhoto: this.message.message.profilePhoto,
+      timeStamp: this.message.message.timeStamp,
+      friendId: this.message.participants[1],
+    };
+
+    new Promise((res, rej) => {
+      this.firestore.getUserNotiSubscription(friend!.key).subscribe(sub => {
+        this.friendPushSub = sub;
+        if (this.friendPushSub !== undefined) {
+          res(this.friendPushSub);
+        }
+      });
+    }).then(pushSub => {
+      this.http
+        .post(apiUrl + 'message', { msg: msg, sub: pushSub })
+        .subscribe(res => console.log(res));
+    });
+  }
+
+  calcMinutesPassed(sentMessDate: any) {
+    const newDate = new Date().getTime();
+    sentMessDate = new Date(sentMessDate).getTime();
+    // A különbség milliszekundumokban
+    const diffMilliseconds = newDate - sentMessDate;
+    // A különbség percekben
+    const passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
+    let hours: number = 0;
+    for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
+      hours += 1;
+    }
+
+    let days: number = 0;
+    for (
+      let i = 1440;
+      passedMinsSMessSent >= 1440 && i <= passedMinsSMessSent;
+      i += 1440
+    ) {
+      days += 1;
+    }
+
+    if (passedMinsSMessSent < 60)
+      return `${passedMinsSMessSent} perccel ezelőtt`;
+
+    if (hours < 24) return `${hours} órával ezelőtt`;
+
+    if (hours >= 24) return `${days} nappal ezelőtt`;
+  }
+
+  scrollToWriteMsgArea() {
+    const micContainer = document.getElementsByClassName('mic-container');
+    const interval = setInterval(() => {
+      if (micContainer) {
+        const micContainerPosition = micContainer
+          .item(0)
+          ?.getBoundingClientRect().bottom;
+        scrollTo(0, micContainerPosition!);
+        clearInterval(interval);
+      }
+    }, 200);
+  }
+
+  settingFiles() {
+    //////////////////// LEÍRÁS ///////////////////////////
+    // Fájlok feltöltéséhez használt Subject, elküldöttfájlok tömb
+    // adatainak beállítása subject segítségével
+    this.filesBehSubjectSub = this.firestore.filesBehSubject.subscribe(
+      flArr => (this.sentFilesArr = flArr)
+    );
+
+    //////////////////// LEÍRÁS ///////////////////////////
+    // elküldött fájlok tömbből kiszűri az adott barátnak küldött
+    // fájlokat és a barát által nekem küldött fájlokat
+    this.sentFilesArr = this.sentFilesArr.filter(file => {
+      return (
+        (file.receiverId === this.selectedFriend.friendId &&
+          file.files.length !== 0) ||
+        file.senderId === this.selectedFriend.friendId
+      );
+    });
+  }
+
+  async recordVoiceMessage() {
+    this.audioStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+    this.mediaRecorder = new MediaRecorder(this.audioStream);
+    this.mediaRecorder.start();
+    this.message.message.voiceMessage = 'recording-started';
+  }
+
+  async stopRecordingVoiceMessage() {
+    // let recordedAudio: Blob;
+    this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+      this.audioChunks.push(event.data);
+      // recordedAudio = new Blob(this.audioChunks, { type: 'audio/x-m4a' });
+      const nameForFile = this.generateNameForFile('m4a');
+      const recordedAudioFile = new File(this.audioChunks, nameForFile, {
+        type: 'audio/x-m4a',
+      });
+      // const url = URL.createObjectURL(recordedAudioFile);
+      // const a = document.createElement('a');
+      // a.href = url;
+      // a.download = 'felvetel.m4a';
+      // document.body.appendChild(a);
+      // a.click();
+      // document.body.removeChild(a);
+      // URL.revokeObjectURL(url);
+      // console.log(recordedAudioFile);
+      this.audioChunks = [];
+      this.selectedFiles.push(recordedAudioFile);
+      this.uploadFiles();
+    };
+    this.mediaRecorder.stop();
+    this.audioStream.getTracks().forEach(track => {
+      track.stop();
+    });
+  }
+
+  selectedFs($event: any) {
+    this.uploadFinished = false;
+    this.selectedFiles = Array.from($event.target.files);
+  }
+
+  uploadFiles() {
+    let arr: any = [];
+    this.selectedFiles.map((file: any) => {
+      const promise = this.firestore
+        .addFilesFromMessages(this.userProfile, file)
+        ?.then((val: any) => {
+          arr.push(val.metadata.name);
+          if (arr.length === this.selectedFiles.length) {
+            this.selectedFiles = [];
+            const fileModal = this.ngbModal.open(FilesModalComponent, {
+              centered: true,
+            });
+            fileModal.componentInstance.uploadTrue = true;
+            this.uploadFinished = true;
+          }
+        })
+        .catch(err => {
+          arr.push('Meglévő fájl');
+          console.log('Már van ilyen fájl az adatbázisban');
+
+          if (arr.length === this.selectedFiles.length) {
+            this.selectedFiles = [];
+            const fileModal = this.ngbModal.open(FilesModalComponent, {
+              centered: true,
+            });
+            fileModal.componentInstance.uploadTrue = true;
+            this.uploadFinished = true;
+          }
+        });
+    });
+
+    this.firestore.filesSubject.subscribe((file: any) => {
+      this.filesArr.push(file);
+      console.log(this.filesArr);
+      if (file.fileName.includes(this.selectedFriend.displayName)) {
+        this.message.message.voiceMessage = file.url;
+        this.message.message.message = '';
+      }
+    });
+  }
+
+  generateNameForFile(fileFormat: string) {
+    const timeId = new Date().getTime();
+    const fileName =
+      this.selectedFriend.displayName + '_' + timeId + '.' + fileFormat;
+    return fileName;
+  }
+
+  getVisibleMessagesForSelectedFriend(): any[] {
+    this.allChatsArray.map(mess => {
+      mess.message.viewTimeStamp = this.calcMinutesPassed(
+        mess.message.timeStamp
+      );
+      mess.message.timeStamp = new Date(mess.message.timeStamp).getTime();
+    });
+
+    this.allChatsArray.sort((a: any, b: any) => {
+      if (a.message.timeStamp < b.message.timeStamp) return 1;
+      else return -1;
+    });
+    // Kiválasztom az első 15 üzenetet
+    this.visibleMessages = this.allChatsArray.slice(0, 15);
+    // Leszűröm az urlt tartalmazó üzeneteket és elmentem egy tömbbe
+    const urlMessages: Chat[] = this.visibleMessages.filter(mess =>
+      mess.message?.message.includes('https://')
+    );
+    // Leszűröm a csak szöveget tartalmazó üzeneteket és elmentem egy tömbbe
+    this.textMessages = this.visibleMessages.filter(
+      mess => !mess.message?.message.includes('https://')
+    );
+
+    // kiszedem csak az url-t tartalmazó részt mindegyik üzenetből a szövegből és belerakom egy tömbbe
+    urlMessages.map((mess, i) => {
+      if (
+        !this.urlText.includes(mess.key) &&
+        mess.message?.message.includes(' ')
+      ) {
+        const transformedUrl = mess.message.message.slice(
+          mess.message?.message.indexOf('https://'),
+          mess.message?.message.indexOf(
+            ' ',
+            mess.message?.message.indexOf('https://')
+          )
+        );
+        const formattedText1stHalf = mess.message?.message.slice(
+          0,
+          mess.message?.message.indexOf(transformedUrl)
+        );
+        const formattedText2ndHalf = mess.message?.message.slice(
+          mess.message?.message.indexOf(
+            ' ',
+            mess.message?.message.indexOf(transformedUrl)
+          )
+        );
+        this.urlText.push(
+          {
+            url: transformedUrl,
+            text1stHalf: formattedText1stHalf,
+            text2ndHalf: formattedText2ndHalf,
+            chatId: mess.key,
+          },
+          mess.key
+        );
+      } else if (
+        !mess.message?.message.includes(' ') &&
+        !this.urlText.includes(mess.key)
+      ) {
+        this.urlText.push(
+          { url: mess.message?.message, chatId: mess.key },
+          mess.key
+        );
+      }
+    });
+    return this.visibleMessages;
+  }
+
+  // getNewMessages() {
+  //   const userProfile = this.userProfile;
+  //   return this.base.getNewMessages().subscribe(mess => {
+  //     this.filterShowFriendsMessArr();
+  //     let msgArr: any[] = [];
+  //     if (mess.length) {
+  //       msgArr = mess;
+  //       let keyArr: any[] = [];
+  //       this.allChatsArray.map((jSM: any) => {
+  //         keyArr.push(jSM.key);
+  //       });
+  //       msgArr = msgArr.filter(
+  //         msg =>
+  //           !keyArr.includes(msg.key) &&
+  //           msg.message.seen === false &&
+  //           msg.message.senderId != userProfile?.uid &&
+  //           msg.participants[1] === userProfile?.uid
+  //       );
+  //     }
+
+  //     for (let msg of msgArr) {
+  //       msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
+  //         new Date(msg.message.timeStamp)
+  //       );
+  //       if (msg.participants[1] === userProfile?.uid) {
+  //         this.haventSeenMessagesArr?.push(msg);
+  //         this.allChatsArray.unshift(msg);
+  //         this.filterShowFriendsMessArr();
+  //       }
+  //     }
+  //     if (this.userMessages) this.updateSeenMessages();
+  //     this.utilService.subjectValueTransfer(
+  //       this.haventSeenMessagesArr,
+  //       this.base.newMessageNotiSubject
+  //     );
+  //     this.runMessagesSubjectValueTransfer();
+  //     // this.getVisibleMessagesForSelectedFriend();
+  //   });
+  // }
+
+  backToUsers() {
+    this.sendPrivateMessageOn = false;
+    // this.isMessageOn = false;
+    // this.firestore.filesSubject.unsubscribe();
+    // this.filesArr = [];
+    // this.firestore.filesSubject = new Subject();
+    this.urlText = [];
+    this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
+      mess => !mess.message.seen
+    );
+    console.log(this.haventSeenMessagesArr);
+    this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+      this.haventSeenMessagesArr,
+      this.showFriendsMess
+    );
+    this.base.getAllMessagesSubject.next({
+      haventSeenMessagesArr: this.haventSeenMessagesArr,
+      showFriendsMess: this.showFriendsMess,
+    });
+    this.router.navigate(['/message']);
   }
 
   onAnimate() {
@@ -129,5 +582,18 @@ export class MessageComponent implements OnInit {
     });
     modalRef.componentInstance.picturesArr = picturesArr;
     modalRef.componentInstance.viewIndex = i;
+  }
+
+  runMessagesSubjectValueTransfer() {
+    this.base.getAllMessagesSubject.next({
+      // haventSeenMessagesArr: this.haventSeenMessagesArr,
+      allChatsArray: this.allChatsArray,
+      // showFriendsMess: this.showFriendsMess,
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.getAllMessagesSubjectSub)
+      this.getAllMessagesSubjectSub.unsubscribe();
   }
 }

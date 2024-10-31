@@ -3,11 +3,96 @@
   overflow-y: auto;
   max-height: 60vh !important;
 }
-
+.sendMessageOpenButton {
+  margin-bottom: 0 !important;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+}
 .reducedHeight {
   height: 40vh;
 }
 
+.messageCardDiv {
+  position: absolute;
+  bottom: 0%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, 40%);
+  // height: 45vh;
+  width: 100vw;
+}
+
+.green {
+  background-color: rgba(21, 179, 21, 0.7) !important;
+}
+
+.messageInput {
+  width: 80vw;
+}
+
+.fileButton {
+  label {
+    cursor: pointer !important;
+  }
+}
+.friend-name-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.friend-name {
+  width: fit-content;
+  color: rgb(13, 18, 107);
+  text-shadow: 1px 1px 1px white;
+  border: 2px solid green;
+  border-radius: 10px;
+  padding: 2px;
+  box-shadow: 3px 3px 3px black;
+  font-weight: bold;
+}
+.searchContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  div input {
+    background-color: rgba(125, 32, 212, 0.3);
+    overflow: auto;
+  }
+  div input:focus {
+    background-color: rgba(125, 32, 212, 0.5);
+  }
+}
+#picUploadInput {
+  display: none;
+}
+
+.my-posts-header {
+  background: rgb(78, 90, 162, 0.7) !important;
+}
+
+.exp-panel-headers {
+  background: rgba(141, 148, 190, 0.7) !important;
+}
+
+.album-icon {
+  color: rgb(46, 46, 219);
+}
+.feeds-icon {
+  color: green;
+}
+.messages-icon {
+  color: rgb(177, 80, 19);
+}
+.friends-icon {
+  color: rgb(88, 21, 88);
+}
+.profile-icon {
+  color: rgb(177, 40, 40);
+}
 .mainDivUser {
   margin-bottom: 10px;
   margin-left: 45px;
@@ -125,29 +210,6 @@
   }
 }
 
-.my-posts-header {
-  background: rgb(78, 90, 162, 0.7) !important;
-}
-
-.exp-panel-headers {
-  background: rgba(141, 148, 190, 0.7) !important;
-}
-
-.album-icon {
-  color: rgb(46, 46, 219);
-}
-.feeds-icon {
-  color: green;
-}
-.messages-icon {
-  color: rgb(177, 80, 19);
-}
-.friends-icon {
-  color: rgb(88, 21, 88);
-}
-.profile-icon {
-  color: rgb(177, 40, 40);
-}
 @media screen and (max-height: 614px) {
   .right {
     width: fit-content;

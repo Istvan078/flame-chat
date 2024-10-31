@@ -3,6 +3,7 @@ export class Chat {
   public participants: [string, string];
   public message: {
     senderId: string;
+    senderId_receiverId: string;
     message: string;
     voiceMessage?: string;
     timeStamp: string;
@@ -16,7 +17,8 @@ export class Chat {
   constructor() {
     this.participants = ['user_id_1', 'user_id_2'];
     this.message = {
-      senderId: 'user_id_1',
+      senderId: '',
+      senderId_receiverId: 'user_id_1-user_id_2',
       message: '',
       timeStamp: '',
       displayName: '',

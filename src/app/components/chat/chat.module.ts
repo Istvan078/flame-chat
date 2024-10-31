@@ -10,6 +10,7 @@ import { MyPostsComponent } from './my-posts/my-posts.component';
 import { ToastComponent } from '../toast/toast.component';
 import { PostsComponent } from './shared/posts/posts.component';
 import { MessageComponent } from './message/message.component';
+import { MessagedFriendsComponent } from './messaged-friends/messaged-friends.component';
 
 // HA NINCS DISPLAYNAME A USERNEK NEM LÉPHET BE A CHAT ÚTVONALRA //
 // Visszanavigálom profillétrehozó felületre
@@ -33,6 +34,7 @@ const chatCanActivate: CanActivateFn = (route, state) => {
     ToastComponent,
     PostsComponent,
     MessageComponent,
+    MessagedFriendsComponent,
   ],
   imports: [
     SharedModule,
@@ -42,6 +44,10 @@ const chatCanActivate: CanActivateFn = (route, state) => {
         path: 'chat/:uid',
         component: ChatComponent,
         canActivate: [chatCanActivate],
+      },
+      {
+        path: 'message',
+        component: MessagedFriendsComponent
       },
       {
         path: 'message/:friendId',
