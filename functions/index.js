@@ -176,12 +176,12 @@ app.route('/message').post((req, res) => {
       data: {
         onActionClick: {
           default: {
-            operation: 'focusLastFocusedOrOpen',
-            url: 'https://project0781.web.app/message/' + msg.friendId,
+            operation: 'openWindow',
+            url: 'https://project0781.web.app/message/' + msg.senderId,
           },
           navigate: {
-            operation: 'focusLastFocusedOrOpen',
-            url: 'https://project0781.web.app/message/' + msg.friendId,
+            operation: 'openWindow',
+            url: 'https://project0781.web.app/message/' + msg.senderId,
           },
         },
       },

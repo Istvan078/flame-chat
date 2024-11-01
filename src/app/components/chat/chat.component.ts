@@ -219,6 +219,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   seenMeSub!: Subscription;
   getMyPostsSub: Subscription = Subscription.EMPTY;
   refreshMyPostsSub: Subscription = Subscription.EMPTY;
+  messSubscription: Subscription = Subscription.EMPTY;
 
   // ESEMÉNYFIGYELŐK //
   private isOnlineHandler: () => void;
@@ -280,6 +281,16 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (this.notConfirmedMeUsers.length || this.userNotFriends.length)
         this.friendsOn = true;
     });
+    this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
+      obj => {
+        if (obj.haventSeenMessagesArr) {
+          this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
+          // this.getNumberOfNewMessages();
+        }
+        console.log(obj);
+      }
+    );
+
     new Promise(res => {
       this.userLoggedInSubscription = this.auth
         .getUserLoggedInSubject()
@@ -362,6 +373,13 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.getFriendsSub = this.getFriendsAndNotFriends().subscribe({
           next: (res: any) => {
             console.log(res);
+            this.getNumberOfNewMessages();
+            setTimeout(() => {
+              console.log(this.haventSeenMessagesArr);
+              this.base.getAllMessagesSubject.next({
+                haventSeenMessagesArr: this.haventSeenMessagesArr,
+              });
+            }, 2000);
           },
           complete: async () => {
             console.log('***OBSERVABLE BEFEJEZŐDÖTT***');
@@ -849,6 +867,17 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
+  getNumberOfNewMessages() {
+    this.messSubscription = this.base.getNewMessages().subscribe(msgs => {
+      this.haventSeenMessagesArr = msgs.filter(msg => !msg.message.seen);
+      this.utilService.subjectValueTransfer(
+        this.haventSeenMessagesArr,
+        this.base.newMessageNotiSubject
+      );
+      console.log(`GETNUMBEROFNEWMESSAGES`);
+    });
+  }
+
   getSharedPosts() {
     if (this.getSharedPostsCounter === -1) return this.getSharedPostsCounter++;
     if (!this.getSharedPostsCounter) {
@@ -949,6 +978,9 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
     if (this.postsNotiSub) {
       this.postsNotiSub.unsubscribe();
+    }
+    if (this.messSubscription) {
+      this.messSubscription.unsubscribe();
     }
     if (this.getFriendsSub) this.getFriendsSub.unsubscribe();
     if (this.userSubjectSub) this.userSubjectSub.unsubscribe();

@@ -110,6 +110,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   getAllMessagesSubjectSub: Subscription = Subscription.EMPTY;
   userSubjectSub: Subscription = Subscription.EMPTY;
   filesBehSubjectSub: Subscription = Subscription.EMPTY;
+  messSubscription: Subscription = Subscription.EMPTY;
 
   constructor(
     private utilService: UtilityService,
@@ -154,6 +155,8 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.userProfile.uid,
         this.selectedFriendId!
       );
+      console.log(this.allChatsArray);
+      this.messSubscription = this.getNewMessages();
       this.getVisibleMessagesForSelectedFriend();
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
       this.userProfilesSub.unsubscribe();
@@ -166,16 +169,16 @@ export class MessageComponent implements OnInit, OnDestroy {
     new Promise((res, rej) => {
       const actualTime = new Date().getTime();
       if (this.userProfile.uid) {
-        this.message.message.senderId_receiverId = `${this.userProfile.uid}_${this.selectedFriend.friendId}`;
+        this.message.message.senderId_receiverId = `${this.userProfile.uid}_${this.selectedFriendId}`;
         this.message.message.senderId = this.userProfile.uid;
       }
       this.message.message.timeStamp = actualTime as any;
       this.message.participants[0] =
         this.userProfile.uid + '-' + new Date().getTime();
-      this.message.participants[1] = this.selectedFriend.friendId;
+      this.message.participants[1] = this.selectedFriendId!;
       this.message.participants[2 as any] =
         this.userProfile.uid +
-        this.selectedFriend.friendId +
+        this.selectedFriendId +
         '-' +
         new Date().getTime();
       this.message.message.displayName = this.userProfile.displayName!;
@@ -188,7 +191,7 @@ export class MessageComponent implements OnInit, OnDestroy {
           this.userProfile
         );
       this.message._setKey =
-        this.userProfile.uid + this.utilService.randomIdGenerator();
+        this.userProfile.uid + this.utilService.randomIdGenerator(this.message);
       const messageCopy = deepMerge.all([this.message]);
       this.allChatsArray.unshift(messageCopy);
       this.getVisibleMessagesForSelectedFriend();
@@ -205,14 +208,14 @@ export class MessageComponent implements OnInit, OnDestroy {
 
     if (this.filesArr.length) {
       const selectedFriend = this.userProfiles.find(
-        usr => usr.uid === this.selectedFriend.friendId
+        usr => usr.uid === this.selectedFriendId
       );
 
       const dataForFiles = {
         files: this.filesArr,
         chatId: this.message.key,
         senderId: this.userProfile.uid,
-        receiverId: this.selectedFriend.friendId,
+        receiverId: this.selectedFriendId,
       };
       this.firestore
         .addFilesToChat(dataForFiles, this.userProfile.key as string)
@@ -228,6 +231,53 @@ export class MessageComponent implements OnInit, OnDestroy {
     }
     this.sendMessNotifications();
   }
+
+  // updateSeenMessages() {
+  //   // látott üzenetek kiszűrése a tömbből
+  //   this.allChatsArray = this.allChatsArray?.map(mess => {
+  //     if (mess.message.senderId === this.selectedFriendId) {
+  //       mess.message.seen = true;
+  //       this.base.updateMessage(mess.key, mess);
+  //       return mess;
+  //     }
+  //     if (mess.message.senderId !== this.selectedFriendId) {
+  //       return mess;
+  //     }
+  //   });
+
+  // this.haventSeenMessagesArr = this.haventSeenMessagesArr?.filter(
+  //   mess => mess !== undefined
+  // );
+  // this.utilService.filterShowFriendsMessArr(
+  //   this.haventSeenMessagesArr,
+  //   this.showFriendsMess
+  // );
+  // this.utilService.subjectValueTransfer(
+  //   this.haventSeenMessagesArr,
+  //   this.base.newMessageNotiSubject
+  // );
+  // this.runMessagesSubjectValueTransfer();
+  // }
+
+  // updateSeenMessagesAndViewTime = (user: any) => {
+  //   return new Promise((res, rej) => {
+  //     this.updateSeenMessages();
+  //     res('');
+  //   }).then(res => {
+  //     /////////////////// LEÍRÁS ////////////////////////
+  //     // Mikor írta az üzenetet beállítása a calcMinutesPassed() //
+  //     // metódus segítségével(formázva)) //
+  //     this.allChatsArray = this.allChatsArray.map(mess => {
+  //       if (!mess.message.viewTimeStamp || mess.message.viewTimeStamp == '') {
+  //         mess.message.viewTimeStamp = this.utilService.calcMinutesPassed(
+  //           mess.message.timeStamp
+  //         );
+  //       }
+  //       // az iteráció végén visszaad minden üzenetet(módosítva)
+  //       return mess;
+  //     });
+  //   });
+  // };
 
   deleteMessage(message: Chat) {
     this.base.deleteMessage(message).then(() => {
@@ -257,25 +307,24 @@ export class MessageComponent implements OnInit, OnDestroy {
 
   sendMessNotifications() {
     const apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
-    let friend = this.userProfiles.find(
-      uP => uP.uid === this.selectedFriend.friendId
-    );
 
     const msg: Notification = {
       displayName: this.message.message.displayName,
       message: this.message.message.message,
       profilePhoto: this.message.message.profilePhoto,
       timeStamp: this.message.message.timeStamp,
-      friendId: this.message.participants[1],
+      senderId: this.userProfile.uid,
     };
 
     new Promise((res, rej) => {
-      this.firestore.getUserNotiSubscription(friend!.key).subscribe(sub => {
-        this.friendPushSub = sub;
-        if (this.friendPushSub !== undefined) {
-          res(this.friendPushSub);
-        }
-      });
+      this.firestore
+        .getUserNotiSubscription(this.selectedFriend.key)
+        .subscribe(sub => {
+          this.friendPushSub = sub;
+          if (this.friendPushSub !== undefined) {
+            res(this.friendPushSub);
+          }
+        });
     }).then(pushSub => {
       this.http
         .post(apiUrl + 'message', { msg: msg, sub: pushSub })
@@ -436,7 +485,15 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   getVisibleMessagesForSelectedFriend(): any[] {
+    console.log(this.allChatsArray);
     this.allChatsArray.map(mess => {
+      if (
+        !mess.message?.seen &&
+        mess.message.senderId === this.selectedFriendId
+      ) {
+        mess.message.seen = true;
+        this.base.updateMessage(mess.key, mess).then(() => {});
+      }
       mess.message.viewTimeStamp = this.calcMinutesPassed(
         mess.message.timeStamp
       );
@@ -503,45 +560,41 @@ export class MessageComponent implements OnInit, OnDestroy {
     return this.visibleMessages;
   }
 
-  // getNewMessages() {
-  //   const userProfile = this.userProfile;
-  //   return this.base.getNewMessages().subscribe(mess => {
-  //     this.filterShowFriendsMessArr();
-  //     let msgArr: any[] = [];
-  //     if (mess.length) {
-  //       msgArr = mess;
-  //       let keyArr: any[] = [];
-  //       this.allChatsArray.map((jSM: any) => {
-  //         keyArr.push(jSM.key);
-  //       });
-  //       msgArr = msgArr.filter(
-  //         msg =>
-  //           !keyArr.includes(msg.key) &&
-  //           msg.message.seen === false &&
-  //           msg.message.senderId != userProfile?.uid &&
-  //           msg.participants[1] === userProfile?.uid
-  //       );
-  //     }
+  getNewMessages() {
+    const userProfile = this.userProfile;
+    return this.base.getNewMessages().subscribe(mess => {
+      let msgArr: any[] = [];
+      if (mess.length) {
+        msgArr = mess;
+        let keyArr: any[] = [];
+        this.allChatsArray.map((jSM: any) => {
+          keyArr.push(jSM.key);
+        });
+        msgArr = msgArr.filter(
+          msg =>
+            !keyArr.includes(msg.key) &&
+            msg.message.seen === false &&
+            msg.message.senderId != userProfile?.uid &&
+            msg.participants[1] === userProfile?.uid
+        );
+      }
 
-  //     for (let msg of msgArr) {
-  //       msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
-  //         new Date(msg.message.timeStamp)
-  //       );
-  //       if (msg.participants[1] === userProfile?.uid) {
-  //         this.haventSeenMessagesArr?.push(msg);
-  //         this.allChatsArray.unshift(msg);
-  //         this.filterShowFriendsMessArr();
-  //       }
-  //     }
-  //     if (this.userMessages) this.updateSeenMessages();
-  //     this.utilService.subjectValueTransfer(
-  //       this.haventSeenMessagesArr,
-  //       this.base.newMessageNotiSubject
-  //     );
-  //     this.runMessagesSubjectValueTransfer();
-  //     // this.getVisibleMessagesForSelectedFriend();
-  //   });
-  // }
+      for (let msg of msgArr) {
+        msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
+          new Date(msg.message.timeStamp)
+        );
+        if (
+          msg.participants[1] === userProfile?.uid &&
+          msg.message.senderId === this.selectedFriendId
+        ) {
+          this.allChatsArray.unshift(msg);
+        }
+      }
+      // if (this.userMessages) this.updateSeenMessages();
+      // this.runMessagesSubjectValueTransfer();
+      this.getVisibleMessagesForSelectedFriend();
+    });
+  }
 
   backToUsers() {
     this.sendPrivateMessageOn = false;
@@ -560,6 +613,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     );
     this.base.getAllMessagesSubject.next({
       haventSeenMessagesArr: this.haventSeenMessagesArr,
+      allChatsArray: this.visibleMessages,
       showFriendsMess: this.showFriendsMess,
     });
     this.router.navigate(['/message']);
@@ -586,7 +640,7 @@ export class MessageComponent implements OnInit, OnDestroy {
 
   runMessagesSubjectValueTransfer() {
     this.base.getAllMessagesSubject.next({
-      // haventSeenMessagesArr: this.haventSeenMessagesArr,
+      haventSeenMessagesArr: this.haventSeenMessagesArr,
       allChatsArray: this.allChatsArray,
       // showFriendsMess: this.showFriendsMess,
     });
@@ -595,5 +649,8 @@ export class MessageComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.getAllMessagesSubjectSub)
       this.getAllMessagesSubjectSub.unsubscribe();
+    if (this.messSubscription) {
+      this.messSubscription.unsubscribe();
+    }
   }
 }

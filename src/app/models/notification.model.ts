@@ -3,5 +3,5 @@ export type Notification = {
   message: string;
   profilePhoto: string;
   timeStamp: string;
-  friendId: string;
+  senderId: string;
 };

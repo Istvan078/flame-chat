@@ -319,6 +319,7 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     const userProfile = this.userProfile;
     return this.base.getNewMessages().subscribe(mess => {
       this.filterShowFriendsMessArr();
+      console.log(this.haventSeenMessagesArr);
       let msgArr: any[] = [];
       if (mess.length) {
         msgArr = mess;
@@ -326,6 +327,7 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         this.allChatsArray.map((jSM: any) => {
           keyArr.push(jSM.key);
         });
+        this.haventSeenMessagesArr?.map(hSM => keyArr.push(hSM.key));
         msgArr = msgArr.filter(
           msg =>
             !keyArr.includes(msg.key) &&
@@ -334,7 +336,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
             msg.participants[1] === userProfile?.uid
         );
       }
-
       for (let msg of msgArr) {
         msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
           new Date(msg.message.timeStamp)
