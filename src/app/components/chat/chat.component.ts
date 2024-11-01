@@ -6,7 +6,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { Chat } from 'src/app/models/chat.model';
 import { ForUserSubject, Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
@@ -15,9 +15,7 @@ import { MatAccordion } from '@angular/material/expansion';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { FirestoreService } from 'src/app/services/firestore.service';
-import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 import { HttpClient } from '@angular/common/http';
-import * as deepMerge from 'deepmerge';
 import { ToastService } from 'src/app/services/toast.service';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import {
@@ -93,50 +91,11 @@ import { UtilityService } from 'src/app/services/utility.service';
         ),
       ]),
     ]),
-    trigger('fade-in', [
-      state(
-        'in-2',
-        style({
-          opacity: 0,
-          transform: 'scale(0)',
-        })
-      ),
-      state(
-        'normal',
-        style({
-          opacity: 1,
-          transform: 'scale(1)',
-        })
-      ),
-      transition('in-2 => normal', [
-        animate(
-          500,
-          keyframes([
-            style({
-              transform: 'scale(0.2)',
-              opacity: 0.3,
-              offset: 0.3,
-            }),
-            style({
-              transform: 'scale(0.5)',
-              opacity: 1,
-              offset: 0.6,
-            }),
-            style({
-              transform: 'scale(1)',
-              opacity: 1,
-              offset: 1,
-            }),
-          ])
-        ),
-      ]),
-    ]),
   ],
 })
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild(MatAccordion) accordion!: MatAccordion;
   @ViewChild('slideToggle') slideToggle!: MatSlideToggle;
-  @ViewChild('messageCardCont') messageCardCont!: ElementRef;
 
   // ANIMÁCIÓVAL KAPCSOLATOS //
   chatAnimationState: string = 'normal';
@@ -159,23 +118,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   userSearched: string = '';
   userSearchedProfiles: UserClass[] & Friends[] = [];
 
-  // ÜZENET KERESÉSE //
-  searchWord: string = '';
-
   // ÜZENETEKKEL KAPCSOLATOS //
-  messages: Chat[] = [];
-  messFromSelFriendArr: any[] = [];
-  urlText: any[] = [];
-  message: Chat = new Chat();
-  editMessage: boolean = false;
-  sendPrivateMessageOn: boolean = false;
   messageButtonClicked: boolean = false;
-  userMessages: boolean = false;
   arePostsOn: boolean = false;
   areMyPostsOn: boolean = false;
-  isMessageOn: boolean = false;
   subscribedForNotifications: boolean = false;
-  fromChatComponent: boolean = false;
   haventSeenMessagesArr: any[] = [];
 
   // POSZTOKKAL KAPCSOLATOS //
@@ -183,13 +130,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   myPostsNotificationNumber: number = 0;
   seenPosts: any[] = [];
   seenMyPosts: any[] = [];
-
-  // FÁJLOKKAL KAPCSOLATOS //
-  selectedFiles: any[] = [];
-  filesArr: any[] = [];
-  sentFilesArr: any[] = [];
-  voiceMessages: any[] = [];
-  uploadFinished: boolean = true;
+  getMyPostsCounter = -1;
+  getSharedPostsCounter = -1;
+  getPosts: {
+    isGetMyPosts: boolean;
+    isGetSharedPosts: boolean;
+  } = {
+    isGetMyPosts: false,
+    isGetSharedPosts: false,
+  };
 
   // PUSH NOTIFICATIONS-EL KAPCSOLATOS //
   friendPushSub: any;
@@ -209,7 +158,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   usersSubscription: Subscription = Subscription.EMPTY;
   userFriendSubjectSub: Subscription = Subscription.EMPTY;
   getAllMessagesSubjectSub: Subscription = Subscription.EMPTY;
-  haventSeenMsgsArrSubjSub: Subscription = Subscription.EMPTY;
   postsNotiSub: Subscription = Subscription.EMPTY;
   isSubscribedForNotSub: Subscription = Subscription.EMPTY;
   getFriendsSub: Subscription = Subscription.EMPTY;
@@ -220,24 +168,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   getMyPostsSub: Subscription = Subscription.EMPTY;
   refreshMyPostsSub: Subscription = Subscription.EMPTY;
   messSubscription: Subscription = Subscription.EMPTY;
-
-  // ESEMÉNYFIGYELŐK //
-  private isOnlineHandler: () => void;
-  private isOfflineHandler: () => void;
-
-  // OBSERVABLES //
-  customInterval$ = new Observable(subscriber => {
-    let timesExecuted = 0;
-    const interval = setInterval(() => {
-      // subscriber.error();
-      if (timesExecuted > 5) {
-        clearInterval(interval);
-        subscriber.complete(); // megtisztítja a subscription-t, nem lesz további érték azt is mondom vele
-        return;
-      }
-      subscriber.next({ message: 'új érték' }); // itt azt állítjuk be MIKOR történjen meg a next esemény!!!
-    }, 2000);
-  });
 
   onAnimate() {
     this.chatAnimationState =
@@ -250,16 +180,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     private router: Router,
     private ngbModal: NgbModal,
     private firestore: FirestoreService,
-    private http: HttpClient,
     private toastService: ToastService,
-    private utilService: UtilityService,
-    private element: ElementRef
-  ) {
-    this.isOnlineHandler = this.handleOnline.bind(this);
-    this.isOfflineHandler = this.handleOffline.bind(this);
-  }
+    private utilService: UtilityService
+  ) {}
   async ngOnInit() {
-    this.isUserOnline();
     this.auth.authNullSubject.subscribe(authNull => {
       this.authNull = authNull;
     });
@@ -268,9 +192,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (user.userProfiles) this.userProfiles = user.userProfiles;
       if (user.userProfile) {
         this.userProfile = user.userProfile;
-        // if (!this.userProfile.displayName) {
-        //   this.router.navigate([`/profile/${this.userProfile.uid}`])
-        // }
       }
       if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
       if (user.userFriends) this.userFriends = user.userFriends;
@@ -285,9 +206,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       obj => {
         if (obj.haventSeenMessagesArr) {
           this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
-          // this.getNumberOfNewMessages();
         }
-        console.log(obj);
       }
     );
 
@@ -336,7 +255,6 @@ export class ChatComponent implements OnInit, OnDestroy {
               );
             }
           if (this.userProfile.key && this.authNull !== null) {
-            console.log(`Lefutott`);
             this.getMyPostsSub = this.getMyPostsSubcription();
             this.refreshMyPostsSub = this.refreshMyPosts();
             this.getNewPostsNotification();
@@ -348,25 +266,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (this.userProfile.displayName)
         this.isSubscribedForNotSub = this.isSubscribedForNotifications()!;
       if (this.isSubscribedForNotSub) this.isSubscribedForNotSub.unsubscribe();
-      let docIdsArr: any[] = [];
-      console.log(res);
-      if (this.firestore.filesBehSubject.value.length === 0) {
-        this.firestore
-          .getFilesFromChat(this.userProfile.key as string)
-          .subscribe((data: any) => {
-            data.forEach((doc: any) => {
-              if (!docIdsArr.includes(doc.payload.doc.id)) {
-                docIdsArr.push(doc.payload.doc.id);
-                this.sentFilesArr.push({
-                  docId: doc.payload.doc.id,
-                  ...doc.payload.doc.data(),
-                });
-              }
-            });
-            console.log('**** FÁJLOK LEKÉRVE ****');
-            this.firestore.filesBehSubject.next(this.sentFilesArr);
-          });
-      }
       // baratok listajanak lekerese
       if (!this.userProfile?.uid) return;
       if (this.userProfile?.uid) {
@@ -387,7 +286,6 @@ export class ChatComponent implements OnInit, OnDestroy {
               { online: true },
               this.userProfile?.key
             );
-            this.isUserOnlineNow = true;
             this.auth.authNullSubject.next(2);
             if (this.getFriendsSub) this.getFriendsSub.unsubscribe();
           },
@@ -829,15 +727,6 @@ export class ChatComponent implements OnInit, OnDestroy {
       });
   }
 
-  getMyPostsCounter = -1;
-  getSharedPostsCounter = -1;
-  getPosts: {
-    isGetMyPosts: boolean;
-    isGetSharedPosts: boolean;
-  } = {
-    isGetMyPosts: false,
-    isGetSharedPosts: false,
-  };
   getMyPosts() {
     if (this.getMyPostsCounter === -1) return this.getMyPostsCounter++;
     if (!this.getMyPostsCounter) {
@@ -869,7 +758,13 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   getNumberOfNewMessages() {
     this.messSubscription = this.base.getNewMessages().subscribe(msgs => {
-      this.haventSeenMessagesArr = msgs.filter(msg => !msg.message.seen);
+      if (msgs.length)
+        this.haventSeenMessagesArr = msgs.filter(
+          msg =>
+            !msg.message.seen &&
+            msg.messsage?.senderId !== this.userProfile.uid &&
+            msg.participants[1] === this.userProfile.uid
+        );
       this.utilService.subjectValueTransfer(
         this.haventSeenMessagesArr,
         this.base.newMessageNotiSubject
@@ -894,45 +789,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   toAlbum() {
     this.base.userProfileSubject.next(this.userProfile);
     this.router.navigate(['/album/' + this.userProfile.uid]);
-  }
-
-  async handleOnline() {
-    if (!this.isUserOnlineNow) {
-      await this.base.updateUserData({ online: true }, this.userProfile?.key);
-      this.isUserOnlineNow = true;
-    }
-  }
-
-  async handleOffline() {
-    if (this.isUserOnlineNow) {
-      await this.base.updateUserData({ online: false }, this.userProfile?.key);
-      await this.base.updateUserData(
-        { lastTimeOnline: new Date().getTime() },
-        this.userProfile?.key
-      );
-      this.isUserOnlineNow = false;
-    }
-  }
-
-  async isUserOnline() {
-    // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
-    window.addEventListener('click', this.isOnlineHandler);
-    window.addEventListener('focus', this.isOnlineHandler);
-    // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
-    window.addEventListener('blur', this.isOfflineHandler);
-    setInterval(async () => {
-      if (this.isUserOnlineNow) {
-        await this.base.updateUserData(
-          { online: false },
-          this.userProfile?.key
-        );
-        await this.base.updateUserData(
-          { lastTimeOnline: new Date().getTime() },
-          this.userProfile?.key
-        );
-        this.isUserOnlineNow = false;
-      }
-    }, 300 * 1000);
   }
 
   searchUser() {
@@ -970,9 +826,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.getAllMessagesSubjectSub) {
       this.getAllMessagesSubjectSub.unsubscribe();
     }
-    if (this.haventSeenMsgsArrSubjSub) {
-      this.getAllMessagesSubjectSub.unsubscribe();
-    }
     if (this.userFriendSubjectSub) {
       this.userFriendSubjectSub.unsubscribe();
     }
@@ -989,8 +842,5 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.seenMeSub) this.seenMeSub.unsubscribe();
     if (this.getMyPostsSub) this.getMyPostsSub.unsubscribe();
     if (this.refreshMyPostsSub) this.refreshMyPostsSub.unsubscribe();
-    window.removeEventListener('click', this.isOnlineHandler);
-    window.removeEventListener('focus', this.isOnlineHandler);
-    window.removeEventListener('blur', this.isOfflineHandler);
   }
 }

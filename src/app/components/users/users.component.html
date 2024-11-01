@@ -153,6 +153,14 @@
               </mat-slide-toggle
             ></span>
           </div>
+          <div *ngIf="user['isRenderOn']" class="ms-2 mt-2">
+            <mat-icon class="align-middle text-success">person</mat-icon>
+            <span class="align-middle"
+              ><b>
+                {{ user['lastTimeOnline'] + ' ' + 'volt elérhető' }}</b
+              ></span
+            >
+          </div>
         </li>
       </ng-container>
     </ol>
@@ -161,7 +169,12 @@
 
 <div class="row">
   <div class="col-12 text-center">
-    <button (click)="showNavAgain()" routerLink="" type="button" class="btn mt-2 btn-warning me-2">
+    <button
+      (click)="showNavAgain()"
+      routerLink=""
+      type="button"
+      class="btn mt-2 btn-warning me-2"
+    >
       Vissza
     </button>
     <button

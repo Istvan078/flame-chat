@@ -14,6 +14,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { BaseService } from 'src/app/services/base.service';
 import { Environments } from 'src/app/environments';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-users',
@@ -43,7 +44,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     private router: Router,
     private http: HttpClient,
     private modalRef: NgbModal,
-    private base: BaseService
+    private base: BaseService,
+    private utilService: UtilityService
   ) {}
 
   ngOnInit(): void {
@@ -52,6 +54,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         user['isRenderOn'] = false;
       });
       this.users = users;
+      console.log(this.users);
     });
   }
 
@@ -81,13 +84,23 @@ export class UsersComponent implements OnInit, OnDestroy {
   getUserProfiles() {
     this.base.getUserProfiles().subscribe(uPfs => (this.userProfiles = uPfs));
     this.userProfiles.forEach(uP => {
-      if (!uP?.age && uP.birthDate) {
+      if (!uP?.age && uP?.age !== 0 && uP.birthDate) {
         const uProf = new UserClass('', uP.birthDate);
         uProf?.ageCalc();
         const updatedAge = { age: uProf.age };
         this.base.updateUserData(updatedAge, uP.key);
       }
+      this.users.map(user => {
+        if (uP.lastTimeOnline) {
+          const lastTOnlineDate = new Date(uP.lastTimeOnline);
+          const formattedDateStr =
+            this.utilService.calcMinutesPassed(lastTOnlineDate);
+          if (user.uid === uP.uid)
+            user['lastTimeOnline' as string] = formattedDateStr;
+        }
+      });
     });
+    console.log(this.users);
   }
 
   removeUserProfile() {

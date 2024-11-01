@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs';
 import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
 import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
+import { UtilityService } from './services/utility.service';
 
 @Component({
   selector: 'app-root',
@@ -22,8 +23,10 @@ export class AppComponent implements OnInit, OnDestroy {
   routerOutletOffSub!: Subscription;
   private matDialog = inject(MatDialog);
   private onDestroyRef = inject(DestroyRef);
+  private base = inject(BaseService);
+  private utilService = inject(UtilityService);
 
-  constructor(private base: BaseService, private swUpdate: SwUpdate) {}
+  constructor(private swUpdate: SwUpdate) {}
   ngOnInit(): void {
     const interval = setInterval(this.checkForVersionUpdate, 30000);
     this.routerOutletOffSub = this.base.logicalSubject.subscribe(
@@ -37,18 +40,29 @@ export class AppComponent implements OnInit, OnDestroy {
   checkForVersionUpdate = () => {
     if (this.swUpdate.isEnabled) {
       this.swUpdate.checkForUpdate().then(isUpd => isUpd);
-      const swUpdateSub = this.swUpdate.versionUpdates.subscribe(val => {
+      const swUpdateSub = this.swUpdate.versionUpdates.subscribe(async val => {
         if (val.type === 'NO_NEW_VERSION_DETECTED') swUpdateSub.unsubscribe();
         if (val.type === 'VERSION_READY') {
           swUpdateSub.unsubscribe();
-          // const matDialogRef = this.matDialog.open(MatModalComponent, {
-          //   enterAnimationDuration: 2000,
-          // });
-          // matDialogRef.componentInstance.isUpdateForApp = true;
-          // matDialogRef.afterClosed().subscribe(res => {
-          //   if (res === true) window.location.reload();
-          // });
-          window.location.reload();
+          const matDialogRef = this.matDialog.open(MatModalComponent, {
+            enterAnimationDuration: 2000,
+          });
+          matDialogRef.componentInstance.isUpdateForApp = true;
+          matDialogRef.afterClosed().subscribe(res => {
+            window.location.reload();
+          });
+          const profsSub = this.base
+            .getUserProfiles()
+            .subscribe(async uProfs => {
+              const uProf = uProfs.find(
+                (uP: any) =>
+                  uP.uid === this.utilService.forUserSubject.userProfile.uid
+              );
+              uProf.appVersion = 1.2;
+              console.log(``);
+              await this.base.updateUserData(uProf, uProf.key);
+              profsSub.unsubscribe();
+            });
         }
       });
     }

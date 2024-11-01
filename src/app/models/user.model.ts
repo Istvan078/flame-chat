@@ -61,7 +61,8 @@ export class UserClass {
     public gender: string = '',
     public pictures: { name: string; url: string }[] = [],
     public profilePicture: string = '',
-    public visibility: boolean = true
+    public visibility: boolean = true,
+    public appVersion: number = 1
   ) {
     this.claims = {
       basic: true,
@@ -84,9 +85,6 @@ export class UserClass {
     if (date.includes('-')) dateArr = date.split('-');
     if (date.includes('.')) dateArr = date.split('.');
     let birthDate: any[] = [];
-    if (this.birthDate.includes('-')) {
-      birthDate = this.birthDate.trim().split('-');
-    }
     if (this.birthDate.includes('-'))
       birthDate = this.birthDate.trim().split('-');
     if (this.birthDate.includes('/')) {

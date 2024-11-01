@@ -9,6 +9,10 @@ const environments = require('./config/config');
 const forecast = require('./utils/forecast');
 const geocode = require('./utils/geocode');
 
+const fs = require('fs');
+const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
+
 const serviceAccount = require(environments.SERVICE_ACCOUNT_ROUTE);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -162,6 +166,32 @@ webpush.setVapidDetails(
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
+
+app.route('/video-compressing').post((req, res) => {
+  const videoBuffer = req.body.video.buffer;
+  const tempFilePath = path.join(['/tmp', 'input-video.mp4']);
+
+  fs.writeFileSync(tempFilePath, videoBuffer);
+
+  const outputFilePath = path.join(['/tmp', 'output-video.mp4']);
+
+  ffmpeg(tempFilePath)
+    .output(outputFilePath)
+    .size('640x360')
+    .format('mp4')
+    .on('end', () => {
+      // Küldés a kliensnek és a fájl törlése
+      res.download(outputFilePath, 'compressed-video.mp4', () => {
+        fs.unlinkSync(tempFilePath);
+        fs.unlinkSync(outputFilePath);
+      });
+    })
+    .on('error', err => {
+      console.error('Videó feldolgozási hiba:', err);
+      res.status(500).send('Hiba történt a videó feldolgozása során');
+    })
+    .run();
+});
 
 app.route('/message').post((req, res) => {
   const msg = req.body.msg;

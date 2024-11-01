@@ -20,7 +20,12 @@
   ],
   "hosting": {
     "public": "dist/project/browser",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "/src/app/for-dev-and-testing"
+    ],
     "rewrites": [
       {
         "source": "**",

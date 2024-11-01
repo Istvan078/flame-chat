@@ -19,6 +19,7 @@ import * as deepMerge from 'deepmerge';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Notification } from 'src/app/models/notification.model';
 import { HttpClient } from '@angular/common/http';
+import { Environments } from 'src/app/environments';
 
 @Component({
   selector: 'app-message',
@@ -73,7 +74,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   @Input() urlText: any;
   @Input() messageButtonClicked: boolean = false;
   // ANIMÁCIÓVAL KAPCSOLATOS //
-  chatAnimationState: string = 'normal';
+  chatAnimationState: string = 'in-2';
 
   // ÜZENETEK //
   allChatsArray: any[] = [];
@@ -86,6 +87,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   selectedFriendId?: string;
   userProfiles: UserClass[] = [];
   userProfile: UserClass = new UserClass();
+  isUserOnlineNow: boolean = false;
 
   // FÁJLOK //
   filesArr: any[] = [];
@@ -146,8 +148,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.userProfilesSub = AllUserDtlsRes.subscribe(async AllUserDtls => {
       this.userProfiles = AllUserDtls.userProfiles;
       this.userProfile = AllUserDtls.userProfile;
-      // this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
-      // this.userFriends = AllUserDtls.userFriends!;
       this.selectedFriend = this.userProfiles.find(
         uP => uP.uid === this.selectedFriendId
       );
@@ -155,14 +155,37 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.userProfile.uid,
         this.selectedFriendId!
       );
-      console.log(this.allChatsArray);
       this.messSubscription = this.getNewMessages();
       this.getVisibleMessagesForSelectedFriend();
+      this.animateMessages();
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
+      let docIdsArr: any[] = [];
+      this.settingFilesArr();
+      if (this.firestore.filesBehSubject.value.length === 0) {
+        this.firestore
+          .getFilesFromChat(this.userProfile.key as string)
+          .subscribe((data: any) => {
+            data.forEach((doc: any) => {
+              if (!docIdsArr.includes(doc.payload.doc.id)) {
+                docIdsArr.push(doc.payload.doc.id);
+                this.sentFilesArr.push({
+                  docId: doc.payload.doc.id,
+                  ...doc.payload.doc.data(),
+                });
+              }
+            });
+            console.log('**** FÁJLOK LEKÉRVE ****');
+            this.firestore.filesBehSubject.next(this.sentFilesArr);
+          });
+        // this.settingFilesArr();
+      }
       this.userProfilesSub.unsubscribe();
     });
+  }
 
-    this.animateMessages();
+  animateMessages() {
+    this.chatAnimationState =
+      this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
   }
 
   addMessage() {
@@ -201,34 +224,32 @@ export class MessageComponent implements OnInit, OnDestroy {
       res('Üzenet tulajdonságai beállítva, üzenet objektum lemásolva.');
     }).then(res => {
       this.base.updateMessage(this.message['key'], this.message).then(() => {
+        if (this.filesArr.length) {
+          const dataForFiles = {
+            files: this.filesArr,
+            chatId: this.message.key,
+            senderId: this.userProfile.uid,
+            receiverId: this.selectedFriendId,
+          };
+          this.firestore
+            .addFilesToChat(dataForFiles, this.userProfile.key as string)
+            .then(() => {
+              this.firestore.filesSubject.unsubscribe();
+              this.firestore
+                .addFilesToChat(
+                  dataForFiles,
+                  this.selectedFriend?.key as string
+                )
+                .then(() => {
+                  this.firestore.filesSubject = new Subject();
+                  this.filesArr = [];
+                });
+            });
+        }
         this.message = new Chat();
         console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
       });
     });
-
-    if (this.filesArr.length) {
-      const selectedFriend = this.userProfiles.find(
-        usr => usr.uid === this.selectedFriendId
-      );
-
-      const dataForFiles = {
-        files: this.filesArr,
-        chatId: this.message.key,
-        senderId: this.userProfile.uid,
-        receiverId: this.selectedFriendId,
-      };
-      this.firestore
-        .addFilesToChat(dataForFiles, this.userProfile.key as string)
-        .then(() => {
-          this.firestore.filesSubject.unsubscribe();
-          this.firestore
-            .addFilesToChat(dataForFiles, selectedFriend?.key as string)
-            .then(() => {
-              this.firestore.filesSubject = new Subject();
-              this.filesArr = [];
-            });
-        });
-    }
     this.sendMessNotifications();
   }
 
@@ -374,7 +395,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     }, 200);
   }
 
-  settingFiles() {
+  settingFilesArr() {
     //////////////////// LEÍRÁS ///////////////////////////
     // Fájlok feltöltéséhez használt Subject, elküldöttfájlok tömb
     // adatainak beállítása subject segítségével
@@ -387,9 +408,9 @@ export class MessageComponent implements OnInit, OnDestroy {
     // fájlokat és a barát által nekem küldött fájlokat
     this.sentFilesArr = this.sentFilesArr.filter(file => {
       return (
-        (file.receiverId === this.selectedFriend.friendId &&
+        (file.receiverId === this.selectedFriendId &&
           file.files.length !== 0) ||
-        file.senderId === this.selectedFriend.friendId
+        file.senderId === this.selectedFriendId
       );
     });
   }
@@ -434,6 +455,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   selectedFs($event: any) {
     this.uploadFinished = false;
     this.selectedFiles = Array.from($event.target.files);
+    this.convertVideo(this.selectedFiles);
   }
 
   uploadFiles() {
@@ -475,6 +497,16 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.message.message.message = '';
       }
     });
+  }
+
+  convertVideo(videoFiles: any[]) {
+    const videoBlob = new Blob(videoFiles, { type: videoFiles[0].type });
+    console.log(videoBlob);
+    this.http
+      .post(Environments.API_URL + 'video-compressing', {
+        videoBuffer: videoBlob,
+      })
+      .subscribe(res => console.log(res));
   }
 
   generateNameForFile(fileFormat: string) {
@@ -606,7 +638,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
       mess => !mess.message.seen
     );
-    console.log(this.haventSeenMessagesArr);
     this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
       this.haventSeenMessagesArr,
       this.showFriendsMess
@@ -617,17 +648,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       showFriendsMess: this.showFriendsMess,
     });
     this.router.navigate(['/message']);
-  }
-
-  onAnimate() {
-    this.chatAnimationState =
-      this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
-  }
-
-  animateMessages() {
-    console.log(this.chatAnimationState);
-    this.chatAnimationState =
-      this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
   }
 
   fileModalOpen(picturesArr: [], i: number) {
@@ -652,5 +672,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     if (this.messSubscription) {
       this.messSubscription.unsubscribe();
     }
+    if (this.filesBehSubjectSub) this.filesBehSubjectSub.unsubscribe();
   }
 }

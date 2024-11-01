@@ -69,7 +69,7 @@
         {{ !message.message.voiceMessage ? 'Küldés' : 'Hangüzenet elküldése' }}
         <mat-icon>send</mat-icon>
       </button>
-      <div *ngIf="!message.message.voiceMessage">
+      <div *ngIf="!message.message.voiceMessage && filesArr.length < 1">
         <button
           (click)="!uploadFinished ? uploadFiles() : ''"
           class="me-2 mb-1 fileButton"
@@ -103,6 +103,7 @@
         "
       >
         <button
+          [disabled]="selectedFiles.length > 0 || filesArr.length > 0"
           (click)="
             message.message.voiceMessage !== 'recording-started'
               ? recordVoiceMessage()
@@ -123,6 +124,18 @@
       </div>
     </mat-card-content>
     <mat-card-content>
+      <div class="text-center mt-2">
+        <b
+          >{{ filesArr.length > 0 ? 'Üzenethez csatolt fájlok' : ''
+          }}{{ selectedFiles.length > 0 ? 'Feltöltendő fájlok' : '' }}</b
+        >
+      </div>
+      <hr class="mt-0" *ngIf="selectedFiles.length || filesArr.length" />
+      <ng-container *ngIf="filesArr.length > 0">
+        <div class="text-center" *ngFor="let file of filesArr">
+          {{ file.fileName }}
+        </div>
+      </ng-container>
       <div class="text-center" *ngFor="let file of selectedFiles">
         {{ file.name }}
       </div>
@@ -228,8 +241,14 @@
                       class="d-inline-block ms-2 mb-0"
                     >
                       <b>{{ msg.message.message }}</b>
-                      @if(msg.message.voiceMessage){
+                      @if(msg.message.attachedVideo) {
                       <div class="mt-1">
+                        <video controls width="50vw">
+                          <source [src]="" type="video/mp4" />
+                        </video>
+                      </div>
+                      } @if(msg.message.voiceMessage){
+                      <div class="mt-1 audio-container">
                         <audio
                           [src]="msg.message.voiceMessage"
                           controls

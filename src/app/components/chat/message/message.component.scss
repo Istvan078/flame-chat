@@ -33,7 +33,11 @@
 .messageInput {
   width: 80vw;
 }
-
+.audio-container {
+  audio {
+    width: 45vw;
+  }
+}
 .fileButton {
   label {
     cursor: pointer !important;

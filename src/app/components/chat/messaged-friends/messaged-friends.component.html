@@ -1,7 +1,17 @@
 <div
-  [@slide-in-keyframed-3]="chatAnimationState"
+  [@slide-in-keyframed]="chatAnimationState"
   class="row justify-content-center"
 >
+  <button
+    routerLink="/chat"
+    class="green ms-2 me-2 mt-2"
+    type="button"
+    mat-raised-button
+  >
+    <mat-icon> keyboard_backspace </mat-icon>
+
+    Vissza a főoldalra
+  </button>
   <div class="text-center mt-2">
     <button
       (click)="showFriendsToChoose = !showFriendsToChoose"

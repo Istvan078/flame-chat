@@ -8,7 +8,7 @@
   aria-live="polite"
   aria-atomic="true"
 ></app-toast>
-<ng-container *ngIf="!isMessageOn">
+<ng-container>
   <div class="d-flex justify-content-center">
     <input
       [(ngModel)]="userSearched"
@@ -54,7 +54,7 @@
   </div>
   }
 </ng-container>
-<div *ngIf="!isMessageOn" class="row justify-content-center align-items-center">
+<div class="row justify-content-center align-items-center">
   <div class="col-xs-2 col-sm-6 notif-container">
     <mat-sidenav-container class="config-options-container">
       <mat-sidenav> </mat-sidenav>
@@ -126,7 +126,7 @@
   </div>
 </div>
 
-<div class="row" *ngIf="!sendPrivateMessageOn">
+<div class="row">
   <div class="col">
     <mat-accordion>
       <mat-expansion-panel
@@ -343,10 +343,7 @@
   </div>
 </div>
 
-<div
-  class="row justify-content-center"
-  *ngIf="!sendPrivateMessageOn && friendsOn"
->
+<div class="row justify-content-center" *ngIf="friendsOn">
   <div
     *ngIf="notConfirmedMeUsers.length"
     class="col-12 col-md-6 col-lg-3 mb-2 mt-2 d-flex justify-content-center"
@@ -395,11 +392,3 @@
   </div>
   }
 </div>
-
-<!-- @if(fromChatComponent) {
-<app-message
-  [sentFilesArr]="sentFilesArr"
-  [urlText]="urlText"
-  *ngIf="userMessages"
-></app-message>
-} -->

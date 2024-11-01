@@ -48,7 +48,16 @@ export class UtilityService {
       input: { formControlName: 'iFrame' },
     },
   ];
-  constructor() {}
+  isUserOnlineNow: boolean = true;
+
+  // ESEMÉNYFIGYELŐK //
+  private isOnlineHandler: () => void;
+  private isOfflineHandler: () => void;
+  constructor() {
+    this.isOnlineHandler = this.handleOnline.bind(this);
+    this.isOfflineHandler = this.handleOffline.bind(this);
+    this.isUserOnline();
+  }
 
   async getUserProfiles(): Promise<Observable<AllUserDetails>> {
     const user = await this.auth.getUser();
@@ -207,6 +216,45 @@ export class UtilityService {
 
   getFormDataForPosts() {
     return this.postsFormData;
+  }
+
+  async handleOnline() {
+    if (!this.isUserOnlineNow) {
+      await this.base.updateUserData({ online: true }, this.userProfile?.key);
+      this.isUserOnlineNow = true;
+    }
+  }
+
+  async handleOffline() {
+    if (this.isUserOnlineNow) {
+      await this.base.updateUserData({ online: false }, this.userProfile?.key);
+      await this.base.updateUserData(
+        { lastTimeOnline: new Date().getTime() },
+        this.userProfile?.key
+      );
+      this.isUserOnlineNow = false;
+    }
+  }
+
+  async isUserOnline() {
+    // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
+    window.addEventListener('click', this.isOnlineHandler);
+    window.addEventListener('focus', this.isOnlineHandler);
+    // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
+    window.addEventListener('blur', this.isOfflineHandler);
+    setInterval(async () => {
+      if (this.isUserOnlineNow) {
+        await this.base.updateUserData(
+          { online: false },
+          this.userProfile?.key
+        );
+        await this.base.updateUserData(
+          { lastTimeOnline: new Date().getTime() },
+          this.userProfile?.key
+        );
+        this.isUserOnlineNow = false;
+      }
+    }, 300 * 1000);
   }
 
   resizeImage(

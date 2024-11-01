@@ -6,7 +6,13 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
-import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Friends, UserClass } from 'src/app/models/user.model';
@@ -18,7 +24,7 @@ import { UtilityService } from 'src/app/services/utility.service';
   templateUrl: './messaged-friends.component.html',
   styleUrl: './messaged-friends.component.scss',
   animations: [
-    trigger('slide-in-keyframed-3', [
+    trigger('slide-in-keyframed', [
       state(
         'normal',
         style({
@@ -53,7 +59,7 @@ import { UtilityService } from 'src/app/services/utility.service';
               offset: 0.6,
             }),
             style({
-              transform: 'translateX(0) scale(1)',
+              transform: 'scale(1)',
               opacity: 1,
               offset: 1,
             }),
@@ -64,6 +70,8 @@ import { UtilityService } from 'src/app/services/utility.service';
   ],
 })
 export class MessagedFriendsComponent implements OnInit, OnDestroy {
+  @ViewChild('messageCardCont') messageCardCont!: ElementRef;
+
   chatAnimationState: string = 'normal';
   showFriendsToChoose: boolean = false;
 
@@ -104,13 +112,12 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     this.userProfilesSub = AllUserDtlsRes.subscribe(async AllUserDtls => {
       this.userProfiles = AllUserDtls.userProfiles;
       this.userProfile = AllUserDtls.userProfile;
-      // this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
       this.userFriends = AllUserDtls.userFriends!;
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-      console.log(AllUserDtls);
-      this.areFriendsOnline();
       this.filterShowFriendsMessArr();
       this.messSubscription = this.getNewMessages();
+      await this.areFriendsOnline();
+      this.onAnimate();
       this.userProfilesSub.unsubscribe();
     });
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
@@ -119,15 +126,8 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         if (obj.showFriendsMess) this.showFriendsMess = obj.showFriendsMess;
         if (obj.haventSeenMessagesArr)
           this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
-        console.log(obj);
       }
     );
-    // this.haventSeenMsgsArrSubjSub = this.base.haventSeenMsgsArr.subscribe(
-    //   hSMArr => {
-    //     this.haventSeenMessagesArr = hSMArr;
-    //     console.log(this.haventSeenMessagesArr);
-    //   }
-    // );
   }
 
   onAnimate() {
@@ -135,34 +135,11 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
   }
 
-  animateMessages() {
-    console.log(this.chatAnimationState);
-    this.chatAnimationState =
-      this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
-  }
-
   areFriendsOnline() {
-    if (this.messagesAccordionTabCounter < 2)
-      this.messagesAccordionTabCounter++;
-    setTimeout(() => {
-      this.onAnimate();
-    }, 100);
-    const initInterval = setInterval(() => {
-      this.userFriends?.map(fr => {
-        return this.userProfiles.map(uP => {
-          if (uP.uid === fr.friendId) {
-            if (uP.visibility) {
-              fr.online = uP.online;
-              fr.lastTimeOnline = this.utilService.calcMinutesPassed(
-                uP.lastTimeOnline
-              );
-              fr.visibility = true;
-            }
-          }
-        });
-      });
-      // clearInterval(interval);
-      const repeatingInterval = setInterval(() => {
+    return new Promise(res => {
+      if (this.messagesAccordionTabCounter < 2)
+        this.messagesAccordionTabCounter++;
+      const initInterval = setInterval(() => {
         this.userFriends?.map(fr => {
           return this.userProfiles.map(uP => {
             if (uP.uid === fr.friendId) {
@@ -176,13 +153,28 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
             }
           });
         });
-        if (this.messagesAccordionTabCounter === 2) {
-          this.messagesAccordionTabCounter = 1;
-          clearInterval(repeatingInterval);
-        }
-      }, 60000);
-      clearInterval(initInterval);
-    }, 1000);
+        const repeatingInterval = setInterval(() => {
+          this.userFriends?.map(fr => {
+            return this.userProfiles.map(uP => {
+              if (uP.uid === fr.friendId) {
+                if (uP.visibility) {
+                  fr.online = uP.online;
+                  fr.lastTimeOnline = this.utilService.calcMinutesPassed(
+                    uP.lastTimeOnline
+                  );
+                  fr.visibility = true;
+                }
+              }
+            });
+          });
+          if (this.messagesAccordionTabCounter === 2) {
+            this.messagesAccordionTabCounter = 1;
+            res(clearInterval(repeatingInterval));
+          }
+        }, 60000);
+        res(clearInterval(initInterval));
+      }, 1000);
+    });
   }
 
   ////////////////  LEÍRÁS  /////////////
