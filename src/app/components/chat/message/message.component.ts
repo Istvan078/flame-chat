@@ -668,6 +668,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
       mess => !mess.message.seen
     );
+    console.log(this.haventSeenMessagesArr);
     this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
       this.haventSeenMessagesArr,
       this.showFriendsMess
