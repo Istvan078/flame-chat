@@ -124,8 +124,13 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       obj => {
         if (obj.allChatsArray) this.allChatsArray = obj.allChatsArray;
         if (obj.showFriendsMess) this.showFriendsMess = obj.showFriendsMess;
-        if (obj.haventSeenMessagesArr)
-          this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
+        // if (obj.haventSeenMessagesArr)
+        //   this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
+      }
+    );
+    this.haventSeenMsgsArrSubjSub = this.base.haventSeenMsgsArr.subscribe(
+      hsmArr => {
+        this.haventSeenMessagesArr = hsmArr;
       }
     );
   }
@@ -249,8 +254,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     });
 
     this.showFriendsMess = filteredFriendsArr;
-    console.log(this.showFriendsMess);
-    console.log(this.haventSeenMessagesArr);
   }
 
   async getMessageUser(user: any) {
@@ -258,6 +261,7 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     this.sendPrivateMessageOn = true;
     this.userMessages = true;
     this.isMessageOn = true;
+    this.base.messageTransferSub.next(true);
     await this.updateSeenMessagesAndViewTime(user);
     this.router.navigate(['/message/' + this.selectedFriend.friendId]);
   }
@@ -311,22 +315,26 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     const userProfile = this.userProfile;
     return this.base.getNewMessages().subscribe(mess => {
       this.filterShowFriendsMessArr();
-      console.log(this.haventSeenMessagesArr);
       let msgArr: any[] = [];
       if (mess.length) {
         msgArr = mess;
-        let keyArr: any[] = [];
-        this.allChatsArray.map((jSM: any) => {
-          keyArr.push(jSM.key);
-        });
-        this.haventSeenMessagesArr?.map(hSM => keyArr.push(hSM.key));
+        // let keyArr: any[] = [];
+        // this.allChatsArray.map((jSM: any) => {
+        //   keyArr.push(jSM.key);
+        // });
+        console.log(msgArr);
+        console.log(this.allChatsArray);
         msgArr = msgArr.filter(
           msg =>
-            !keyArr.includes(msg.key) &&
+            // !keyArr.includes(msg.key) &&
             msg.message.seen === false &&
-            msg.message.senderId != userProfile?.uid &&
+            msg.message.senderId !== userProfile?.uid &&
             msg.participants[1] === userProfile?.uid
         );
+      }
+      this.haventSeenMessagesArr = [];
+      if (msgArr.length < 1) {
+        this.filterShowFriendsMessArr();
       }
       for (let msg of msgArr) {
         msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
@@ -334,8 +342,14 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         );
         if (msg.participants[1] === userProfile?.uid) {
           this.haventSeenMessagesArr?.push(msg);
+          console.log(msg);
+          console.log(this.haventSeenMessagesArr);
           this.allChatsArray.unshift(msg);
+          this.base.getAllMessagesSubject.next({
+            allChatsArray: this.allChatsArray,
+          });
           this.filterShowFriendsMessArr();
+          this.base.messageTransferSub.next(true);
         }
       }
       if (this.userMessages) this.updateSeenMessages();
@@ -349,7 +363,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
 
   updateSeenMessages() {
     // látott üzenetek kiszűrése a tömbből
-    console.log(this.haventSeenMessagesArr);
     this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
       if (mess.message.senderId === this.selectedFriend.friendId) {
         console.log(mess);

@@ -39,7 +39,6 @@ export class VisitedMeComponent implements OnInit {
       nM.message.seen = true;
       this.base.updateMessage(nM.key, nM);
     });
-    // this.newMessages = []
 
     this.base.haventSeenMsgsArr.next([]);
 

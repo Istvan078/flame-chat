@@ -1,13 +1,6 @@
-import {
-  Component,
-  ElementRef,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
-import { Chat } from 'src/app/models/chat.model';
 import { ForUserSubject, Friends, UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
@@ -15,7 +8,6 @@ import { MatAccordion } from '@angular/material/expansion';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { FirestoreService } from 'src/app/services/firestore.service';
-import { HttpClient } from '@angular/common/http';
 import { ToastService } from 'src/app/services/toast.service';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import {
@@ -116,7 +108,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   // KERESÉS //
   userSearched: string = '';
-  userSearchedProfiles: UserClass[] & Friends[] = [];
+  userSearchedProfiles: UserClass[] & Friends[] & any[] = [];
 
   // ÜZENETEKKEL KAPCSOLATOS //
   messageButtonClicked: boolean = false;
@@ -792,10 +784,13 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   searchUser() {
+    if (!this.userSearched) {
+      this.userSearchedProfiles = [];
+      return;
+    }
     this.userSearchedProfiles = (this.userProfiles as any).filter((uP: any) =>
-      uP.displayName?.toLowerCase().includes(this.userSearched)
+      uP.displayName?.toLowerCase().includes(this.userSearched.toLowerCase())
     );
-    if (!this.userSearched) this.userSearchedProfiles = [];
   }
 
   setVisibilityOn() {

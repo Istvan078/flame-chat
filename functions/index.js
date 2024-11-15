@@ -3,20 +3,18 @@ const admin = require('firebase-admin');
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const fileParser = require('express-multipart-file-parser');
 
 const environments = require('./config/config');
 
 const forecast = require('./utils/forecast');
 const geocode = require('./utils/geocode');
 
-const fs = require('fs');
-const path = require('path');
-const ffmpeg = require('fluent-ffmpeg');
-
 const serviceAccount = require(environments.SERVICE_ACCOUNT_ROUTE);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: environments.DATABASE_URL,
+  storageBucket: 'project0781.appspot.com',
 });
 
 const app = express();
@@ -28,6 +26,8 @@ app.use(
 );
 
 app.use(bodyParser.json());
+app.use(fileParser);
+const storage = admin.storage();
 
 const verifyToken = (req, res, next) => {
   const idToken = req.headers.authorization;
@@ -167,31 +167,13 @@ webpush.setVapidDetails(
   vapidKeys.privateKey
 );
 
-app.route('/video-compressing').post((req, res) => {
-  const videoBuffer = req.body.video.buffer;
-  const tempFilePath = path.join(['/tmp', 'input-video.mp4']);
-
-  fs.writeFileSync(tempFilePath, videoBuffer);
-
-  const outputFilePath = path.join(['/tmp', 'output-video.mp4']);
-
-  ffmpeg(tempFilePath)
-    .output(outputFilePath)
-    .size('640x360')
-    .format('mp4')
-    .on('end', () => {
-      // Küldés a kliensnek és a fájl törlése
-      res.download(outputFilePath, 'compressed-video.mp4', () => {
-        fs.unlinkSync(tempFilePath);
-        fs.unlinkSync(outputFilePath);
-      });
-    })
-    .on('error', err => {
-      console.error('Videó feldolgozási hiba:', err);
-      res.status(500).send('Hiba történt a videó feldolgozása során');
-    })
-    .run();
-});
+// app.post('/video-compressing', verifyToken, async (req, res) => {
+//   const bucket = storage.bucket();
+//   // res.json({ message: bucket });
+//   const file = bucket.file(
+//     `fromChats/${req.body.userEmail}/files/${req.body.videoName}`
+//   );
+// });
 
 app.route('/message').post((req, res) => {
   const msg = req.body.msg;

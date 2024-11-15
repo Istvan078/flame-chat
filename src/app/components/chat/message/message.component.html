@@ -201,7 +201,9 @@
                         <div *ngFor="let pic of file.files; let i = index">
                           <img
                             *ngIf="
-                              !pic.fileName.includes(selectedFriend.displayName)
+                              !pic.fileName.includes(
+                                selectedFriend.displayName
+                              ) && !pic.fileName.includes('.mp4')
                             "
                             (click)="fileModalOpen(file.files, i)"
                             class="me-1 mb-1 rounded"
@@ -209,6 +211,12 @@
                             [src]="pic.url"
                             [alt]="pic.fileName"
                           />
+                          <video
+                            *ngIf="pic.fileName.includes('.mp4')"
+                            [src]="pic.url"
+                            controls
+                            width="80%"
+                          ></video>
                         </div>
                       </div>
                     </ng-container>

@@ -55,6 +55,7 @@ export class BaseService {
   getAllMessagesSubject: BehaviorSubject<any> = new BehaviorSubject({});
   newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([]);
+  messageTransferSub: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   userKeySubject: BehaviorSubject<any> = new BehaviorSubject('');
   userKeySubjectSubscription!: Subscription;
@@ -155,19 +156,19 @@ export class BaseService {
     friendUid: string
   ): Promise<any[]> {
     if (friendUid) {
+      const threeMthsAgo = new Date();
+      threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
       const promise1 = new Promise((res, rej) => {
         const ref2 = this.realTimeDatabase.list('chats', ref2 => {
-          const oneHourAgo = new Date();
-          oneHourAgo.setMonth(oneHourAgo.getMonth() - 3);
           return ref2
             .orderByChild('participants/2')
             .startAt(
-              ((friendUid + userUid) as string) + '-' + oneHourAgo.getTime()
+              ((friendUid + userUid) as string) + '-' + threeMthsAgo.getTime()
             )
             .endAt(
               ((friendUid + userUid) as string) + '-' + new Date().getTime()
             )
-            .limitToLast(10);
+            .limitToLast(15);
         });
         ref2.valueChanges(['child_added']).subscribe(val => {
           return res(val);
@@ -175,10 +176,15 @@ export class BaseService {
       });
 
       const promise2 = new Promise((res, rej) => {
-        const ref3 = this.realTimeDatabase.list('chats', ref3 =>
-          ref3
-            .orderByChild('message/senderId_receiverId')
-            .equalTo(`${userUid}_${friendUid}`)
+        const ref3 = this.realTimeDatabase.list(
+          'chats',
+          ref3 =>
+            ref3
+              .orderByChild('message/senderId_receiverId')
+              .startAt(`${userUid}_${friendUid}_${threeMthsAgo.getTime()}`)
+              .endAt(`${userUid}_${friendUid}_${new Date().getTime()}`)
+              .limitToLast(15)
+          // .equalTo(`${userUid}_${friendUid}`)
         );
         ref3.valueChanges(['child_added']).subscribe(val => {
           res(val);
