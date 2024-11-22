@@ -32,3 +32,13 @@ export class Chat {
     this.key = key;
   }
 }
+export class ReplyMessage extends Chat {
+  constructor(
+    public replyMessage: {
+      message?: string;
+      voiceMessage?: string;
+    }
+  ) {
+    super();
+  }
+}

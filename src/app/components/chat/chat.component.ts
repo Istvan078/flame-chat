@@ -266,7 +266,6 @@ export class ChatComponent implements OnInit, OnDestroy {
             console.log(res);
             this.getNumberOfNewMessages();
             setTimeout(() => {
-              console.log(this.haventSeenMessagesArr);
               this.base.getAllMessagesSubject.next({
                 haventSeenMessagesArr: this.haventSeenMessagesArr,
               });
@@ -312,7 +311,6 @@ export class ChatComponent implements OnInit, OnDestroy {
                   });
             });
       setTimeout(() => {
-        console.log(`TIMEOUT MEGJAVÍTANI`);
         this.setDefaultProfilePic();
       }, 5000);
     });
@@ -749,20 +747,23 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   getNumberOfNewMessages() {
-    this.messSubscription = this.base.getNewMessages().subscribe(msgs => {
-      if (msgs.length)
-        this.haventSeenMessagesArr = msgs.filter(
-          msg =>
-            !msg.message.seen &&
-            msg.messsage?.senderId !== this.userProfile.uid &&
-            msg.participants[1] === this.userProfile.uid
+    this.messSubscription = this.base
+      .getNewMessages(this.userProfile.key)
+      .subscribe(msgs => {
+        if (msgs.length)
+          this.haventSeenMessagesArr = msgs.filter(
+            msg =>
+              !msg.message.seen &&
+              msg.messsage?.senderId !== this.userProfile.uid &&
+              msg.participants[1] === this.userProfile.uid
+          );
+        this.utilService.subjectValueTransfer(
+          this.haventSeenMessagesArr,
+          this.base.newMessageNotiSubject
         );
-      this.utilService.subjectValueTransfer(
-        this.haventSeenMessagesArr,
-        this.base.newMessageNotiSubject
-      );
-      console.log(`GETNUMBEROFNEWMESSAGES`);
-    });
+        console.log(msgs);
+        console.log(`****GET NUMBER OF NEW MESSAGES BEFEJEZŐDÖTT****`);
+      });
   }
 
   getSharedPosts() {

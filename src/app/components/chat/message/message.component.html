@@ -4,7 +4,7 @@
   </h1>
 </div>
 
-<div *ngIf="sendPrivateMessageOn" class="text-center searchContainer">
+<div class="text-center searchContainer">
   <div class="mb-2 w-50">
     <input
       [(ngModel)]="searchWord"
@@ -18,7 +18,6 @@
 </div>
 
 <div
-  *ngIf="sendPrivateMessageOn"
   class="messageCardDiv d-flex flex-cols flex-wrap align-items-center justify-content-center"
 >
   <mat-card *ngIf="messageButtonClicked">
@@ -76,6 +75,7 @@
           [ngClass]="[uploadFinished ? 'bg-primary' : 'bg-success']"
           mat-raised-button
           type="button"
+          [disabled]="disabled"
         >
           <mat-icon class="align-middle">attach_file</mat-icon>
           <label *ngIf="!uploadFinished" for="fileUpload"
@@ -203,7 +203,9 @@
                             *ngIf="
                               !pic.fileName.includes(
                                 selectedFriend.displayName
-                              ) && !pic.fileName.includes('.mp4')
+                              ) &&
+                              !pic.fileName.includes('.mp4') &&
+                              !pic.fileName.includes('m4a')
                             "
                             (click)="fileModalOpen(file.files, i)"
                             class="me-1 mb-1 rounded"
@@ -241,6 +243,11 @@
                     @if(tmsg.key === msg.key && (msg.message.message ||
                     msg.message.voiceMessage)) {
                     <div
+                      (click)="
+                        msg.message.senderId === selectedFriendId
+                          ? replyMessage(msg)
+                          : ''
+                      "
                       [ngClass]="
                         msg.message.senderId === userProfile.uid
                           ? 'left myMessageRight'
@@ -248,7 +255,48 @@
                       "
                       class="d-inline-block ms-2 mb-0"
                     >
-                      <b>{{ msg.message.message }}</b>
+                      <b>{{
+                        msg.replyMessage?.message
+                          ? msg.replyMessage.message
+                          : msg.message.message
+                      }}</b>
+                      <ng-container *ngIf="msg.replyMessage?.message">
+                        <hr class="my-1" />
+                        <i>
+                          {{
+                            msg.message.senderId === selectedFriendId
+                              ? userProfile.displayName + ' írta'
+                              : 'Válaszoltál neki: ' +
+                                selectedFriend.displayName
+                          }}
+                        </i>
+                        <div
+                          class="d-inline-flex justify-content-between align-items-center flex-wrap"
+                          style="width: 100%"
+                        >
+                          <!-- <span class="msg-span">
+                            {{
+                              msg.message.senderId === selectedFriendId
+                                ? msg.message.message
+                                : msg.replyMessage.message
+                            }}</span -->
+                          <span class="msg-span">
+                            {{ msg.message.message }}
+                          </span>
+                          <img
+                            [src]="
+                              msg.message.senderId === selectedFriendId
+                                ? userProfile.profilePicture
+                                : selectedFriend.profilePicture
+                            "
+                            alt=""
+                            class="rounded"
+                            width="25px"
+                            height="25px"
+                            style="position: relative"
+                          />
+                        </div>
+                      </ng-container>
                       @if(msg.message.attachedVideo) {
                       <div class="mt-1">
                         <video controls width="50vw">
@@ -294,10 +342,7 @@
   </ng-container>
 </div>
 
-<div
-  *ngIf="sendPrivateMessageOn"
-  class="d-flex flex-wrap justify-content-center sendMessageOpenButton"
->
+<div class="d-flex flex-wrap justify-content-center sendMessageOpenButton">
   <button
     *ngIf="!messageButtonClicked"
     (click)="backToUsers()"

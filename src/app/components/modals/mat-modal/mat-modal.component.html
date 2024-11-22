@@ -1,7 +1,7 @@
 @if(isUpdateForApp){
 <ng-container>
   <h2 mat-dialog-title>Új verzió elérhető</h2>
-  <mat-dialog-content class="mat-typography">1.1.1</mat-dialog-content>
+  <mat-dialog-content class="mat-typography">1.1.4</mat-dialog-content>
   <mat-dialog-actions>
     <!-- <button mat-button mat-dialog-close type="button">Nem</button> -->
     <button mat-button [mat-dialog-close]="true" cdkFocusInitial type="button">
@@ -12,9 +12,6 @@
 } @if(isPosted){
 <ng-container>
   <h2 mat-dialog-title>Bejegyzés sikeresen létrehozva</h2>
-  <!-- <mat-dialog-content class="mat-typography"
-    >Szeretnéd, hogy frissítsem az applikációt?</mat-dialog-content
-  > -->
   <mat-dialog-actions class="justify-content-center">
     <button mat-button [mat-dialog-close]="true" cdkFocusInitial type="button">
       Rendben
@@ -40,4 +37,44 @@
     Értettem
   </button>
 </mat-dialog-actions>
+} @if(isReplyForMessage) {
+<ng-container>
+  <h2 mat-dialog-title>
+    <img
+      width="50px"
+      height="50px"
+      class="rounded-circle"
+      [src]="oldMessage.message.profilePhoto"
+      alt=""
+    />
+    {{ oldMessage.message.displayName }} írta:
+  </h2>
+  <mat-dialog-content class="mat-typography">{{
+    oldMessage.replyMessage?.message
+      ? oldMessage.replyMessage?.message
+      : oldMessage.message.message
+  }}</mat-dialog-content>
+  <mat-dialog-content class="pb-0">
+    <mat-form-field style="width: 90%">
+      <mat-label>Válasz</mat-label>
+      <textarea
+        [(ngModel)]="replyMessage.replyMessage.message"
+        matInput
+      ></textarea>
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions class="ms-3 pt-0">
+    <!-- <button mat-button mat-dialog-close type="button">Nem</button> -->
+    <button
+      mat-button
+      class="send-button"
+      [mat-dialog-close]="'message-sent'"
+      cdkFocusInitial
+      type="button"
+    >
+      Válasz küldése
+      <mat-icon>send</mat-icon>
+    </button>
+  </mat-dialog-actions>
+</ng-container>
 }

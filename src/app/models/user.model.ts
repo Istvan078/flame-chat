@@ -62,7 +62,8 @@ export class UserClass {
     public pictures: { name: string; url: string }[] = [],
     public profilePicture: string = '',
     public visibility: boolean = true,
-    public appVersion: number = 1
+    public appVersion: number = 1,
+    public curPosition: string = ''
   ) {
     this.claims = {
       basic: true,

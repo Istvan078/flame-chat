@@ -203,7 +203,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
 
       messageCardElements.forEach((el: any) => {
         if (mess.displayName === el.innerText) {
-          console.log(el);
           const container = el.parentNode.parentNode;
           window.scrollTo(
             el.getBoundingClientRect().x,
@@ -212,12 +211,10 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
           );
           if (mess.messaging) {
             container.classList.add('hidden');
-            console.log(container.classList.contains('hidden'));
             setTimeout(() => {
               container.classList.remove('hidden');
               container.classList.add('fade-in');
               container.style.backgroundColor = 'darkGreen';
-              console.log(container.classList.contains('fade-in'));
             }, 50);
           }
         }
@@ -269,7 +266,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
   updateSeenMessagesAndViewTime = (user: any) => {
     return new Promise((res, rej) => {
       this.updateSeenMessages();
-      console.log(this.showFriendsMess);
       // Üzenetek a kiválasztott baráttól tömb iteráció
       this.allChatsArray.map(mess => {
         //////////////// LEÍRÁS  ////////////////////////
@@ -313,7 +309,7 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
 
   getNewMessages() {
     const userProfile = this.userProfile;
-    return this.base.getNewMessages().subscribe(mess => {
+    return this.base.getNewMessages(this.userProfile.key).subscribe(mess => {
       this.filterShowFriendsMessArr();
       let msgArr: any[] = [];
       if (mess.length) {
@@ -322,8 +318,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         // this.allChatsArray.map((jSM: any) => {
         //   keyArr.push(jSM.key);
         // });
-        console.log(msgArr);
-        console.log(this.allChatsArray);
         msgArr = msgArr.filter(
           msg =>
             // !keyArr.includes(msg.key) &&
@@ -342,8 +336,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         );
         if (msg.participants[1] === userProfile?.uid) {
           this.haventSeenMessagesArr?.push(msg);
-          console.log(msg);
-          console.log(this.haventSeenMessagesArr);
           this.allChatsArray.unshift(msg);
           this.base.getAllMessagesSubject.next({
             allChatsArray: this.allChatsArray,
@@ -365,9 +357,8 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     // látott üzenetek kiszűrése a tömbből
     this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
       if (mess.message.senderId === this.selectedFriend.friendId) {
-        console.log(mess);
         mess.message.seen = true;
-        this.base.updateMessage(mess.key, mess);
+        this.base.updateMessage(mess.key, mess, this.userProfile.key);
         return undefined;
       }
       if (mess.message.senderId !== this.selectedFriend.friendId) {

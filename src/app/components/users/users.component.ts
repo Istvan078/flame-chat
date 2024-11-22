@@ -54,7 +54,6 @@ export class UsersComponent implements OnInit, OnDestroy {
         user['isRenderOn'] = false;
       });
       this.users = users;
-      console.log(this.users);
     });
   }
 
@@ -91,6 +90,8 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.base.updateUserData(updatedAge, uP.key);
       }
       this.users.map(user => {
+        if (user.uid === uP.uid) user.curPosition = uP.curPosition;
+        console.log(user);
         if (uP.lastTimeOnline) {
           const lastTOnlineDate = new Date(uP.lastTimeOnline);
           const formattedDateStr =
@@ -101,6 +102,11 @@ export class UsersComponent implements OnInit, OnDestroy {
       });
     });
     console.log(this.users);
+  }
+
+  getCurPosition(curPos: string) {
+    const url = `https://www.google.com/maps/@${curPos},13z`;
+    open(url);
   }
 
   removeUserProfile() {

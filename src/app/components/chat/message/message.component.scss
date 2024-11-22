@@ -33,6 +33,16 @@
 .messageInput {
   width: 80vw;
 }
+.msg-span {
+  background: grey;
+  color: rgb(9, 63, 23);
+  border-radius: 2px;
+  padding: 1px 5px 1px 5px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  display: inline-flex;
+  margin-left: 7px;
+  max-width: 77%;
+}
 .audio-container {
   audio {
     width: 45vw;
@@ -50,13 +60,19 @@
 }
 .friend-name {
   width: fit-content;
-  color: rgb(13, 18, 107);
-  text-shadow: 1px 1px 1px white;
+  color: rgba(133, 0, 145, 0.5);
+  // color: rgb(13, 18, 107);
+  text-shadow: 1px 1px 1px rgb(51, 8, 55);
   border: 2px solid green;
   border-radius: 10px;
   padding: 2px;
   box-shadow: 3px 3px 3px black;
   font-weight: bold;
+  background-image: linear-gradient(
+    to right,
+    rgba(22, 74, 22, 0.9),
+    rgba(61, 217, 61, 0.6)
+  );
 }
 .searchContainer {
   width: 100%;
@@ -163,6 +179,7 @@
 .myMessageLeft {
   margin-left: 8px !important;
   max-width: 60vw !important;
+  cursor: pointer;
 }
 
 .seenDiv {

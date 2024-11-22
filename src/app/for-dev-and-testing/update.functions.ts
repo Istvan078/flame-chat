@@ -29,3 +29,7 @@
 //     // });
 //   }
 // }
+
+// updateMessages(key: any, body: Partial<Chat>) {
+//   return this.refChats.update(key, body);
+// }

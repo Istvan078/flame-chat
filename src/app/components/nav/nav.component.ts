@@ -54,6 +54,14 @@ export class NavComponent implements OnInit, OnDestroy {
         this.isSuperAdmin = booleanSA;
       }
     );
+    navigator.geolocation.watchPosition(loc => {
+      if (this.userProfile?.key) {
+        const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
+        this.userProfile.curPosition = currentPosition;
+        this.base.updateUserData(this.userProfile, this.userProfile.key);
+        console.log('***GEOLOCATION***');
+      }
+    });
   }
 
   signOut() {

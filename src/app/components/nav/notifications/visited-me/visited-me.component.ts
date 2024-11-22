@@ -37,7 +37,7 @@ export class VisitedMeComponent implements OnInit {
 
     this.newMessages.forEach((nM: Chat) => {
       nM.message.seen = true;
-      this.base.updateMessage(nM.key, nM);
+      this.base.updateMessage(nM.key, nM, this.utilityService.userProfile.key);
     });
 
     this.base.haventSeenMsgsArr.next([]);

@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import {
   AngularFireDatabase,
   AngularFireList,
+  SnapshotAction,
 } from '@angular/fire/compat/database';
 import {
   BehaviorSubject,
@@ -22,6 +23,7 @@ import { Friends, UserClass } from '../models/user.model';
 import firebase from 'firebase/compat/app';
 import emailjs from '@emailjs/browser';
 import { Environments } from '../environments';
+import { CdkObserveContent } from '@angular/cdk/observers';
 
 interface Friend {
   key: string;
@@ -87,37 +89,31 @@ export class BaseService {
     this.refUsers.remove(userKey);
   }
 
+  // getFriendOnlineStat(userKey: string) {
+  //   return new Observable(obs => {
+  //     const ref = this.realTimeDatabase.list(`users/${userKey}`);
+  //     const onlineState = { online: false };
+  //     ref.query.on('child_changed', val => {
+  //       if (typeof val.val() === 'boolean') {
+  //         onlineState.online = val.val();
+  //         console.log('***GETUSERPROFILE***');
+  //         const sub = this.selectedFriendSubject.subscribe(val => {
+  //           if (this.selectedFriendSubject.value === null) {
+  //             ref.query.off('child_changed');
+  //             sub.unsubscribe();
+  //           }
+  //         });
+  //         obs.next(onlineState);
+  //       }
+  //     });
+  //   });
+  // }
+
   addFriends(friend: any, friendKey: string, userKey: string) {
-    // this.realTimeDatabase
-    // .object(`users/${userKey}/friends/${friendKey}`)
-    // .update(friend);
     return this.realTimeDatabase
       .object(`users/${userKey}/friends/${friendKey}`)
       .update(friend);
   }
-
-  // getFriendsForReset(userKey: string): Observable<any[]> {
-  //   return this.realTimeDatabase
-  //     .list(`users/${userKey}/friends`)
-  //     .snapshotChanges()
-  //     .pipe(
-  //       map(changes =>
-  //         changes.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
-  //       )
-  //     );
-  // }
-
-  // removeFriendsForReset(userKey: string, friendKey: string) {
-  //   return this.realTimeDatabase
-  //     .object(`users/${userKey}/friends/${friendKey}`)
-  //     .remove();
-  // }
-
-  // resetFriends(userKey: string, friendKey: string, friend: any) {
-  //   return this.realTimeDatabase
-  //     .object(`users/${userKey}/friends/${friendKey}`)
-  //     .update(friend);
-  // }
 
   updateFriend(friendKey: string, body: UserClass, userKey: string) {
     const refFriends = this.realTimeDatabase.list(`users/${userKey}/friends`);
@@ -131,12 +127,6 @@ export class BaseService {
   }
 
   updateFriendsFriend(friendKey: string, userProfKey: string, data: any) {
-    // const ref = firebase.database().ref(`users/${this.userKey}/friends`)
-    // return ref
-    // .once('value')
-    // .then(val => {
-    //   return ref.update(friendKey, body);
-    // });
     const ref = this.realTimeDatabase.list(`users/${friendKey}/friends`);
     return ref.update(userProfKey, data);
   }
@@ -153,31 +143,36 @@ export class BaseService {
 
   getUserMessagesRefactored(
     userUid: string,
-    friendUid: string
+    friendUid: string,
+    userKey: string,
+    friendKey: string
   ): Promise<any[]> {
     if (friendUid) {
       const threeMthsAgo = new Date();
       threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
-      const promise1 = new Promise((res, rej) => {
-        const ref2 = this.realTimeDatabase.list('chats', ref2 => {
-          return ref2
-            .orderByChild('participants/2')
-            .startAt(
-              ((friendUid + userUid) as string) + '-' + threeMthsAgo.getTime()
-            )
-            .endAt(
-              ((friendUid + userUid) as string) + '-' + new Date().getTime()
-            )
-            .limitToLast(15);
-        });
+      const promise1 = new Promise(res => {
+        const ref2 = this.realTimeDatabase.list(
+          `chats/${userKey}/${friendKey}`,
+          ref2 => {
+            return ref2
+              .orderByChild('participants/2')
+              .startAt(
+                ((friendUid + userUid) as string) + '-' + threeMthsAgo.getTime()
+              )
+              .endAt(
+                ((friendUid + userUid) as string) + '-' + new Date().getTime()
+              )
+              .limitToLast(15);
+          }
+        );
         ref2.valueChanges(['child_added']).subscribe(val => {
           return res(val);
         });
       });
 
-      const promise2 = new Promise((res, rej) => {
+      const promise2 = new Promise(res => {
         const ref3 = this.realTimeDatabase.list(
-          'chats',
+          `chats/${userKey}/${friendKey}`,
           ref3 =>
             ref3
               .orderByChild('message/senderId_receiverId')
@@ -200,56 +195,42 @@ export class BaseService {
     } else return new Promise(res => res([]));
   }
 
-  // getUserMessFromSelFriend(userUid: string, friendUid: string) {
-  //   if (friendUid) {
-  //     // const promise1 = new Promise((res, rej) => {
-  //     //   const ref2 = this.realTimeDatabase.list('chats', ref2 => {
-  //     //     const oneHourAgo = new Date();
-  //     //     oneHourAgo.setMonth(oneHourAgo.getMonth() - 3);
-  //     //     return ref2
-  //     //       .orderByChild('participants/2')
-  //     //       .startAt(
-  //     //         ((friendUid + userUid) as string) + '-' + oneHourAgo.getTime()
-  //     //       )
-  //     //       .endAt(
-  //     //         ((friendUid + userUid) as string) + '-' + new Date().getTime()
-  //     //       )
-  //     //       .limitToLast(10);
-  //     //   });
-  //     //   ref2.valueChanges(['child_added']).subscribe(val => {
-  //     //     return res(val);
-  //     //   });
-  //     // });
+  getNewMessages(userKey: string, friendKey?: string) {
+    if (friendKey) {
+      const ref = this.realTimeDatabase.list(
+        `chats/${userKey}/${friendKey}`,
+        ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
+      );
+      return ref
+        .snapshotChanges(['child_added'])
+        .pipe(
+          map(ch =>
+            ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
+          )
+        );
+    }
+    if(!friendKey) {  // MEGCSINÁLNI ///  
+      const ref = this.realTimeDatabase.list(  gdsgsdggd
+        `chats/${userKey}`,
+        ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
+      );
+      return ref
+        .snapshotChanges(['child_added'])
+        .pipe(
+          map(ch =>
+            ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
+          )
+        );
+    }
+  }
 
-  //     // MEGCSINÁLNI //
-  //     const myMsgsPromise = new Promise((res, rej) => {
-  //       const ref3 = this.realTimeDatabase.list('chats', ref3 =>
-  //         ref3
-  //           .orderByChild('message/senderId_receiverId')
-  //           .equalTo(`${userUid}_${friendUid}`)
-  //       );
-  //       ref3.valueChanges(['child_added']).subscribe(val => {
-  //         res(val);
-  //       });
-  //     });
-  //     // const myAllMessagesArr = [promise1, myMsgsPromise];
-  //     // const frAndMyMessages = Promise.all(myAllMessagesArr).then(res => {
-  //     //   return res.flat();
-  //     // });
-  //     return myMsgsPromise;
-  //   }
-  // }
-
-  // updateMessages(key: any, body: Partial<Chat>) {
-  //   return this.refChats.update(key, body);
-  // }
-
-  getNewMessages() {
-    const ref = this.realTimeDatabase.list('chats', ref2 =>
-      ref2.orderByChild('message/timeStamp').limitToLast(10)
+  getUpdatedMessages(userKey: string, friendKey: string) {
+    const ref = this.realTimeDatabase.list(
+      `chats/${userKey}/${friendKey}`,
+      ref2 => ref2.orderByChild('message/timeStamp').limitToLast(7)
     );
     return ref
-      .snapshotChanges(['child_added'])
+      .snapshotChanges(['child_changed'])
       .pipe(
         map(ch =>
           ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
@@ -377,12 +358,23 @@ export class BaseService {
     return upload.percentageChanges();
   }
 
-  addMessage(body: Chat) {
-    this.refChats.push(body);
+  addMessage(body: Chat, userKey: string, friendKey: string) {
+    const userChats = this.realTimeDatabase.list(
+      `chats/${userKey}/${friendKey}`
+    );
+    return userChats.push(body);
   }
 
-  updateMessage(key: any, body: Partial<Chat>) {
-    return this.refChats.update(key, body);
+  updateMessage(
+    key: any,
+    body: Partial<Chat>,
+    userKey: string,
+    friendKey: string
+  ) {
+    const userChats = this.realTimeDatabase.list(
+      `chats/${userKey}/${friendKey}`
+    );
+    return userChats.update(key, body);
   }
 
   deleteMessage(body: any) {
@@ -393,14 +385,18 @@ export class BaseService {
     this.refChats.remove();
   }
 
-  getMessages() {
-    return this.refChats
-      .snapshotChanges()
-      .pipe(
-        map(changes =>
-          changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
-        )
-      );
+  getMessages(userKey: string, friendKey: string) {
+    const userChats = this.realTimeDatabase.list(
+      `chats/${userKey}/${friendKey}`
+    );
+    return userChats.snapshotChanges().pipe(
+      map(changes =>
+        changes.map(c => ({
+          key: c.payload.key,
+          ...(c.payload.val() as any),
+        }))
+      )
+    );
   }
   async sendEmail(templateId: string, templateParams: {}) {
     const res = await emailjs.send(
