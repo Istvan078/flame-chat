@@ -100,7 +100,7 @@
       <ng-container>
         <div
           class="mt-2 text-center text-danger mb-0 pb-0"
-          *ngIf="mess.seen === false"
+          *ngIf="mess.newMessageNumber"
         >
           <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
         </div>
@@ -108,7 +108,7 @@
           #messageCardCont
           class="card text-white text-center mb-2 messageCardCont"
           [ngClass]="
-            mess.seen === false ? 'newMessageColorOnCard' : 'messageCardBg'
+            mess.newMessageNumber ? 'newMessageColorOnCard' : 'messageCardBg'
           "
         >
           <!-- <h5 class="card-header">
@@ -133,7 +133,7 @@
               *ngIf="!mess.online"
               class="card-text last-time-online-container"
             >
-              <ng-container *ngIf="mess.seen !== false && mess.visibility">
+              <ng-container *ngIf="!mess.newMessageNumber && mess.visibility">
                 <p class="mt-1 text-dark mb-0">
                   <b>Utoljára elérhető:</b>
                 </p>

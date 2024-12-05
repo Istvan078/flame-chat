@@ -157,10 +157,10 @@ export class BaseService {
             return ref2
               .orderByChild('participants/2')
               .startAt(
-                ((friendUid + userUid) as string) + '-' + threeMthsAgo.getTime()
+                ((userUid + friendUid) as string) + '-' + threeMthsAgo.getTime()
               )
               .endAt(
-                ((friendUid + userUid) as string) + '-' + new Date().getTime()
+                ((userUid + friendUid) as string) + '-' + new Date().getTime()
               )
               .limitToLast(15);
           }
@@ -172,12 +172,12 @@ export class BaseService {
 
       const promise2 = new Promise(res => {
         const ref3 = this.realTimeDatabase.list(
-          `chats/${userKey}/${friendKey}`,
+          `chats/${friendKey}/${userKey}`,
           ref3 =>
             ref3
               .orderByChild('message/senderId_receiverId')
-              .startAt(`${userUid}_${friendUid}_${threeMthsAgo.getTime()}`)
-              .endAt(`${userUid}_${friendUid}_${new Date().getTime()}`)
+              .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
+              .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`)
               .limitToLast(15)
           // .equalTo(`${userUid}_${friendUid}`)
         );
@@ -198,7 +198,7 @@ export class BaseService {
   getNewMessages(userKey: string, friendKey?: string) {
     if (friendKey) {
       const ref = this.realTimeDatabase.list(
-        `chats/${userKey}/${friendKey}`,
+        `chats/${friendKey}/${userKey}`,
         ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
       );
       return ref
@@ -209,19 +209,19 @@ export class BaseService {
           )
         );
     }
-    if(!friendKey) {  // MEGCSINÁLNI ///  
-      const ref = this.realTimeDatabase.list(  gdsgsdggd
-        `chats/${userKey}`,
-        ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
-      );
-      return ref
-        .snapshotChanges(['child_added'])
-        .pipe(
-          map(ch =>
-            ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
-          )
-        );
-    }
+    // if(!friendKey) {  // MEGCSINÁLNI ///
+    //   const ref = this.realTimeDatabase.list(  gdsgsdggd
+    //     `chats/${userKey}`,
+    //     ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
+    //   );
+    //   return ref
+    //     .snapshotChanges(['child_added'])
+    //     .pipe(
+    //       map(ch =>
+    //         ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
+    //       )
+    //     );
+    // }
   }
 
   getUpdatedMessages(userKey: string, friendKey: string) {

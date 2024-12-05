@@ -8,7 +8,7 @@ import {
 } from '@angular/animations';
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { UserClass } from 'src/app/models/user.model';
+import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { UtilityService } from 'src/app/services/utility.service';
 import { FilesModalComponent } from '../../modals/files-modal/files-modal.component';
@@ -74,7 +74,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   @Input() selectedFriend: any;
   @Input() sentFilesArr: any[] = [];
   @Input() textMessages: any;
-  @Input() urlText: any;
+  @Input() urlText: any[] = [];
   @Input() messageButtonClicked: boolean = false;
   // ANIMÁCIÓVAL KAPCSOLATOS //
   chatAnimationState: string = 'in-2';
@@ -91,6 +91,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   userProfiles: UserClass[] = [];
   userProfile: UserClass = new UserClass();
   isUserOnlineNow: boolean = false;
+  userFriends: Friends[] = [];
 
   // FÁJLOK //
   filesArr: any[] = [];
@@ -120,6 +121,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   updatingMessSentTimeSub: Subscription = Subscription.EMPTY;
   updMessSub: Subscription = Subscription.EMPTY;
   frOnlineStateSub: Subscription = Subscription.EMPTY;
+  messTransfSubscr: Subscription = Subscription.EMPTY;
 
   constructor(
     private utilService: UtilityService,
@@ -152,57 +154,86 @@ export class MessageComponent implements OnInit, OnDestroy {
         if (path === 'message/') this.isOnMessageRoute = true;
       }
     });
-    const AllUserDtlsRes = await this.utilService.getUserProfiles();
-    this.userProfilesSub = AllUserDtlsRes.subscribe(async AllUserDtls => {
-      this.userProfiles = AllUserDtls.userProfiles;
-      this.userProfile = AllUserDtls.userProfile;
-      this.selectedFriend = this.userProfiles.find(
-        uP => uP.uid === this.selectedFriendId
-      );
-      this.base.selectedFriendSubject.next(this.selectedFriend);
-      if (
-        !this.base.getAllMessagesSubject.value.allChatsArray?.length ||
-        this.base.messageTransferSub.value === true
-      ) {
-        this.allChatsArray = await this.base.getUserMessagesRefactored(
-          this.userProfile.uid,
-          this.selectedFriendId!,
-          this.userProfile.key,
-          this.selectedFriend.key
-        );
-        this.base.messageTransferSub.next(false);
-      }
-      this.messSubscription = this.getNewMessages();
-      this.getVisibleMessagesForSelectedFriend();
-      this.animateMessages();
-      /////// ONLINE-E A KIVÁLASZTOTT ISMERŐS ////////////
-      // this.frOnlineStateSub = this.getFrOnlineState();
-      this.updMessSub = this.getUpdatedMessages();
-      this.updateSeenMessages(this.allChatsArray, true);
-      console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-      let docIdsArr: any[] = [];
-      this.settingFilesArr();
-      this.updatingMessSentTimeSub = this.updatingMessSentTime().subscribe();
-      if (this.firestore.filesBehSubject.value.length === 0) {
-        this.firestore
-          .getFilesFromChat(this.userProfile.key as string)
-          .subscribe((data: any) => {
-            data.forEach((doc: any) => {
-              if (!docIdsArr.includes(doc.payload.doc.id)) {
-                docIdsArr.push(doc.payload.doc.id);
-                this.sentFilesArr.push({
-                  docId: doc.payload.doc.id,
-                  ...doc.payload.doc.data(),
-                });
-              }
-            });
-            console.log('**** FÁJLOK LEKÉRVE ****');
-            this.firestore.filesBehSubject.next(this.sentFilesArr);
-          });
-        // this.settingFilesArr();
-      }
-      this.userProfilesSub.unsubscribe();
+    this.userSubjectSub = this.utilService.userSubject.subscribe(val => {
+      this.userFriends = val.userFriends;
     });
+    this.base.messageTransferSub.next(true);
+    this.messTransfSubscr = this.base.messageTransferSub.subscribe(
+      async isTrue => {
+        if (
+          // !this.base.getAllMessagesSubject.value.allChatsArray?.length ||
+          isTrue
+        ) {
+          const AllUserDtlsRes = await this.utilService.getUserProfiles();
+          this.userProfilesSub = AllUserDtlsRes.subscribe(async AllUserDtls => {
+            this.utilService.forUserSubject.userProfiles =
+              AllUserDtls.userProfiles;
+            this.utilService.forUserSubject.userProfile =
+              AllUserDtls.userProfile;
+            this.utilService.subjectValueTransfer(
+              this.utilService.forUserSubject,
+              this.utilService.userSubject
+            );
+            this.userProfiles = AllUserDtls.userProfiles;
+            this.userProfile = AllUserDtls.userProfile;
+            this.selectedFriend = this.userProfiles.find(
+              uP => uP.uid === this.selectedFriendId
+            );
+            this.base.selectedFriendSubject.next(this.selectedFriend);
+            this.allChatsArray = await this.base.getUserMessagesRefactored(
+              this.userProfile.uid,
+              this.selectedFriendId!,
+              this.userProfile.key,
+              this.selectedFriend.key
+            );
+            console.log(this.allChatsArray);
+            this.base.messageTransferSub.next(false);
+
+            // if (
+            //   !this.base.getAllMessagesSubject.value.allChatsArray?.length ||
+            //   this.base.messageTransferSub.value === true
+            // ) {
+
+            // }
+            this.messSubscription = this.getNewMessages();
+            this.getVisibleMessagesForSelectedFriend();
+            this.animateMessages();
+            /////// ONLINE-E A KIVÁLASZTOTT ISMERŐS ////////////
+            // this.frOnlineStateSub = this.getFrOnlineState();
+            this.updMessSub = this.getUpdatedMessages();
+            this.updateSeenMessages(this.allChatsArray, true);
+            console.log(
+              'ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL'
+            );
+
+            let docIdsArr: any[] = [];
+            this.settingFilesArr();
+            this.updatingMessSentTimeSub =
+              this.updatingMessSentTime().subscribe();
+            if (this.firestore.filesBehSubject.value.length === 0) {
+              this.firestore
+                .getFilesFromChat(this.userProfile.key as string)
+                .subscribe((data: any) => {
+                  data.forEach((doc: any) => {
+                    if (!docIdsArr.includes(doc.payload.doc.id)) {
+                      docIdsArr.push(doc.payload.doc.id);
+                      this.sentFilesArr.push({
+                        docId: doc.payload.doc.id,
+                        ...doc.payload.doc.data(),
+                      });
+                    }
+                  });
+                  console.log('**** FÁJLOK LEKÉRVE ****');
+                  this.firestore.filesBehSubject.next(this.sentFilesArr);
+                });
+              // this.settingFilesArr();
+            } // Ez után
+            this.userProfilesSub.unsubscribe();
+          });
+        }
+        // this.messTransfSubscr.unsubscribe();
+      }
+    );
   }
 
   animateMessages() {
@@ -273,6 +304,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     }
     const replDiagSub = replyDialog.afterClosed().subscribe(async dat => {
       if (dat === 'message-sent') {
+        this.sendMessage(reply);
         await this.base.updateMessage(
           reply.key,
           reply,
@@ -286,8 +318,8 @@ export class MessageComponent implements OnInit, OnDestroy {
       replDiagSub.unsubscribe();
     });
   }
-
-  setMessage(
+  updateFrsFrObj: any = {};
+  async setMessage(
     message: Chat & ReplyMessage,
     isEmailOn: boolean,
     replyMessage?: string
@@ -305,16 +337,67 @@ export class MessageComponent implements OnInit, OnDestroy {
     };
     message._setKey =
       this.userProfile.uid + this.utilService.randomIdGenerator(message);
-    message.participants[0] = this.userProfile.uid + '-' + actualTime;
+    // message.participants[0] = this.userProfile.uid + '-' + actualTime;
     message.participants[1] = this.selectedFriendId!;
-    message.participants[2 as any] =
-      this.userProfile.uid + this.selectedFriendId + '-' + actualTime;
+    // message.participants[2 as any] =
+    // this.userProfile.uid + this.selectedFriendId + '-' + actualTime;
+    // let selectedFriend: any = {}
+    const uProfsObs = await this.utilService.getUserProfiles();
+    const uProfsSub = uProfsObs.subscribe(async allUsrDtls => {
+      this.selectedFriend = allUsrDtls.userProfiles.find(
+        uP => uP.uid === this.selectedFriendId
+      );
+      console.log(this.selectedFriend);
+      const arr = Object.values(this.selectedFriend.friends);
+      const meForFr: any = arr.find(
+        (fr: any) => this.userProfile.uid === fr.friendId
+      );
+      if (meForFr?.newMessageNumber)
+        meForFr.newMessageNumber = meForFr.newMessageNumber + 1;
+      if (!meForFr?.newMessageNumber) meForFr!.newMessageNumber = 1;
+      this.updateFrsFrObj = {
+        friendId: meForFr?.friendId,
+        friendKey: meForFr?.friendKey,
+        seenMe: meForFr?.seenMe,
+        newMessageNumber: meForFr?.newMessageNumber,
+      };
+      if (meForFr?.areFriends)
+        this.updateFrsFrObj.areFriends = meForFr.areFriends;
+      if (meForFr?.confirmed) this.updateFrsFrObj.confirmed = meForFr.confirmed;
+      if (meForFr?.messaging) this.updateFrsFrObj.messaging = meForFr.messaging;
+
+      uProfsSub.unsubscribe();
+      // this.sendMessage(message)
+      // await this.base.updateFriendsFriend(
+      //   this.selectedFriend.key!,
+      //   this.userProfile.key,
+      //   this.updateFrsFrObj
+      // );
+    });
+
     if (isEmailOn)
       this.base.sendMessNotificationEmail(
         this.selectedFriend,
         this.message,
         this.userProfile
       );
+  }
+
+  // async setNewMessageNum() {}
+
+  async sendMessage(message: Chat & ReplyMessage) {
+    const actualTime = new Date().getTime();
+    message.message.timeStamp = actualTime as any;
+    message.message.senderId_receiverId = `${this.userProfile.uid}_${this.selectedFriendId}_${actualTime}`;
+    message.participants[0] = this.userProfile.uid + '-' + actualTime;
+    message.participants[2 as any] =
+      this.userProfile.uid + this.selectedFriendId + '-' + actualTime;
+    console.log(this.updateFrsFrObj);
+    await this.base.updateFriendsFriend(
+      this.selectedFriend.key!,
+      this.userProfile.key,
+      this.updateFrsFrObj
+    );
   }
 
   updateChatsAndVisMessArr(message: Chat | ReplyMessage) {
@@ -327,11 +410,10 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   updateSeenMessages(mess: Chat[] | ReplyMessage[], isFriendMessage: boolean) {
-    const threeSecAgo = new Date().getTime() - 3000;
+    console.log(mess);
 
     if (!isFriendMessage && this.getUpdatedMessagesCounter === 2)
       mess.map(mess => {
-        const messTimeStamp = new Date(mess.message.timeStamp).getTime();
         if (
           mess.message.senderId === this.userProfile.uid &&
           mess.participants[1] === this.selectedFriendId &&
@@ -359,8 +441,8 @@ export class MessageComponent implements OnInit, OnDestroy {
           this.base.updateMessage(
             mess.key,
             mess,
-            this.userProfile.key,
-            this.selectedFriend.key
+            this.selectedFriend.key,
+            this.userProfile.key
           );
         }
         return mess;
@@ -653,8 +735,8 @@ export class MessageComponent implements OnInit, OnDestroy {
           .updateMessage(
             mess.key,
             mess,
-            this.userProfile.key,
-            this.selectedFriend.key
+            this.selectedFriend.key,
+            this.userProfile.key
           )
           .then(() => {});
       }
@@ -682,7 +764,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     // kiszedem csak az url-t tartalmazó részt mindegyik üzenetből a szövegből és belerakom egy tömbbe
     urlMessages.map((mess, i) => {
       if (
-        !this.urlText.includes(mess.key) &&
+        !this.urlText?.includes(mess.key) &&
         mess.message?.message.includes(' ')
       ) {
         const transformedUrl = mess.message.message.slice(
@@ -713,7 +795,7 @@ export class MessageComponent implements OnInit, OnDestroy {
         );
       } else if (
         !mess.message?.message.includes(' ') &&
-        !this.urlText.includes(mess.key)
+        !this.urlText?.includes(mess.key)
       ) {
         this.urlText.push(
           { url: mess.message?.message, chatId: mess.key },
@@ -741,11 +823,38 @@ export class MessageComponent implements OnInit, OnDestroy {
       });
   }
 
+  updateFrNewMessNumToZero(isNewMess?: boolean) {
+    const selFriend = this.userFriends.find(
+      fr =>
+        (fr.friendId === this.selectedFriendId && fr.newMessageNumber) ||
+        (isNewMess && fr.friendId === this.selectedFriendId)
+    );
+    if (selFriend?.friendId) {
+      selFriend!.newMessageNumber = 0;
+      const updateFrObj: any = {
+        friendId: selFriend?.friendId,
+        friendKey: selFriend?.friendKey,
+        seenMe: selFriend?.seenMe,
+        newMessageNumber: selFriend?.newMessageNumber,
+      };
+      if (selFriend?.areFriends) updateFrObj.areFriends = selFriend.areFriends;
+      if (selFriend?.confirmed) updateFrObj.confirmed = selFriend.confirmed;
+      if (selFriend?.messaging) updateFrObj.messaging = selFriend.messaging;
+      console.log(updateFrObj);
+      this.base.updateFriend(
+        this.selectedFriend.key,
+        updateFrObj,
+        this.userProfile.key
+      );
+    }
+  }
   getNewMessages() {
     const userProfile = this.userProfile;
+    this.updateFrNewMessNumToZero();
     return this.base
-      .getNewMessages(this.userProfile.key, this.selectedFriend.key)
+      .getNewMessages(this.userProfile.key, this.selectedFriend.key)!
       .subscribe(mess => {
+        this.updateFrNewMessNumToZero(true);
         console.log('***ÚJ ÜZENETEK LEKÉRVE***');
         let msgArr: any[] = [];
         if (mess.length) {
@@ -774,7 +883,7 @@ export class MessageComponent implements OnInit, OnDestroy {
             this.allChatsArray.unshift(msg);
             this.haventSeenMessagesArr.push(msg);
             this.updateSeenMessages(this.allChatsArray, false);
-            // this.updMessSub = this.getUpdatedMessages();
+            //this.updMessSub = this.getUpdatedMessages();
             this.haventSeenMessagesArr.map(mess => {
               if (
                 mess.message.senderId === this.selectedFriendId &&
@@ -784,8 +893,8 @@ export class MessageComponent implements OnInit, OnDestroy {
                 this.base.updateMessage(
                   mess.key,
                   mess,
-                  this.userProfile.key,
-                  this.selectedFriend.key
+                  this.selectedFriend.key,
+                  this.userProfile.key
                 );
               }
               return mess;
@@ -833,9 +942,11 @@ export class MessageComponent implements OnInit, OnDestroy {
       this.messSubscription.unsubscribe();
     }
     if (this.filesBehSubjectSub) this.filesBehSubjectSub.unsubscribe();
+    if (this.userSubjectSub) this.userSubjectSub.unsubscribe();
     if (this.updatingMessSentTimeSub)
       this.updatingMessSentTimeSub.unsubscribe();
     if (this.updMessSub) this.updMessSub.unsubscribe();
     if (this.frOnlineStateSub) this.frOnlineStateSub.unsubscribe();
+    if (this.messTransfSubscr) this.messTransfSubscr.unsubscribe();
   }
 }

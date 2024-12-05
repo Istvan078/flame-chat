@@ -83,6 +83,17 @@ export class NotificationsComponent implements AfterViewInit {
     this.compOfNoti.emit(this.toVisitedMeOn);
     this.sideNavToggleToNav.emit(this.sideNavToggle);
   }
+  toNewMessage(newMess: any) {
+    const friendId = newMess.friendId;
+    this.newMessages = this.newMessages.filter(
+      nM => nM.friendId !== newMess.friendId
+    );
+    this.base.newMessageNotiSubject.next(this.newMessages);
+    this.sideNavToggle = !this.sideNavToggle;
+    this.base.messageTransferSub.next(true);
+    this.sideNavToggleToNav.emit(this.sideNavToggle);
+    this.router.navigate([`/message/${friendId}`]);
+  }
 
   toMyPosts() {
     this.router.navigate(['/my-posts']);

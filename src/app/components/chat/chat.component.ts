@@ -116,6 +116,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   areMyPostsOn: boolean = false;
   subscribedForNotifications: boolean = false;
   haventSeenMessagesArr: any[] = [];
+  newMessageNumber: number = 0;
 
   // POSZTOKKAL KAPCSOLATOS //
   postsNotificationNumber: number = 0;
@@ -186,7 +187,10 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.userProfile = user.userProfile;
       }
       if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
-      if (user.userFriends) this.userFriends = user.userFriends;
+      if (user.userFriends) {
+        this.userFriends = user.userFriends;
+        this.getNumberOfNewMessages();
+      }
       if (user.notConfirmedMeUsers)
         this.notConfirmedMeUsers = user.notConfirmedMeUsers;
       if (user.subscription) user.subscription.unsubscribe();
@@ -264,7 +268,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.getFriendsSub = this.getFriendsAndNotFriends().subscribe({
           next: (res: any) => {
             console.log(res);
-            this.getNumberOfNewMessages();
+            // this.getNumberOfNewMessages();
             setTimeout(() => {
               this.base.getAllMessagesSubject.next({
                 haventSeenMessagesArr: this.haventSeenMessagesArr,
@@ -298,6 +302,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.getFriendsFromUtilSub = this.utilService
             .getFriends()
             .subscribe(val => {
+              console.log(val);
               observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
               if (!this.seenMeSub)
                 this.seenMeSub = this.utilService
@@ -747,23 +752,27 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   getNumberOfNewMessages() {
-    this.messSubscription = this.base
-      .getNewMessages(this.userProfile.key)
-      .subscribe(msgs => {
-        if (msgs.length)
-          this.haventSeenMessagesArr = msgs.filter(
-            msg =>
-              !msg.message.seen &&
-              msg.messsage?.senderId !== this.userProfile.uid &&
-              msg.participants[1] === this.userProfile.uid
-          );
-        this.utilService.subjectValueTransfer(
-          this.haventSeenMessagesArr,
-          this.base.newMessageNotiSubject
-        );
-        console.log(msgs);
-        console.log(`****GET NUMBER OF NEW MESSAGES BEFEJEZŐDÖTT****`);
-      });
+    let obj: any = {};
+    let forNotiSubArr: any[] = [];
+    this.userFriends?.map(fr => {
+      if (fr?.newMessageNumber) {
+        const forNotiSubObj = {
+          friendId: fr.friendId,
+          newMessageNumber: fr.newMessageNumber,
+          displayName: fr.displayName,
+        };
+        forNotiSubArr.push(forNotiSubObj);
+        obj.newMessageNumber = obj.newMessageNumber
+          ? obj.newMessageNumber + fr.newMessageNumber
+          : fr.newMessageNumber;
+        console.log(obj.newMessageNumber);
+        // this.haventSeenMessagesArr.push(fr);
+      }
+    });
+    this.base.newMessageNotiSubject.next(forNotiSubArr);
+    console.log(this.haventSeenMessagesArr);
+    this.newMessageNumber = obj.newMessageNumber;
+    console.log(`****GET NUMBER OF NEW MESSAGES BEFEJEZŐDÖTT****`);
   }
 
   getSharedPosts() {

@@ -207,18 +207,14 @@
           [@slide-in-keyframed]
           routerLink="/message"
           class="d-grid justify-content-center"
-          [ngClass]="
-            haventSeenMessagesArr!.length > 0
-              ? 'newMessage'
-              : 'exp-panel-headers'
-          "
+          [ngClass]="newMessageNumber > 0 ? 'newMessage' : 'exp-panel-headers'"
         >
           <mat-panel-title class="pt-2">
             Üzenetek
             <mat-icon
               matBadgeSize="small"
-              [matBadgeDisabled]="!haventSeenMessagesArr?.length"
-              matBadge="{{ haventSeenMessagesArr?.length }}"
+              [matBadgeDisabled]="!newMessageNumber"
+              matBadge="{{ newMessageNumber }}"
               matBadgeColor="primary"
               class="ms-2 messages-icon"
               aria-hidden="false"

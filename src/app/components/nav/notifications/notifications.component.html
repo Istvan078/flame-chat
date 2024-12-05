@@ -24,28 +24,23 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card
-      style="padding-top: 10px"
-      class="mt-1"
-      *ngIf="newMessages.length && lastNewMessage.message.displayName !== ''"
-    >
-      <mat-card-content>
-        <mat-card-subtitle
-          (click)="toVisitedMe()"
-          [matBadge]="newMessages.length"
-          class="mouse-pointer"
-        >
-          <b>{{ lastNewMessage.message.displayName }}</b>
-          {{
-            newMessages.length > 1
-              ? 'írt neked és további ' +
-                (newMessages.length - 1) +
-                ' új üzenet érkezett'
-              : 'írt neked új üzenetet'
-          }}
-        </mat-card-subtitle>
-      </mat-card-content>
-    </mat-card>
+    <ng-container *ngIf="newMessages.length">
+      <mat-card
+        *ngFor="let msg of newMessages"
+        style="padding-top: 10px"
+        class="mt-1"
+      >
+        <mat-card-content>
+          <mat-card-subtitle
+            (click)="toNewMessage(msg)"
+            [matBadge]="msg.newMessageNumber"
+            class="mouse-pointer"
+          >
+            <b>{{ msg.displayName }}</b> írt neked új üzenetet
+          </mat-card-subtitle>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
 
     <mat-card style="padding-top: 10px" class="mt-1" *ngIf="newMyPosts">
       <mat-card-content>

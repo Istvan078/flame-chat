@@ -122,7 +122,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isLoading = true;
     this.selectedFriendSub = this.base.selectedFriendSubject.subscribe(
       async fr => {
-        if (fr.friendKey) {
+        if (fr?.key) {
           await this.sendPostNotification(fr);
           console.log('**POSZTMEGOSZTÁS ÉRTESÍTÉS ELKÜLDVE**');
         }

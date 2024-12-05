@@ -21,6 +21,8 @@ export interface Friends {
   confirmed: boolean;
   areFriends?: boolean;
   visibility: boolean;
+  newMessageNumber?: number;
+  messaging?: boolean;
 }
 
 export class ForUserSubject {
@@ -42,6 +44,7 @@ export class UserClass {
     displayName?: string;
     profilePicture?: string;
     confirmed?: boolean;
+    newMessageNumber?: number;
   }[];
   public age: number;
   public phoneNumber: string = '';
