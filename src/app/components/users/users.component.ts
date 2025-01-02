@@ -26,6 +26,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   isReadyToDeleteProf: boolean = false;
   userDisplayOn: boolean = false;
   user: UserClass = new UserClass();
+  userProfile: UserClass = new UserClass();
   userProfiles: UserClass[] = [];
   loggedInUser: UserClass = new UserClass();
   columns: string[] = [
@@ -54,6 +55,12 @@ export class UsersComponent implements OnInit, OnDestroy {
         user['isRenderOn'] = false;
       });
       this.users = users;
+      this.getLoggedInUser();
+      this.base.getUserProfiles().subscribe(uPfs => (this.userProfiles = uPfs));
+      if (this.loggedInUser?.uid)
+        this.userProfile = this.userProfiles.find(
+          uP => uP.uid === this.loggedInUser.uid
+        )!;
     });
   }
 

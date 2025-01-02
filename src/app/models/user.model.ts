@@ -6,6 +6,11 @@ type Claims = {
   superAdmin: boolean;
 };
 
+type Position = {
+  position: string;
+  time: number;
+};
+
 export type FirebaseUser = firebase.User | null;
 
 export interface Friends {
@@ -66,6 +71,7 @@ export class UserClass {
     public profilePicture: string = '',
     public visibility: boolean = true,
     public appVersion: number = 1,
+    public positions: Position[] = [],
     public curPosition: string = ''
   ) {
     this.claims = {

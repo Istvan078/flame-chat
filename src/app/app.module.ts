@@ -30,6 +30,7 @@ import { FilesModalComponent } from './components/modals/files-modal/files-modal
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { AdminComponent } from './components/admin/admin.component';
 import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
+import { LocationComponent } from './components/users/location/location.component';
 
 @NgModule({
   declarations: [
@@ -40,6 +41,7 @@ import { MatModalComponent } from './components/modals/mat-modal/mat-modal.compo
     ClassPipe,
     LoginComponent,
     UsersComponent,
+    LocationComponent,
     LoadingSpinnerComponent,
     ModalComponent,
     NotificationsComponent,

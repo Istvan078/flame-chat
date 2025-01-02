@@ -24,6 +24,8 @@ export class NavComponent implements OnInit, OnDestroy {
 
   compOfNoti!: boolean;
 
+  positions: any[] = [];
+
   constructor(
     private authService: AuthService,
     private base: BaseService,
@@ -56,10 +58,24 @@ export class NavComponent implements OnInit, OnDestroy {
     );
     navigator.geolocation.watchPosition(loc => {
       if (this.userProfile?.key) {
+        const time = new Date().getTime();
         const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
+        if (this.userProfile.positions.length <= 20) {
+          this.userProfile.positions = [
+            ...this.userProfile.positions,
+            { time: time, position: currentPosition },
+          ];
+          console.log('Dátum hozzáadva');
+        } else {
+          this.userProfile.positions.splice(0, 10);
+          // this.userProfile.positions.map(pos => {
+          //   console.log(new Date(pos.time).toLocaleString());
+          // });
+        }
         this.userProfile.curPosition = currentPosition;
+        console.log('***GEOLOCATION***', this.userProfile);
         this.base.updateUserData(this.userProfile, this.userProfile.key);
-        console.log('***GEOLOCATION***');
+        console.log('***GEOLOCATION***', this.userProfile.positions);
       }
     });
   }

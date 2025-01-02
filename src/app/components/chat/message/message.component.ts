@@ -254,6 +254,7 @@ export class MessageComponent implements OnInit, OnDestroy {
           this.selectedFriend.key
         )
         .then(() => {
+          this.sendMessage(this.message as Chat & ReplyMessage);
           if (this.filesArr.length) {
             const dataForFiles = {
               files: this.filesArr,
@@ -284,7 +285,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     });
   }
 
-  replyMessage(mess: Chat & ReplyMessage) {
+  async replyMessage(mess: Chat & ReplyMessage) {
     const voiceMessage: string = '';
     const reply = new ReplyMessage({
       message: '',
@@ -297,20 +298,25 @@ export class MessageComponent implements OnInit, OnDestroy {
     let oldReplyMessage;
     if (mess.replyMessage?.message) {
       oldReplyMessage = mess.replyMessage.message;
-      this.setMessage(reply, false, oldReplyMessage);
+      await this.setMessage(reply, false, oldReplyMessage);
+      console.log('Már válaszoltam');
     } else {
       reply.message.message = mess.message.message;
-      this.setMessage(reply, false);
+      await this.setMessage(reply, false);
+      console.log('Még nem válaszoltam', reply);
     }
     const replDiagSub = replyDialog.afterClosed().subscribe(async dat => {
       if (dat === 'message-sent') {
-        this.sendMessage(reply);
+        console.log(reply);
+        await this.sendMessage(reply);
         await this.base.updateMessage(
           reply.key,
           reply,
           this.userProfile.key,
           this.selectedFriend.key
         );
+        console.log(this.userProfile.key);
+        console.log(this.selectedFriend.key);
         this.updateChatsAndVisMessArr(reply);
         this.sendMessNotifications(reply);
         replDiagSub.unsubscribe();
@@ -335,6 +341,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       senderId_receiverId: `${this.userProfile.uid}_${this.selectedFriendId}_${actualTime}`,
       message: replyMessage ? replyMessage : message.message.message, // MEGCSINÁLNI
     };
+    console.log(message.message.timeStamp);
     message._setKey =
       this.userProfile.uid + this.utilService.randomIdGenerator(message);
     // message.participants[0] = this.userProfile.uid + '-' + actualTime;
@@ -347,7 +354,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       this.selectedFriend = allUsrDtls.userProfiles.find(
         uP => uP.uid === this.selectedFriendId
       );
-      console.log(this.selectedFriend);
       const arr = Object.values(this.selectedFriend.friends);
       const meForFr: any = arr.find(
         (fr: any) => this.userProfile.uid === fr.friendId
@@ -365,7 +371,7 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.updateFrsFrObj.areFriends = meForFr.areFriends;
       if (meForFr?.confirmed) this.updateFrsFrObj.confirmed = meForFr.confirmed;
       if (meForFr?.messaging) this.updateFrsFrObj.messaging = meForFr.messaging;
-
+      console.log(this.updateFrsFrObj);
       uProfsSub.unsubscribe();
       // this.sendMessage(message)
       // await this.base.updateFriendsFriend(
@@ -392,12 +398,12 @@ export class MessageComponent implements OnInit, OnDestroy {
     message.participants[0] = this.userProfile.uid + '-' + actualTime;
     message.participants[2 as any] =
       this.userProfile.uid + this.selectedFriendId + '-' + actualTime;
-    console.log(this.updateFrsFrObj);
     await this.base.updateFriendsFriend(
       this.selectedFriend.key!,
       this.userProfile.key,
       this.updateFrsFrObj
     );
+    console.log('ÜZENET ELKÜLDVE, JELZÉS BARÁTNAK ELKÜLDVE');
   }
 
   updateChatsAndVisMessArr(message: Chat | ReplyMessage) {
@@ -856,6 +862,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       .subscribe(mess => {
         this.updateFrNewMessNumToZero(true);
         console.log('***ÚJ ÜZENETEK LEKÉRVE***');
+        console.log(mess);
         let msgArr: any[] = [];
         if (mess.length) {
           msgArr = mess;
@@ -870,6 +877,7 @@ export class MessageComponent implements OnInit, OnDestroy {
               msg.message.senderId !== userProfile?.uid &&
               msg.participants[1] === userProfile?.uid
           );
+          console.log(msgArr);
         }
 
         for (let msg of msgArr) {

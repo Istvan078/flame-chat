@@ -1,7 +1,7 @@
-import { inject, NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { ChatComponent } from './chat.component';
 import { SharedModule } from '../shared/shared.module';
-import { CanActivateFn, Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { UserProfileComponent } from '../user-profile/user-profile.component';
 import { NewsComponent } from './news/news.component';
 import { FriendProfileComponent } from '../user-profile/friend-profile/friend-profile.component';
@@ -14,14 +14,14 @@ import { MessagedFriendsComponent } from './messaged-friends/messaged-friends.co
 
 // HA NINCS DISPLAYNAME A USERNEK NEM LÉPHET BE A CHAT ÚTVONALRA //
 // Visszanavigálom profillétrehozó felületre
-const chatCanActivate: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  if (route.params['uid']) {
-    router.navigate(['/profile/' + route.params['uid']]);
-    return false;
-  }
-  return true;
-};
+// const chatCanActivate: CanActivateFn = (route, state) => {
+//   const router = inject(Router);
+//   if (route.params['uid']) {
+//     router.navigate(['/profile/' + route.params['uid']]);
+//     return false;
+//   }
+//   return true;
+// };
 
 @NgModule({
   declarations: [
@@ -41,13 +41,8 @@ const chatCanActivate: CanActivateFn = (route, state) => {
     RouterModule.forChild([
       { path: '', component: ChatComponent },
       {
-        path: 'chat/:uid',
-        component: ChatComponent,
-        canActivate: [chatCanActivate],
-      },
-      {
         path: 'message',
-        component: MessagedFriendsComponent
+        component: MessagedFriendsComponent,
       },
       {
         path: 'message/:friendId',

@@ -115,7 +115,7 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       this.userProfile = AllUserDtls.userProfile;
       this.userFriends = AllUserDtls.userFriends!;
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-      this.filterShowFriendsMessArr();
+      // this.filterShowFriendsMessArr();
       this.getNewMessages();
       await this.areFriendsOnline();
       this.onAnimate();
