@@ -12,7 +12,7 @@ export const routes: Routes = [
   { path: 'home', component: HomeComponent },
   { path: 'signup', component: SignupComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'users', component: UsersComponent, canActivate: [isAdminGuard] },
+  { path: 'users', component: UsersComponent },
   {
     path: 'profile/:uid',
     component: UserProfileComponent,

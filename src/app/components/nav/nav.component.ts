@@ -56,28 +56,32 @@ export class NavComponent implements OnInit, OnDestroy {
         this.isSuperAdmin = booleanSA;
       }
     );
-    navigator.geolocation.watchPosition(loc => {
-      if (this.userProfile?.key) {
-        const time = new Date().getTime();
-        const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
-        if (this.userProfile.positions.length <= 20) {
-          this.userProfile.positions = [
-            ...this.userProfile.positions,
-            { time: time, position: currentPosition },
-          ];
-          console.log('Dátum hozzáadva');
-        } else {
-          this.userProfile.positions.splice(0, 10);
-          // this.userProfile.positions.map(pos => {
-          //   console.log(new Date(pos.time).toLocaleString());
-          // });
+    setInterval(() => {
+      navigator.geolocation.getCurrentPosition(loc => {
+        console.log(this.userProfile);
+        if (this.userProfile?.key) {
+          const time = new Date().getTime();
+          const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
+          if (this.userProfile?.positions?.length <= 20) {
+            this.userProfile.positions = [
+              ...this.userProfile.positions,
+              { time: time, position: currentPosition },
+            ];
+            console.log('Dátum hozzáadva');
+          } else if (!this.userProfile?.positions?.length) {
+            this.userProfile.positions = [
+              { time: time, position: currentPosition },
+            ];
+          } else {
+            this.userProfile?.positions?.splice(0, 10);
+          }
+          this.userProfile.curPosition = currentPosition;
+          console.log('***GEOLOCATION***', this.userProfile);
+          this.base.updateUserData(this.userProfile, this.userProfile.key);
+          console.log('***GEOLOCATION***', this.userProfile?.positions);
         }
-        this.userProfile.curPosition = currentPosition;
-        console.log('***GEOLOCATION***', this.userProfile);
-        this.base.updateUserData(this.userProfile, this.userProfile.key);
-        console.log('***GEOLOCATION***', this.userProfile.positions);
-      }
-    });
+      });
+    }, 5000);
   }
 
   signOut() {

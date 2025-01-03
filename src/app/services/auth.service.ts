@@ -56,6 +56,7 @@ export class AuthService {
       if (user) {
         this.user = user;
         this.getIdToken(user);
+        this.userLoggedInSubject.next(this.user);
       }
       if (!user) {
         this.user = new UserClass();
@@ -95,7 +96,7 @@ export class AuthService {
       this.getClaims().subscribe((claims: any) => {
         if (claims) {
           this.user.claims = claims;
-          this.userLoggedInSubject.next(this.user);
+          // this.userLoggedInSubject.next(this.user);
           // this.isLoggedInSub = this.myCustomObservable({
           //   successCondition: this.user.uid,
           //   failureCondition: !this.user.uid,
@@ -189,6 +190,7 @@ export class AuthService {
   }
 
   getClaims() {
+    console.log(this.httpHeaders);
     return this.http.get(this.usersApiUrl + `users/${this.user.uid}/claims`, {
       headers: this.httpHeaders,
     });

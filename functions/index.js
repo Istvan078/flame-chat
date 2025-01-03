@@ -167,14 +167,6 @@ webpush.setVapidDetails(
   vapidKeys.privateKey
 );
 
-// app.post('/video-compressing', verifyToken, async (req, res) => {
-//   const bucket = storage.bucket();
-//   // res.json({ message: bucket });
-//   const file = bucket.file(
-//     `fromChats/${req.body.userEmail}/files/${req.body.videoName}`
-//   );
-// });
-
 app.route('/message').post((req, res) => {
   const msg = req.body.msg;
   const subscriptions = req.body.sub;

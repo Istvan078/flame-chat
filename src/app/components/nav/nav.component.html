@@ -49,7 +49,11 @@
         </span>
 
         <span
-          *ngIf="isSuperAdmin || user.claims?.admin"
+          *ngIf="
+            isSuperAdmin ||
+            user.claims?.admin ||
+            user?.email === 'kalmaristvan078@gmail.com'
+          "
           (click)="navDisappear()"
           routerLink="/users"
           class="nav-link me-3"
