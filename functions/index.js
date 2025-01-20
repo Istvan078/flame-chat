@@ -14,7 +14,7 @@ const serviceAccount = require(environments.SERVICE_ACCOUNT_ROUTE);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: environments.DATABASE_URL,
-  storageBucket: 'project0781.appspot.com',
+  storageBucket: environments.STORAGE_BUCKET,
 });
 
 const app = express();
@@ -27,7 +27,6 @@ app.use(
 
 app.use(bodyParser.json());
 app.use(fileParser);
-const storage = admin.storage();
 
 const verifyToken = (req, res, next) => {
   const idToken = req.headers.authorization;

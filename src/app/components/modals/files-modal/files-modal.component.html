@@ -9,7 +9,7 @@
     ></button>
   </div>
   <div class="modal-body text-center">
-    @if(picturesArr.length){
+    @if(picturesArr.length || profPicsArr.length){
     <div
       class="d-flex flex-wrap justify-content-center align-items-center tape"
     >
@@ -21,11 +21,12 @@
       <img
         [ngClass]="{ 'fade-in': fadeIn }"
         class="me-1 rounded flex-grow-1"
-        [src]="picturesArr[viewIndex].url"
+        [src]="picturesArr[viewIndex]?.url || profPicsArr[viewIndex]"
         alt="Kép"
       />
       <div class="right">
-        @if(viewIndex < picturesArr.length - 1) {
+        @if(viewIndex < picturesArr.length - 1 || viewIndex < profPicsArr.length
+        - 1) {
         <span (click)="right()">></span>
         }
       </div>

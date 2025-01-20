@@ -44,7 +44,6 @@ export class AppComponent implements OnInit, OnDestroy {
         if (val.type === 'NO_NEW_VERSION_DETECTED') swUpdateSub.unsubscribe();
         if (val.type === 'VERSION_READY') {
           swUpdateSub.unsubscribe();
-          window.location.reload();
           // const matDialogRef = this.matDialog.open(MatModalComponent, {
           //   enterAnimationDuration: 2000,
           // });
@@ -59,11 +58,14 @@ export class AppComponent implements OnInit, OnDestroy {
                 (uP: any) =>
                   uP.uid === this.utilService.forUserSubject.userProfile.uid
               );
-              uProf.appVersion = 1.4;
+              uProf.appVersion = '1.1.5';
               console.log(``);
               await this.base.updateUserData(uProf, uProf.key);
               profsSub.unsubscribe();
             });
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
         }
       });
     }

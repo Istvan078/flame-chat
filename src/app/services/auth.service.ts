@@ -190,7 +190,6 @@ export class AuthService {
   }
 
   getClaims() {
-    console.log(this.httpHeaders);
     return this.http.get(this.usersApiUrl + `users/${this.user.uid}/claims`, {
       headers: this.httpHeaders,
     });

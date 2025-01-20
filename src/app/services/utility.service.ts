@@ -201,7 +201,11 @@ export class UtilityService {
     ];
     // objektum ami segít kiszűrni a duplikációkat a tömbből
     const seenFriendIds: any = {};
-    const filteredFriendsArr = allFriendsAndNMessFromArr.filter((fr, i) => {
+    const friendsWithNewMess: any[] = [];
+    let filteredFriendsArr = allFriendsAndNMessFromArr.filter((fr, i) => {
+      if (fr?.newMessageNumber) {
+        friendsWithNewMess.push(fr);
+      }
       // Ha ez az első alkalom, hogy találkozunk ezzel a friendId-val, akkor visszatérünk igazzal, hogy a barát objektumot a szűrt tömbbe tegyük
       if (!seenFriendIds[fr.friendId]) {
         seenFriendIds[fr.friendId] = true;
@@ -209,8 +213,10 @@ export class UtilityService {
       }
       return false;
     });
-
+    filteredFriendsArr = filteredFriendsArr.filter(fr => !fr.newMessageNumber);
+    filteredFriendsArr.unshift(...friendsWithNewMess);
     showFriendsMess = filteredFriendsArr;
+    console.log('***ISMERŐS ÜZENETFEJEK SZŰRVE(FSM)***');
     return showFriendsMess;
   }
 
@@ -243,20 +249,34 @@ export class UtilityService {
     // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
     window.addEventListener('blur', this.isOfflineHandler);
     setInterval(async () => {
+      console.log(`LEFUTSZ_E???`);
+
       if (this.isUserOnlineNow) {
-        await this.base.updateUserData(
-          { online: false },
-          this.userProfile?.key
-        );
-        await this.base.updateUserData(
-          { lastTimeOnline: new Date().getTime() },
-          this.userProfile?.key
-        );
-        this.isUserOnlineNow = false;
+        const minutes = new Date().getMinutes();
+        const lastTimeOnline = new Date(
+          this.userProfile?.lastTimeOnline!
+        ).getMinutes();
+        if (minutes - lastTimeOnline >= 3) {
+          await this.base.updateUserData(
+            { online: false },
+            this.userProfile?.key
+          );
+          console.log('VOLT ELÉRHETŐ');
+          this.isUserOnlineNow = false;
+        }
+        // await this.base.updateUserData(
+        //   { online: false },
+        //   this.userProfile?.key
+        // );
+        // await this.base.updateUserData(
+        //   { lastTimeOnline: new Date().getTime() },
+        //   this.userProfile?.key
+        // );
       }
-    }, 300 * 1000);
+    }, 10 * 1000);
   }
 
+  //////////////// KÉPÚJRAMÉRETEZŐ FUNKCIÓ ////////////////////
   resizeImage(
     file: File,
     maxWidth: number,
@@ -306,6 +326,7 @@ export class UtilityService {
     });
   }
 
+  ////////// CHATEKHEZ ÉS BARÁT AZONOSÍTÓHOZ ID GENERÁLÓ FUNKCIÓ ////////////
   randomIdGenerator(message?: Chat) {
     const idString = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let chatId = 'chat_id_';
@@ -368,5 +389,35 @@ export class UtilityService {
     if (hours < 24) return `${hours} órával ezelőtt`;
 
     if (hours >= 24) return `${days} nappal ezelőtt`;
+  }
+
+  setReactionsArr() {
+    const reactions = [
+      {
+        reactionIcon: 'sentiment_very_satisfied',
+        reactionName: 'vicces',
+        bgColor: 'rgba(183, 84, 188, 1)',
+        color: 'rgba(183, 84, 188, 1)',
+      },
+      {
+        reactionIcon: 'thumb_up',
+        reactionName: 'tetszik',
+        bgColor: 'rgba(63, 76, 176, 1)',
+        color: 'rgba(63, 76, 176, 1)',
+      },
+      {
+        reactionIcon: 'sentiment_very_dissatisfied',
+        reactionName: 'szomorú',
+        bgColor: 'rgba(234, 240, 117, 1)',
+        color: 'rgb(169, 120, 21)',
+      },
+      {
+        reactionIcon: 'favorite',
+        reactionName: 'imádom',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+    ];
+    return reactions;
   }
 }

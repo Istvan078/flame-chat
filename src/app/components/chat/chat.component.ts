@@ -19,6 +19,7 @@ import {
   trigger,
 } from '@angular/animations';
 import { UtilityService } from 'src/app/services/utility.service';
+import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 
 @Component({
   selector: 'app-chat',
@@ -302,7 +303,6 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.getFriendsFromUtilSub = this.utilService
             .getFriends()
             .subscribe(val => {
-              console.log(val);
               observer.next('**** SIKERES BARÁTOK LISTÁJA LEKÉRÉS ****');
               if (!this.seenMeSub)
                 this.seenMeSub = this.utilService
@@ -396,6 +396,10 @@ export class ChatComponent implements OnInit, OnDestroy {
           });
         });
     }
+  }
+
+  async showProfPics(friend: any) {
+    this.base.showProfPics(friend.email);
   }
 
   signAsAFriend(user: Friends) {
@@ -765,12 +769,10 @@ export class ChatComponent implements OnInit, OnDestroy {
         obj.newMessageNumber = obj.newMessageNumber
           ? obj.newMessageNumber + fr.newMessageNumber
           : fr.newMessageNumber;
-        console.log(obj.newMessageNumber);
         // this.haventSeenMessagesArr.push(fr);
       }
     });
     this.base.newMessageNotiSubject.next(forNotiSubArr);
-    console.log(this.haventSeenMessagesArr);
     this.newMessageNumber = obj.newMessageNumber;
     console.log(`****GET NUMBER OF NEW MESSAGES BEFEJEZŐDÖTT****`);
   }

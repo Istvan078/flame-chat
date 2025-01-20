@@ -5,6 +5,7 @@ import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
+import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 
 @Component({
   selector: 'app-nav',
@@ -39,7 +40,7 @@ export class NavComponent implements OnInit, OnDestroy {
         if (!usr.uid) this.user = new UserClass();
         if (usr.uid) {
           this.user = usr;
-          this.base.getUserProfiles().subscribe({
+          const uProfsSub = this.base.getUserProfiles().subscribe({
             next: uProfs => {
               this.userProfile = uProfs.find(
                 (uP: any) => uP.uid === this.user.uid
@@ -58,7 +59,6 @@ export class NavComponent implements OnInit, OnDestroy {
     );
     setInterval(() => {
       navigator.geolocation.getCurrentPosition(loc => {
-        console.log(this.userProfile);
         if (this.userProfile?.key) {
           const time = new Date().getTime();
           const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
@@ -67,7 +67,7 @@ export class NavComponent implements OnInit, OnDestroy {
               ...this.userProfile.positions,
               { time: time, position: currentPosition },
             ];
-            console.log('Dátum hozzáadva');
+            console.log('**Jelenlegi pozíció hozzáadva**');
           } else if (!this.userProfile?.positions?.length) {
             this.userProfile.positions = [
               { time: time, position: currentPosition },
@@ -76,12 +76,14 @@ export class NavComponent implements OnInit, OnDestroy {
             this.userProfile?.positions?.splice(0, 10);
           }
           this.userProfile.curPosition = currentPosition;
-          console.log('***GEOLOCATION***', this.userProfile);
           this.base.updateUserData(this.userProfile, this.userProfile.key);
-          console.log('***GEOLOCATION***', this.userProfile?.positions);
         }
       });
     }, 5000);
+  }
+
+  showProfPics() {
+    this.base.showProfPics(this.userProfile?.email!);
   }
 
   signOut() {

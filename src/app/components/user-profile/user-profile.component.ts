@@ -60,14 +60,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   profilePicsArr: any[] = [];
   filteredProfilePicsArr: any[] = [];
 
-  ngOnDestroy(): void {
-    this.profilePicSub.unsubscribe();
-    this.picturesSubscription.unsubscribe();
-    clearInterval(this.chosenProfilePicInterval);
-    if (this.updateChosenImageSub) this.updateChosenImageSub.unsubscribe();
-    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
-  }
-
   constructor(
     private router: ActivatedRoute,
     private auth: AuthService,
@@ -88,32 +80,34 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     });
     new Promise(res => {
       this.router.params.subscribe((param: Params) => {
-        this.userProfilesSub = this.base
-          .getUserProfiles()
-          .subscribe(async (userProfiles: UserClass[]) => {
-            const userProfil = userProfiles.filter(
-              userProfile => userProfile['uid'] === param['uid']
-            );
-            this.userProf = Object.assign(this.userProf, ...userProfil);
-            console.log(this.profilePicsArr);
-            if (!this.userProf.profilePicture)
-              this.userProf.profilePicture =
-                'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
-            this.filteredProfilePicsArr = (await this.base.getProfilePictures(
-              this.userProf.email!
-            )) as any[];
-            this.init();
-            if (!this.userProf.birthDate) {
-              this.registeredSuccessfully = true;
-            }
-            if (this.userProf) {
-              this.userBirthDate = this.userProf.birthDate;
-            }
-            if (this.userProf.email) {
-              this.registeredWithPhone = false;
-            } else this.registeredWithPhone = true;
-            res('Sikeres profillekérés');
-          });
+        if (!this.userProf?.uid)
+          this.userProfilesSub = this.base
+            .getUserProfiles()
+            .subscribe(async (userProfiles: UserClass[]) => {
+              const userProfil = userProfiles.filter(
+                userProfile => userProfile['uid'] === param['uid']
+              );
+              this.userProf = Object.assign(this.userProf, ...userProfil);
+              console.log(this.profilePicsArr);
+              if (!this.userProf.profilePicture)
+                this.userProf.profilePicture =
+                  'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
+              this.filteredProfilePicsArr = (await this.base.getProfilePictures(
+                this.userProf.email!
+              )) as any[];
+              this.init();
+              if (!this.userProf.birthDate) {
+                this.registeredSuccessfully = true;
+              }
+              if (this.userProf) {
+                this.userBirthDate = this.userProf.birthDate;
+              }
+              if (this.userProf.email) {
+                this.registeredWithPhone = false;
+              } else this.registeredWithPhone = true;
+              res('Sikeres profillekérés');
+              this.userProfilesSub.unsubscribe();
+            });
       });
     });
   }
@@ -129,18 +123,22 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
       (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
       console.log(this.chosenProfPic);
     }, 1000);
-    this.updateChosenImageSub = new Observable(observer => {
-      this.chosenProfilePicInterval = setInterval(() => {
-        if (
-          this.chosenProfPic?.nativeElement.src !==
-          this.chosenProfPicFromUploads?.nativeElement.src
-        )
-          (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
-        console.log('fut az interval');
-        if (this.index < this.filteredProfilePicsArr.length - 1)
-          this.isRightArrow = true;
-      }, 1000);
-    }).subscribe();
+    // this.updateChosenImageSub = new Observable(observer => {
+    this.chosenProfilePicInterval = setInterval(() => {
+      if (
+        this.chosenProfPic?.nativeElement.src !==
+        this.chosenProfPicFromUploads?.nativeElement.src
+      ) {
+        (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
+        // this.updateChosenImageSub.unsubscribe();
+        // clearInterval(this.chosenProfilePicInterval);
+      }
+
+      console.log('fut az interval');
+      if (this.index < this.filteredProfilePicsArr.length - 1)
+        this.isRightArrow = true;
+    }, 1000);
+    // }).subscribe();
   }
 
   selectFile(event: any) {
@@ -184,7 +182,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     const maxWidth = 1440;
     const maxHeight = 768;
     const quality = 0.8; // Tömörítési szint (0.0 - 1.0)
-    // this.selectedFiles.forEach(file => {
     this.utilityService
       .resizeImage(this.profilePhoto, maxWidth, maxHeight, quality)
       .then(resizedBlob => {
@@ -209,7 +206,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
           });
       })
       .catch(err => console.log(err));
-    // });
   }
 
   ///////////////////////////// TESZT ALATT VAN ////////////////////
@@ -339,5 +335,13 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   updateProfilePic() {
     const picUrl = this.chosenProfPicFromUploads?.nativeElement.src;
     this.base.updateUserData({ profilePicture: picUrl }, this.userProf.key);
+  }
+
+  ngOnDestroy(): void {
+    this.profilePicSub.unsubscribe();
+    this.picturesSubscription.unsubscribe();
+    clearInterval(this.chosenProfilePicInterval);
+    if (this.updateChosenImageSub) this.updateChosenImageSub.unsubscribe();
+    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
   }
 }

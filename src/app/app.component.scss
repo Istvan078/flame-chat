@@ -1,14 +1,13 @@
-.main-img{
-    position: relative;
-    z-index: -1;
+.main-img {
+  position: relative;
+  z-index: -1;
 }
 img {
-    z-index: -1;
-    position: fixed;
-    top:0;
-    opacity: 0.5;
+  z-index: -1;
+  position: fixed;
+  top: 0;
+  opacity: 0.5;
 }
-
 // .outlet-container{
 //     margin-top: 90px;
 // }

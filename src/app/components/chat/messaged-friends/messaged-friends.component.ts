@@ -87,6 +87,9 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
 
   selectedFriend: any = {};
 
+  // SZÁMLÁLÓK
+  profSubCounter: number = 0;
+
   // ÜZENETEKKEL KAPCSOLATOS //
   haventSeenMessagesArr?: any[] = [];
   sendPrivateMessageOn: boolean = false;
@@ -111,20 +114,31 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     const AllUserDtlsRes = await this.utilService.getUserProfiles();
     this.userProfilesSub = AllUserDtlsRes.subscribe(async AllUserDtls => {
-      this.userProfiles = AllUserDtls.userProfiles;
-      this.userProfile = AllUserDtls.userProfile;
-      this.userFriends = AllUserDtls.userFriends!;
-      console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-      // this.filterShowFriendsMessArr();
-      this.getNewMessages();
-      await this.areFriendsOnline();
-      this.onAnimate();
+      if (this.profSubCounter === 0) {
+        this.profSubCounter = 1;
+        this.userProfiles = AllUserDtls.userProfiles;
+        this.userProfile = AllUserDtls.userProfile;
+        this.userFriends = AllUserDtls.userFriends!;
+        console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
+        this.getNewMessages();
+        await this.areFriendsOnline();
+
+        this.onAnimate();
+      }
       this.userProfilesSub.unsubscribe();
     });
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
       obj => {
         if (obj.allChatsArray) this.allChatsArray = obj.allChatsArray;
-        if (obj.showFriendsMess) this.showFriendsMess = obj.showFriendsMess;
+        if (obj.showFriendsMess) {
+          this.showFriendsMess = obj.showFriendsMess;
+          setTimeout(() => {
+            this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+              this.haventSeenMessagesArr!,
+              this.showFriendsMess
+            );
+          }, 1000);
+        }
         // if (obj.haventSeenMessagesArr)
         //   this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
       }
@@ -198,9 +212,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       const messageCardElements = this.element.nativeElement.querySelectorAll(
         '.messageCardCont div h2'
       );
-      // const showAllFriendsCont = this.element.nativeElement.querySelector(
-      //   '.showAllFriendsCont'
-      // );
 
       messageCardElements.forEach((el: any) => {
         if (mess.displayName === el.innerText) {
@@ -208,7 +219,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
           window.scrollTo(
             el.getBoundingClientRect().x,
             el.getBoundingClientRect().y
-            // showAllFriendsCont.getBoundingClientRect().height
           );
           if (mess.messaging) {
             container.classList.add('hidden');
@@ -221,43 +231,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         }
       });
     }, 5);
-  }
-
-  /////////////////////// LEÍRÁS //////////////////////////////
-  // A ShowFriendsMessArr tömb értékeit állítja be //
-  // új üzenetnél és mikor elolvassuk az üzenetet //
-  filterShowFriendsMessArr() {
-    // a nemlátott üzenetek tömböt iterálja, kiszűri a baráttól való
-    // eddig nem láttott üzeneteket és kap egy
-    // seen:false property-t + az adott barát összes többi tulajdonságát
-    const messSenderIds = this.haventSeenMessagesArr?.map(
-      mess => mess?.message?.senderId
-    );
-    const friendNewMessageFrom: any = this.userFriends
-      ?.filter(fr => messSenderIds?.includes(fr.friendId))
-      .map(fr => ({ ...fr, seen: false }));
-    const allFriendsAndNMessFromArr = [
-      ...friendNewMessageFrom,
-      ...(this.userFriends || ''),
-    ];
-    // objektum ami segít kiszűrni a duplikációkat a tömbből
-    const seenFriendIds: any = {};
-    const friendsWithNewMess: any[] = [];
-    let filteredFriendsArr = allFriendsAndNMessFromArr.filter((fr, i) => {
-      if (fr?.newMessageNumber) {
-        friendsWithNewMess.push(fr);
-      }
-      // Ha ez az első alkalom, hogy találkozunk ezzel a friendId-val, akkor visszatérünk igazzal, hogy a barát objektumot a szűrt tömbbe tegyük
-      if (!seenFriendIds[fr.friendId]) {
-        seenFriendIds[fr.friendId] = true;
-        return true;
-      }
-      return false;
-    });
-    filteredFriendsArr = filteredFriendsArr.filter(fr => !fr.newMessageNumber);
-    filteredFriendsArr.unshift(...friendsWithNewMess);
-    this.showFriendsMess = filteredFriendsArr;
-    console.log('***ISMERŐS ÜZENETFEJEK SZŰRVE(FSM)***');
   }
 
   async getMessageUser(user: any) {
@@ -331,7 +304,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         let forNewMessNotiSub: any[] = [];
         nMessFrs.map(fr => {
           const frProf = this.userProfiles.find(uP => uP.uid === fr.friendId);
-          console.log(fr);
           forNewMessNotiSub.push({
             friendId: fr.friendId,
             newMessageNumber: fr.newMessageNumber,
@@ -346,57 +318,12 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
             fr.newMessageNumber = arr[nMNumberInd];
           }
         });
-        this.filterShowFriendsMessArr();
+        if (!this.showFriendsMess.length)
+          this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+            this.haventSeenMessagesArr!,
+            this.showFriendsMess
+          );
       });
-    // this.userFriends?.map(fr => {
-    //   if (fr?.newMessageNumber) {
-    //     return this.base
-    //       .getNewMessages(this.userProfile.key, fr.friendKey)!
-    //       .subscribe(mess => {
-    //         console.log(this.haventSeenMessagesArr);
-    //         this.filterShowFriendsMessArr();
-    //         let msgArr: any[] = [];
-    //         if (mess.length) {
-    //           msgArr = mess;
-    //           // let keyArr: any[] = [];
-    //           // this.allChatsArray.map((jSM: any) => {
-    //           //   keyArr.push(jSM.key);
-    //           // });
-    //           msgArr = msgArr.filter(
-    //             msg =>
-    //               // !keyArr.includes(msg.key) &&
-    //               msg.message.seen === false &&
-    //               msg.message.senderId !== userProfile?.uid &&
-    //               msg.participants[1] === userProfile?.uid
-    //           );
-    //         }
-    //         // this.haventSeenMessagesArr = [];
-    //         if (msgArr.length < 1) {
-    //           this.filterShowFriendsMessArr();
-    //         }
-    //         for (let msg of msgArr) {
-    //           msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
-    //             new Date(msg.message.timeStamp)
-    //           );
-    //           if (msg.participants[1] === userProfile?.uid) {
-    //             this.haventSeenMessagesArr?.push(msg);
-    //             this.allChatsArray.unshift(msg);
-    //             this.base.getAllMessagesSubject.next({
-    //               allChatsArray: this.allChatsArray,
-    //             });
-    //             this.filterShowFriendsMessArr();
-    //             this.base.messageTransferSub.next(true);
-    //           }
-    //         }
-    //         if (this.userMessages) this.updateSeenMessages();
-    //         this.utilService.subjectValueTransfer(
-    //           this.haventSeenMessagesArr,
-    //           this.base.newMessageNotiSubject
-    //         );
-    //         this.runMessagesSubjectValueTransfer();
-    //       });
-    //   }
-    // });
   }
 
   updateSeenMessages() {
@@ -404,7 +331,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
       if (mess.message.senderId === this.selectedFriend.friendId) {
         mess.message.seen = true;
-        // this.base.updateMessage(mess.key, mess, this.userProfile.key);
         return undefined;
       }
       if (mess.message.senderId !== this.selectedFriend.friendId) {
@@ -414,11 +340,10 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     this.haventSeenMessagesArr = this.haventSeenMessagesArr?.filter(
       mess => mess !== undefined
     );
-    this.filterShowFriendsMessArr();
-    // this.utilService.subjectValueTransfer(
-    //   this.haventSeenMessagesArr,
-    //   this.base.newMessageNotiSubject
-    // );
+    this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+      this.haventSeenMessagesArr!,
+      this.showFriendsMess
+    );
     this.runMessagesSubjectValueTransfer();
   }
 
@@ -439,5 +364,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       this.messSubscription.unsubscribe();
     }
     if (this.getNewMessSub) this.getNewMessSub.unsubscribe();
+    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
   }
 }

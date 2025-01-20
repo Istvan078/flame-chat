@@ -18,7 +18,7 @@ import { Chat, ReplyMessage } from 'src/app/models/chat.model';
 import * as deepMerge from 'deepmerge';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Notification } from 'src/app/models/notification.model';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Environments } from 'src/app/environments';
 import { AuthService } from 'src/app/services/auth.service';
 import { MatModalComponent } from '../../modals/mat-modal/mat-modal.component';
@@ -85,6 +85,8 @@ export class MessageComponent implements OnInit, OnDestroy {
   showFriendsMess: any[] = [];
   haventSeenMessagesArr: any[] = [];
   getUpdatedMessagesCounter: number = 0;
+  reactions: any[] = [];
+  lastMsgPos: any;
 
   // FELHASZNÁLÓ //
   selectedFriendId?: string;
@@ -186,7 +188,6 @@ export class MessageComponent implements OnInit, OnDestroy {
               this.userProfile.key,
               this.selectedFriend.key
             );
-            console.log(this.allChatsArray);
             this.base.messageTransferSub.next(false);
 
             // if (
@@ -198,8 +199,6 @@ export class MessageComponent implements OnInit, OnDestroy {
             this.messSubscription = this.getNewMessages();
             this.getVisibleMessagesForSelectedFriend();
             this.animateMessages();
-            /////// ONLINE-E A KIVÁLASZTOTT ISMERŐS ////////////
-            // this.frOnlineStateSub = this.getFrOnlineState();
             this.updMessSub = this.getUpdatedMessages();
             this.updateSeenMessages(this.allChatsArray, true);
             console.log(
@@ -226,8 +225,8 @@ export class MessageComponent implements OnInit, OnDestroy {
                   console.log('**** FÁJLOK LEKÉRVE ****');
                   this.firestore.filesBehSubject.next(this.sentFilesArr);
                 });
-              // this.settingFilesArr();
-            } // Ez után
+            }
+            this.reactions = this.utilService.setReactionsArr();
             this.userProfilesSub.unsubscribe();
           });
         }
@@ -241,47 +240,65 @@ export class MessageComponent implements OnInit, OnDestroy {
       this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
   }
 
+  async setReactionForMsg(msg: Chat, reac: any) {
+    msg.message.reaction = {
+      reactionIcon: reac.reactionIcon,
+      color: reac.color,
+    };
+    await this.base.updateMessage(
+      msg.key,
+      msg,
+      this.selectedFriend.key,
+      this.userProfile.key
+    );
+  }
+
   addMessage() {
     new Promise((res, rej) => {
       this.setMessage(this.message as any, false);
       res('Üzenet tulajdonságai beállítva, üzenet objektum lemásolva.');
     }).then(res => {
-      this.base
-        .updateMessage(
-          this.message['key'],
-          this.message,
-          this.userProfile.key,
-          this.selectedFriend.key
-        )
-        .then(() => {
+      const checkNewMessNumInt = setInterval(() => {
+        if (this.updateFrsFrObj?.newMessageNumber) {
           this.sendMessage(this.message as Chat & ReplyMessage);
-          if (this.filesArr.length) {
-            const dataForFiles = {
-              files: this.filesArr,
-              chatId: this.message.key,
-              senderId: this.userProfile.uid,
-              receiverId: this.selectedFriendId,
-            };
-            this.firestore
-              .addFilesToChat(dataForFiles, this.userProfile.key as string)
-              .then(() => {
-                this.firestore.filesSubject.unsubscribe();
+          this.base
+            .updateMessage(
+              this.message['key'],
+              this.message,
+              this.userProfile.key,
+              this.selectedFriend.key
+            )
+            .then(() => {
+              if (this.filesArr.length) {
+                const dataForFiles = {
+                  files: this.filesArr,
+                  chatId: this.message.key,
+                  senderId: this.userProfile.uid,
+                  receiverId: this.selectedFriendId,
+                };
                 this.firestore
-                  .addFilesToChat(
-                    dataForFiles,
-                    this.selectedFriend?.key as string
-                  )
+                  .addFilesToChat(dataForFiles, this.userProfile.key as string)
                   .then(() => {
-                    this.firestore.filesSubject = new Subject();
-                    this.filesArr = [];
+                    this.firestore.filesSubject.unsubscribe();
+                    this.firestore
+                      .addFilesToChat(
+                        dataForFiles,
+                        this.selectedFriend?.key as string
+                      )
+                      .then(() => {
+                        this.firestore.filesSubject = new Subject();
+                        this.filesArr = [];
+                      });
                   });
-              });
-          }
-          this.updateChatsAndVisMessArr(this.message);
-          this.sendMessNotifications(this.message);
-          this.message = new Chat();
-          console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
-        });
+              }
+              this.updateChatsAndVisMessArr(this.message);
+              this.sendMessNotifications(this.message);
+              this.message = new Chat();
+              console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
+            });
+          clearInterval(checkNewMessNumInt);
+        }
+      }, 200);
     });
   }
 
@@ -339,16 +356,17 @@ export class MessageComponent implements OnInit, OnDestroy {
       seen: false,
       timeStamp: actualTime as any,
       senderId_receiverId: `${this.userProfile.uid}_${this.selectedFriendId}_${actualTime}`,
-      message: replyMessage ? replyMessage : message.message.message, // MEGCSINÁLNI
+      message: replyMessage ? replyMessage : message.message.message,
     };
-    console.log(message.message.timeStamp);
-    message._setKey =
-      this.userProfile.uid + this.utilService.randomIdGenerator(message);
-    // message.participants[0] = this.userProfile.uid + '-' + actualTime;
+    // MEGNÉZNI HOGY HÁNYADIK ÜZENET ÉS EGYET HOZZÁADNI AZ ÚJ KEY LEGVÉGÉHEZ
+    let newMsgNum: any;
+    if (this.visibleMessages?.length) {
+      const lastMsgKeyArr = this.visibleMessages[0].key.split('_');
+      newMsgNum = +lastMsgKeyArr[1] + 1;
+    } else newMsgNum = 1;
+    newMsgNum.toString();
+    message._setKey = this.userProfile.uid + '_' + newMsgNum;
     message.participants[1] = this.selectedFriendId!;
-    // message.participants[2 as any] =
-    // this.userProfile.uid + this.selectedFriendId + '-' + actualTime;
-    // let selectedFriend: any = {}
     const uProfsObs = await this.utilService.getUserProfiles();
     const uProfsSub = uProfsObs.subscribe(async allUsrDtls => {
       this.selectedFriend = allUsrDtls.userProfiles.find(
@@ -371,14 +389,7 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.updateFrsFrObj.areFriends = meForFr.areFriends;
       if (meForFr?.confirmed) this.updateFrsFrObj.confirmed = meForFr.confirmed;
       if (meForFr?.messaging) this.updateFrsFrObj.messaging = meForFr.messaging;
-      console.log(this.updateFrsFrObj);
       uProfsSub.unsubscribe();
-      // this.sendMessage(message)
-      // await this.base.updateFriendsFriend(
-      //   this.selectedFriend.key!,
-      //   this.userProfile.key,
-      //   this.updateFrsFrObj
-      // );
     });
 
     if (isEmailOn)
@@ -389,7 +400,47 @@ export class MessageComponent implements OnInit, OnDestroy {
       );
   }
 
-  // async setNewMessageNum() {}
+  getLastIntersectingMsg() {
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 1.0,
+    };
+    const observer = new IntersectionObserver(
+      (
+        entries: IntersectionObserverEntry[],
+        observer: IntersectionObserver
+      ) => {
+        setTimeout(() => {
+          this.lastMsgPos = document.getElementById(
+            `msg-${this.visibleMessages.length - 1}`
+          );
+        }, 1500);
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          console.log('****INTERSECTIONOBS***');
+          this.scrollMsgs();
+          observer.unobserve(this.lastMsgPos!);
+          setTimeout(() => {
+            observer.observe(this.lastMsgPos!);
+          }, 2000);
+        }
+      },
+      options
+    );
+    const int = setInterval(() => {
+      this.lastMsgPos = document.getElementById(
+        `msg-${this.visibleMessages.length - 1}`
+      );
+      if (this.lastMsgPos) {
+        observer.observe(this.lastMsgPos!);
+        clearInterval(int);
+      }
+    }, 200);
+    return observer;
+  }
+
+  async toDoDevFunction() {}
 
   async sendMessage(message: Chat & ReplyMessage) {
     const actualTime = new Date().getTime();
@@ -416,8 +467,6 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   updateSeenMessages(mess: Chat[] | ReplyMessage[], isFriendMessage: boolean) {
-    console.log(mess);
-
     if (!isFriendMessage && this.getUpdatedMessagesCounter === 2)
       mess.map(mess => {
         if (
@@ -476,16 +525,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteMessage(message: Chat) {
-    this.base.deleteMessage(message).then(() => {
-      this.urlText = [];
-      this.allChatsArray = this.allChatsArray.filter(
-        mess => mess.key !== message.key
-      );
-      this.getVisibleMessagesForSelectedFriend();
-    });
-  }
-
   deleteFile(files: any[], docId: string, i: number) {
     files.forEach((file: any) =>
       this.firestore.deleteFilesFromStorage(
@@ -532,35 +571,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     });
   }
 
-  calcMinutesPassed(sentMessDate: any) {
-    const newDate = new Date().getTime();
-    sentMessDate = new Date(sentMessDate).getTime();
-    // A különbség milliszekundumokban
-    const diffMilliseconds = newDate - sentMessDate;
-    // A különbség percekben
-    const passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
-    let hours: number = 0;
-    for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
-      hours += 1;
-    }
-
-    let days: number = 0;
-    for (
-      let i = 1440;
-      passedMinsSMessSent >= 1440 && i <= passedMinsSMessSent;
-      i += 1440
-    ) {
-      days += 1;
-    }
-
-    if (passedMinsSMessSent < 60)
-      return `${passedMinsSMessSent} perccel ezelőtt`;
-
-    if (hours < 24) return `${hours} órával ezelőtt`;
-
-    if (hours >= 24) return `${days} nappal ezelőtt`;
-  }
-
   scrollToWriteMsgArea() {
     const micContainer = document.getElementsByClassName('mic-container');
     const interval = setInterval(() => {
@@ -594,6 +604,78 @@ export class MessageComponent implements OnInit, OnDestroy {
     });
   }
 
+  scrollMsgs() {
+    let counter: any = 1;
+    let msgScrolled: number = 0;
+    for (let i = 0; i < 15; i++) {
+      let lastMsgNum: any =
+        +this.visibleMessages[this.visibleMessages.length - 1]?.key.split(
+          '_'
+        )[1] - counter;
+      counter++;
+      lastMsgNum = lastMsgNum.toString();
+      let isMyMsg: boolean = false;
+      if (!isMyMsg) {
+        const sub = this.base
+          .getMessageByKey(
+            this.userProfile.key,
+            this.selectedFriend.key,
+            lastMsgNum,
+            this.selectedFriendId
+          )
+          .subscribe((val: any) => {
+            if (!val) isMyMsg = true;
+            if (val) {
+              this.visibleMessages.push(val);
+              msgScrolled++;
+            }
+            sub.unsubscribe();
+          });
+      }
+      const int = setInterval(() => {
+        if (isMyMsg) {
+          const sub = this.base
+            .getMessageByKey(
+              this.selectedFriend.key,
+              this.userProfile.key,
+              lastMsgNum,
+              this.userProfile.uid
+            )
+            .subscribe((val: any) => {
+              if (val) {
+                this.visibleMessages.push(val);
+                msgScrolled++;
+              }
+              clearInterval(int);
+              sub.unsubscribe();
+            });
+        }
+      }, 200);
+    }
+    const int = setInterval(() => {
+      if (msgScrolled >= 15) {
+        console.log(this.visibleMessages);
+        let tomb: any[] = [];
+        this.visibleMessages = this.visibleMessages.filter(msg => {
+          if (!tomb.includes(msg.key)) {
+            tomb.push(msg.key);
+            return msg;
+          }
+        });
+        this.visibleMessages.sort((a: any, b: any) => {
+          if (a.message.timeStamp < b.message.timeStamp) return 1;
+          else return -1;
+        });
+        // Leszűröm a csak szöveget tartalmazó üzeneteket és elmentem egy tömbbe
+        this.textMessages = this.visibleMessages.filter(
+          mess => !mess.message?.message.includes('https://')
+        );
+        console.log(`MESSAGE SORT AND FILTER AFTER SCROLL****`);
+        clearInterval(int);
+      }
+    }, 200);
+  }
+
   async recordVoiceMessage() {
     this.audioStream = await navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -610,14 +692,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       const recordedAudioFile = new File(this.audioChunks, nameForFile, {
         type: 'audio/x-m4a',
       });
-      // const url = URL.createObjectURL(recordedAudioFile);
-      // const a = document.createElement('a');
-      // a.href = url;
-      // a.download = 'felvetel.m4a';
-      // document.body.appendChild(a);
-      // a.click();
-      // document.body.removeChild(a);
-      // URL.revokeObjectURL(url);
       this.audioChunks = [];
       this.selectedFiles.push(recordedAudioFile);
       this.uploadFiles();
@@ -723,7 +797,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     return fileName;
   }
 
-  getVisibleMessagesForSelectedFriend(): any[] {
+  getVisibleMessagesForSelectedFriend(): any {
     this.allChatsArray = this.allChatsArray.filter(
       ch =>
         ch.message.senderId === this.selectedFriendId ||
@@ -746,10 +820,11 @@ export class MessageComponent implements OnInit, OnDestroy {
           )
           .then(() => {});
       }
-      mess.message.viewTimeStamp = this.calcMinutesPassed(
+      mess.message.viewTimeStamp = this.utilService.calcMinutesPassed(
         mess.message.timeStamp
       );
       mess.message.timeStamp = new Date(mess.message.timeStamp).getTime();
+      return mess;
     });
 
     this.allChatsArray.sort((a: any, b: any) => {
@@ -757,6 +832,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       else return -1;
     });
     // Kiválasztom az első 15 üzenetet
+    // this.visibleMessages = this.allChatsArray;
     this.visibleMessages = this.allChatsArray.slice(0, 15);
     // Leszűröm az urlt tartalmazó üzeneteket és elmentem egy tömbbe
     const urlMessages: Chat[] = this.visibleMessages.filter(mess =>
@@ -809,16 +885,20 @@ export class MessageComponent implements OnInit, OnDestroy {
         );
       }
     });
+    console.log(`****GET VISIBLE MESSAGES***`);
+    // INTERSECTION OBSERVER INTERSZEKTÁL A TÖMB UTOLSÓ ÜZENETÉNÉL ÉS SCROLLMSGS LEFUT
+    // HA LEGALÁBB 14 ÜZENET VAN A TÖMBBEN
+    if (this.visibleMessages?.length > 13) {
+      if (!this.lastMsgPos) this.getLastIntersectingMsg();
+      else {
+        this.getLastIntersectingMsg().disconnect();
+        this.getLastIntersectingMsg();
+      }
+    }
+
+    // this.visibleMessages.reverse();
     return this.visibleMessages;
   }
-
-  // getFrOnlineState() {
-  //   return this.base
-  //     .getUserProfile(this.selectedFriend.key)
-  //     .subscribe((st: any) => {
-  //       this.selectedFriend.online = st.online;
-  //     });
-  // }
 
   getUpdatedMessages() {
     return this.base
@@ -846,7 +926,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       if (selFriend?.areFriends) updateFrObj.areFriends = selFriend.areFriends;
       if (selFriend?.confirmed) updateFrObj.confirmed = selFriend.confirmed;
       if (selFriend?.messaging) updateFrObj.messaging = selFriend.messaging;
-      console.log(updateFrObj);
       this.base.updateFriend(
         this.selectedFriend.key,
         updateFrObj,
@@ -862,7 +941,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       .subscribe(mess => {
         this.updateFrNewMessNumToZero(true);
         console.log('***ÚJ ÜZENETEK LEKÉRVE***');
-        console.log(mess);
         let msgArr: any[] = [];
         if (mess.length) {
           msgArr = mess;
@@ -920,6 +998,10 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
       mess => !mess.message.seen
     );
+    this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+      this.haventSeenMessagesArr,
+      this.showFriendsMess
+    );
     this.base.getAllMessagesSubject.next({
       allChatsArray: this.visibleMessages,
       showFriendsMess: this.showFriendsMess,
@@ -936,13 +1018,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     modalRef.componentInstance.viewIndex = i;
   }
 
-  runMessagesSubjectValueTransfer() {
-    this.base.getAllMessagesSubject.next({
-      haventSeenMessagesArr: this.haventSeenMessagesArr,
-      allChatsArray: this.allChatsArray,
-    });
-  }
-
   ngOnDestroy(): void {
     if (this.getAllMessagesSubjectSub)
       this.getAllMessagesSubjectSub.unsubscribe();
@@ -956,5 +1031,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     if (this.updMessSub) this.updMessSub.unsubscribe();
     if (this.frOnlineStateSub) this.frOnlineStateSub.unsubscribe();
     if (this.messTransfSubscr) this.messTransfSubscr.unsubscribe();
+    if (this.userProfilesSub) this.userProfilesSub.unsubscribe();
   }
 }

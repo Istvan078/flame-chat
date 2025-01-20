@@ -13,6 +13,7 @@ export class FilesModalComponent {
   @Input() picturesUploaded: boolean = false;
   @Input() viewIndex: number = 0;
   @Input() picturesArr: any[] = [];
+  @Input() profPicsArr: string = '';
   fadeIn: boolean = false;
 
   left() {
@@ -26,7 +27,10 @@ export class FilesModalComponent {
   }
 
   right() {
-    if (this.viewIndex < this.picturesArr.length - 1) {
+    if (
+      this.viewIndex < this.picturesArr.length - 1 ||
+      this.viewIndex < this.profPicsArr.length - 1
+    ) {
       this.viewIndex = this.viewIndex + 1;
       this.fadeIn = true;
       setTimeout(() => {

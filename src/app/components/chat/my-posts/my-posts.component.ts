@@ -170,9 +170,6 @@ export class MyPostsComponent {
       }
     });
     this.isLoading = false;
-    console.log(this.postSharedWithMe);
-    console.log(this.myPostsArr);
-    console.log(this.userFriends);
   }
 
   loadImage(entries: any, observer: any) {

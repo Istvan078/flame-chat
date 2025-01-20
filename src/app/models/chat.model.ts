@@ -11,6 +11,7 @@ export class Chat {
     profilePhoto: string;
     email: string;
     seen: boolean;
+    reaction?: {};
   };
 
   [indexS: string | number]: string | number | object;

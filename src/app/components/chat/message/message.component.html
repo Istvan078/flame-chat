@@ -1,3 +1,11 @@
+<button
+  disabled
+  *ngIf="userProfile.email === 'kalmaristvan078@gmail.com'"
+  (click)="toDoDevFunction()"
+  type="button"
+>
+  FEJLESZTÉS GOMB
+</button>
 <div class="text-center friend-name-container">
   <h1 class="friend-name">
     {{ selectedFriend?.displayName }}
@@ -157,6 +165,8 @@
       "
       class="d-grid mainDiv"
       *ngFor="let msg of visibleMessages | filter : searchWord; let i = index"
+      attr.data-index="{{ i }}"
+      [id]="'msg-' + i"
     >
       <mat-card class="card msgsCard cardBg">
         <ng-container>
@@ -312,6 +322,46 @@
                       </div>
                       }
                     </div>
+
+                    <div class="d-flex justify-content-between mb-0">
+                      <ng-container
+                        *ngIf="msg.message.senderId !== userProfile.uid"
+                      >
+                        <button mat-icon-button [matMenuTriggerFor]="menu">
+                          <mat-icon class="align-middle" style="color: blue"
+                            >add_reaction</mat-icon
+                          >
+                        </button>
+                      </ng-container>
+                      <div
+                        *ngIf="msg.message.senderId === userProfile.uid"
+                      ></div>
+                      <div
+                        *ngIf="msg.message?.reaction"
+                        class="d-flex justify-content-end"
+                      >
+                        <button
+                          mat-icon-button
+                          [ngStyle]="{ color: msg.message.reaction.color }"
+                        >
+                          <mat-icon class="align-middle">{{
+                            msg.message.reaction.reactionIcon
+                          }}</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                    <mat-menu #menu="matMenu">
+                      <button
+                        *ngFor="let reaction of reactions"
+                        mat-menu-item
+                        (click)="setReactionForMsg(msg, reaction)"
+                      >
+                        <mat-icon [ngStyle]="{ color: reaction.color }">{{
+                          reaction.reactionIcon
+                        }}</mat-icon>
+                        <span>{{ reaction.reactionName }}</span>
+                      </button>
+                    </mat-menu>
                     }
                   </ng-container>
                   <div class="seenDiv">

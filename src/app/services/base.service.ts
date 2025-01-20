@@ -24,6 +24,8 @@ import firebase from 'firebase/compat/app';
 import emailjs from '@emailjs/browser';
 import { Environments } from '../environments';
 import { CdkObserveContent } from '@angular/cdk/observers';
+import { FilesModalComponent } from '../components/modals/files-modal/files-modal.component';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 interface Friend {
   key: string;
@@ -67,7 +69,8 @@ export class BaseService {
   constructor(
     private realTimeDatabase: AngularFireDatabase,
     private fireStorage: AngularFireStorage,
-    private http: HttpClient
+    private http: HttpClient,
+    private modalRef: NgbModal
   ) {
     this.refChats = realTimeDatabase.list(`/chats`);
     this.refUsers = realTimeDatabase.list('/users');
@@ -193,6 +196,54 @@ export class BaseService {
       });
       return frAndMyMessages;
     } else return new Promise(res => res([]));
+  }
+
+  getScrolledMessages(userKey: string, friendKey: string) {
+    const ref2 = this.realTimeDatabase.list(
+      `chats/${friendKey}/${userKey}`,
+      ref2 => ref2.orderByValue().limitToLast(15)
+    );
+    return ref2.valueChanges();
+  }
+  getMessageByKey(
+    userKey: string,
+    friendKey: string,
+    number: string,
+    userOrFriendId?: string
+  ) {
+    let value: any;
+    this.realTimeDatabase
+      .object(`chats/${friendKey}/${userKey}/${userOrFriendId}_${number}`)
+      .query.get()
+      .then(val => (value = val));
+    return new Observable(obs => {
+      const int = setInterval(() => {
+        if (value) {
+          obs.next(value.val());
+          clearInterval(int);
+        }
+      }, 100);
+    });
+  }
+
+  // CSAK DEV FUNKCIÓ
+  getAllMessagesFromFriend(
+    friendKey: string,
+    userKey: string,
+    friendUid: string,
+    userUid: string
+  ) {
+    const threeMthsAgo = new Date();
+    threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
+    const ref = this.realTimeDatabase.list(
+      'chats/' + friendKey + '/' + userKey,
+      ref =>
+        ref
+          .orderByChild('message/senderId_receiverId')
+          .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
+          .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`)
+    );
+    return ref.valueChanges();
   }
 
   getNewMessages(userKey: string, friendKey?: string) {
@@ -323,6 +374,15 @@ export class BaseService {
       });
     });
   }
+  async showProfPics(userEmail: string) {
+    const profPicsArr = await this.getProfilePictures(userEmail);
+    console.log(profPicsArr);
+    const modal = this.modalRef.open(FilesModalComponent, {
+      centered: true,
+      animation: true,
+    });
+    modal.componentInstance.profPicsArr = profPicsArr;
+  }
 
   addProfilePicture(file: any, userEmail: string) {
     const fullPath = 'profilePictures/' + userEmail + '/' + file.name;
@@ -377,8 +437,8 @@ export class BaseService {
     return userChats.update(key, body);
   }
 
-  deleteMessage(body: any) {
-    return this.refChats.remove(body['key']);
+  deleteMessage(friendKey: string, userKey: string, chatKey: string) {
+    return this.refChats.remove(`/${friendKey}/${userKey}/${chatKey}`);
   }
 
   deleteMessages() {
@@ -442,5 +502,12 @@ export class BaseService {
       templateParams
     );
     console.log(res, 'E-mail sikeresen elküldve');
+  }
+  /////////// SEGÍTŐ FUNKCIÓK ///////////////////
+  removeMessages(chatkey: string) {
+    this.refChats.remove(chatkey);
+  }
+  getOldMsgs() {
+    return this.refChats.valueChanges();
   }
 }
