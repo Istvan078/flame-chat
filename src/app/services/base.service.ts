@@ -60,6 +60,7 @@ export class BaseService {
   newMessageNotiSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([]);
   messageTransferSub: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  chosenMsgThemeSubject: BehaviorSubject<any> = new BehaviorSubject('');
 
   userKeySubject: BehaviorSubject<any> = new BehaviorSubject('');
   userKeySubjectSubscription!: Subscription;
@@ -503,6 +504,7 @@ export class BaseService {
     );
     console.log(res, 'E-mail sikeresen elküldve');
   }
+
   /////////// SEGÍTŐ FUNKCIÓK ///////////////////
   removeMessages(chatkey: string) {
     this.refChats.remove(chatkey);

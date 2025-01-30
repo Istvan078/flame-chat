@@ -7,6 +7,7 @@ import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { ModalComponent } from '../modals/modal/modal.component';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-login',
@@ -30,7 +31,8 @@ export class LoginComponent {
     private authService: AuthService,
     private router: Router,
     private base: BaseService,
-    private modalRef: NgbModal
+    private modalRef: NgbModal,
+    private utilService: UtilityService
   ) {}
 
   loginWithEmAndPa() {
@@ -80,6 +82,12 @@ export class LoginComponent {
             }
           }
           if (user?.emailVerified) {
+            if (userProfile[0]?.uid) {
+              this.utilService.forUserSubject.userProfile = userProfile[0];
+              this.utilService.userSubject.next(
+                this.utilService.forUserSubject
+              );
+            }
             if (
               userProfile[0].birthDate === undefined ||
               (userProfile[0].birthDate === '' && user?.emailVerified === true)
@@ -108,6 +116,12 @@ export class LoginComponent {
             let userProfile = this.userProfiles.filter(
               (userProfile: any) => userProfile.uid === user.uid
             );
+            if (userProfile[0]?.uid) {
+              this.utilService.forUserSubject.userProfile = userProfile[0];
+              this.utilService.userSubject.next(
+                this.utilService.forUserSubject
+              );
+            }
 
             if (userProfile.length === 0) {
               userProfile.push(user);
@@ -138,9 +152,9 @@ export class LoginComponent {
       .then(() => this.router.navigate(['']));
   }
 
-  booleanFunction() {
-    this.emailOrGoogle = !this.emailOrGoogle;
-  }
+  // booleanFunction() {
+  //   this.emailOrGoogle = !this.emailOrGoogle;
+  // }
 
   startLoginWithPhoneNumber() {
     this.authService

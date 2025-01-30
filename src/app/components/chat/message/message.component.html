@@ -10,6 +10,24 @@
   <h1 class="friend-name">
     {{ selectedFriend?.displayName }}
   </h1>
+  <button mat-icon-button [mat-menu-trigger-for]="menu" type="button">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button [mat-menu-trigger-for]="themesMenu" mat-menu-item>
+      <mat-icon style="color: blueviolet">contrast</mat-icon> Téma
+    </button>
+  </mat-menu>
+  <mat-menu #themesMenu="matMenu">
+    <button
+      (click)="chooseMsgTheme(theme)"
+      mat-menu-item
+      *ngFor="let theme of msgThemes"
+    >
+      <img width="100vw" height="50vh" [src]="theme.url" [alt]="theme.name" />
+      {{ theme.name }}
+    </button>
+  </mat-menu>
 </div>
 
 <div class="text-center searchContainer">
@@ -67,7 +85,7 @@
         class="me-2 mb-1"
         color="accent"
         [disabled]="
-          uploadFinished == false ||
+          uploadFinished === false ||
           message.message.voiceMessage === 'recording-started'
         "
         (click)="addMessage(); messageButtonClicked = false"
@@ -200,6 +218,7 @@
                     class="rounded-circle"
                     [src]="selectedFriend.profilePicture"
                     alt="Profilkép"
+                    (click)="showFriendsProfPics()"
                   />
                 </div>
                 <div class="d-grid">
@@ -340,14 +359,11 @@
                         *ngIf="msg.message?.reaction"
                         class="d-flex justify-content-end"
                       >
-                        <button
-                          mat-icon-button
-                          [ngStyle]="{ color: msg.message.reaction.color }"
+                        <mat-icon
+                          style="width: fit-content; overflow: visible"
+                          class="d-inline-flex mt-1"
+                          >{{ msg.message.reaction.reactionIcon }}</mat-icon
                         >
-                          <mat-icon class="align-middle">{{
-                            msg.message.reaction.reactionIcon
-                          }}</mat-icon>
-                        </button>
                       </div>
                     </div>
                     <mat-menu #menu="matMenu">
@@ -356,9 +372,6 @@
                         mat-menu-item
                         (click)="setReactionForMsg(msg, reaction)"
                       >
-                        <mat-icon [ngStyle]="{ color: reaction.color }">{{
-                          reaction.reactionIcon
-                        }}</mat-icon>
                         <span>{{ reaction.reactionName }}</span>
                       </button>
                     </mat-menu>

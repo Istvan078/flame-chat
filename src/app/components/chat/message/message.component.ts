@@ -87,6 +87,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   getUpdatedMessagesCounter: number = 0;
   reactions: any[] = [];
   lastMsgPos: any;
+  msgThemes: any[] = [];
 
   // FELHASZNÁLÓ //
   selectedFriendId?: string;
@@ -227,6 +228,8 @@ export class MessageComponent implements OnInit, OnDestroy {
                 });
             }
             this.reactions = this.utilService.setReactionsArr();
+            this.msgThemes = this.utilService.getMsgThemes();
+            this.setMsgTheme();
             this.userProfilesSub.unsubscribe();
           });
         }
@@ -240,11 +243,23 @@ export class MessageComponent implements OnInit, OnDestroy {
       this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
   }
 
+  setMsgTheme() {
+    const friend = this.userFriends.find(
+      fr => this.selectedFriendId === fr.friendId
+    );
+    this.base.chosenMsgThemeSubject.next((friend as any).chosenTheme);
+  }
+
+  async showFriendsProfPics() {
+    await this.base.showProfPics(this.selectedFriend.email);
+  }
+
   async setReactionForMsg(msg: Chat, reac: any) {
     msg.message.reaction = {
       reactionIcon: reac.reactionIcon,
       color: reac.color,
     };
+    this.sendReactionNotif(msg, reac.reactionName);
     await this.base.updateMessage(
       msg.key,
       msg,
@@ -332,8 +347,6 @@ export class MessageComponent implements OnInit, OnDestroy {
           this.userProfile.key,
           this.selectedFriend.key
         );
-        console.log(this.userProfile.key);
-        console.log(this.selectedFriend.key);
         this.updateChatsAndVisMessArr(reply);
         this.sendMessNotifications(reply);
         replDiagSub.unsubscribe();
@@ -349,6 +362,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   ) {
     const actualTime = new Date().getTime();
     message.message = {
+      ...message.message,
       displayName: this.userProfile.displayName!,
       email: this.userProfile.email!,
       profilePhoto: this.userProfile.profilePicture,
@@ -541,7 +555,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       });
   }
 
-  sendMessNotifications(mess: Chat | ReplyMessage) {
+  sendMessNotifications(mess: Chat | ReplyMessage, reaction?: any) {
     const apiUrl = Environments.API_URL;
     const msg: Notification = {
       displayName: mess.message.displayName,
@@ -553,6 +567,9 @@ export class MessageComponent implements OnInit, OnDestroy {
       profilePhoto: mess.message.profilePhoto,
       timeStamp: mess.message.timeStamp,
       senderId: mess.message.senderId,
+      reactedFriendId: mess.participants[1],
+      reactedDName: this.userProfile?.displayName,
+      reactedProfPhoto: this.userProfile.profilePicture,
     };
 
     new Promise(res => {
@@ -566,7 +583,11 @@ export class MessageComponent implements OnInit, OnDestroy {
         });
     }).then(pushSub => {
       this.http
-        .post(apiUrl + 'message', { msg: msg, sub: pushSub })
+        .post(apiUrl + 'message', {
+          msg: msg,
+          reaction: reaction,
+          sub: pushSub,
+        })
         .subscribe(res => console.log(res));
     });
   }
@@ -602,6 +623,11 @@ export class MessageComponent implements OnInit, OnDestroy {
         file.senderId === this.selectedFriendId
       );
     });
+  }
+
+  sendReactionNotif(reactedMsg: any, chosenReaction: any) {
+    const reaction = `Reagált az üzenetedre: ${chosenReaction}\n`;
+    this.sendMessNotifications(reactedMsg, reaction);
   }
 
   scrollMsgs() {
@@ -711,6 +737,11 @@ export class MessageComponent implements OnInit, OnDestroy {
     let arr: any = [];
     this.disabled = true;
     this.selectedFiles.map(async (file: any) => {
+      if (file?.name?.includes('.m4a')) {
+        this.addFilesForMessage(file, arr);
+      }
+
+      console.log(file);
       const videoFile: any = this.uploadVideo(this.selectedFiles);
       if (videoFile[0]?.size) {
         this.addFilesForMessage(videoFile[0], arr);
@@ -1016,6 +1047,17 @@ export class MessageComponent implements OnInit, OnDestroy {
     });
     modalRef.componentInstance.picturesArr = picturesArr;
     modalRef.componentInstance.viewIndex = i;
+  }
+
+  chooseMsgTheme(theme: any) {
+    console.log(this.userFriends);
+    const selectedTheme = { chosenTheme: theme.url };
+    this.base.chosenMsgThemeSubject.next(theme.url);
+    this.base.updateFriend(
+      this.selectedFriend.key,
+      selectedTheme as any,
+      this.userProfile.key
+    );
   }
 
   ngOnDestroy(): void {

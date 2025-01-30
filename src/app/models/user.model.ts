@@ -50,6 +50,7 @@ export class UserClass {
     profilePicture?: string;
     confirmed?: boolean;
     newMessageNumber?: number;
+    chosenMsgTheme?: string;
   }[];
   public age: number;
   public phoneNumber: string = '';

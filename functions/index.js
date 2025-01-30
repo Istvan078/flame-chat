@@ -1,16 +1,16 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const fileParser = require('express-multipart-file-parser');
-
-const environments = require('./config/config');
-
-const forecast = require('./utils/forecast');
-const geocode = require('./utils/geocode');
-
-const serviceAccount = require(environments.SERVICE_ACCOUNT_ROUTE);
+import admin from 'firebase-admin';
+import { onRequest } from 'firebase-functions/v2/https';
+import express from 'express';
+import bodyParser from 'body-parser';
+import fileParser from 'express-multipart-file-parser';
+import environments from './config/config.js';
+import * as forecast from './utils/forecast.js';
+import geocode from './utils/geocode.js';
+import fs from 'fs';
+import webpush from 'web-push';
+const serviceAccount = JSON.parse(
+  fs.readFileSync(environments.SERVICE_ACCOUNT_ROUTE, 'utf-8')
+);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: environments.DATABASE_URL,
@@ -18,12 +18,6 @@ admin.initializeApp({
 });
 
 const app = express();
-
-app.use(
-  cors({
-    origin: '*',
-  })
-);
 
 app.use(bodyParser.json());
 app.use(fileParser);
@@ -152,8 +146,6 @@ app.get('/weather', (req, res) => {
   );
 });
 
-const webpush = require('web-push');
-
 const vapidKeys = {
   publicKey: environments.VAPID_PUBLIC_KEY,
   privateKey: environments.VAPID_PRIVATE_KEY,
@@ -168,23 +160,26 @@ webpush.setVapidDetails(
 
 app.route('/message').post((req, res) => {
   const msg = req.body.msg;
+  const reaction = req.body.reaction;
   const subscriptions = req.body.sub;
+  const openUrl = 'https://project0781.web.app/message/';
+  const reactedFriendId = msg.reactedFriendId;
 
   const notificationPayload = {
     notification: {
-      title: msg.displayName,
-      body: msg.message,
-      icon: msg.profilePhoto,
+      title: reaction ? msg.reactedDName : msg.displayName,
+      body: reaction ? reaction + '( ' + msg.message + ' )' : msg.message,
+      icon: reaction ? msg.reactedProfPhoto : msg.profilePhoto,
       vibrate: [100, 50, 100],
       data: {
         onActionClick: {
           default: {
             operation: 'openWindow',
-            url: 'https://project0781.web.app/message/' + msg.senderId,
+            url: reaction ? openUrl + reactedFriendId : openUrl + msg.senderId,
           },
           navigate: {
             operation: 'openWindow',
-            url: 'https://project0781.web.app/message/' + msg.senderId,
+            url: reaction ? openUrl + reactedFriendId : openUrl + msg.senderId,
           },
         },
       },
@@ -253,4 +248,4 @@ app.route('/post').post((req, res) => {
     });
 });
 
-exports.api = functions.https.onRequest(app);
+export const api = onRequest({ cors: true }, app);

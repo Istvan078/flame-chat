@@ -21,6 +21,8 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'Flame Chat';
   routerOutletOff: boolean = false;
   routerOutletOffSub!: Subscription;
+  chosenMsgThemeSub: Subscription = Subscription.EMPTY;
+  chosenMsgTheme: any;
   private matDialog = inject(MatDialog);
   private onDestroyRef = inject(DestroyRef);
   private base = inject(BaseService);
@@ -34,7 +36,13 @@ export class AppComponent implements OnInit, OnDestroy {
     );
     this.onDestroyRef.onDestroy(() => {
       clearInterval(interval);
+      this.chosenMsgThemeSub.unsubscribe();
     });
+    this.chosenMsgThemeSub = this.base.chosenMsgThemeSubject.subscribe(
+      (chmsgth: any) => {
+        this.chosenMsgTheme = chmsgth;
+      }
+    );
   }
 
   checkForVersionUpdate = () => {

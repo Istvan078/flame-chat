@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { ToastService } from 'src/app/services/toast.service';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-friend-profile',
@@ -32,6 +33,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
   constructor(
     private actRoute: ActivatedRoute,
     private base: BaseService,
+    private utilService: UtilityService,
 
     // paginator opciói
     private pag: MatPaginatorIntl,
@@ -86,7 +88,12 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Click eseményre barát uid átküldve út paraméterként, feliratkozva rá
     // BehaviorSubject küldi el a chat komponensből a barát profilját
-    this.actRoute.params.subscribe(uid => {
+    this.actRoute.params.subscribe((uid: any) => {
+      // const friendProf = this.utilService.userProfiles.find(
+      //   uP => uP.uid === uid.uid
+      // )!;
+      // console.log(this.utilService.userProfile);
+      // this.utilService.getFriends().subscribe(cal => {});
       this.friendProfileSubscription = this.base.friendProfileSubject.subscribe(
         frObj => {
           if (frObj.uid) {
@@ -105,7 +112,14 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
                 if (this.friendProfile.friends) {
                   var friendsArr = Object.values(
                     this.friendProfile.friends as any
-                  ).map((friend: any) => friend.friendId);
+                  ).map((friend: any) => {
+                    console.log(friend);
+                    if (
+                      friend?.areFriends === true ||
+                      friend?.confirmed === true
+                    )
+                      return friend.friendId;
+                  });
                 }
 
                 this.profilesOfFriendsArr = uProfs.filter((uP: UserClass) => {
@@ -115,13 +129,18 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
                   if (friendsArr) return friendsArr.includes(uP.uid);
                 });
 
+                // this.utilService.userFriends.map(uF => {
+                //   if(uF.areFriends === true)
+                // })
+
                 // paginator címke
                 this.pag.itemsPerPageLabel =
                   'Ismerősők megjelenítése egyszerre:';
 
                 // matTable adatforrásának beállítása
-                this.tableDataSource = new MatTableDataSource<UserClass>(
+                this.tableDataSource = new MatTableDataSource<any>(
                   this.profilesOfFriendsArr
+                  // this.utilService.userFriends
                 );
               });
           }
@@ -141,7 +160,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
   }
 
   toChosenUserProfile(userUid: string) {
-    this.friendProfile = this.profilesOfFriendsArr.find(
+    (this.friendProfile as any) = this.profilesOfFriendsArr.find(
       prof => prof.uid === userUid
     )!;
     this.base.friendProfileSubject.next(this.friendProfile);

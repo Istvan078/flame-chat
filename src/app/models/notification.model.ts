@@ -4,4 +4,7 @@ export type Notification = {
   profilePhoto: string;
   timeStamp: string;
   senderId: string;
+  reactedFriendId?: string;
+  reactedDName?: string;
+  reactedProfPhoto?: string;
 };

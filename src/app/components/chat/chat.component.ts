@@ -445,6 +445,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (uP.displayName === friend) return uP.displayName === friend;
       if (uP.email === friend) return uP.email === friend;
     });
+    console.log(friendProf);
     await this.base.updateFriendsFriend(friendProf!.key, this.userProfile.key, {
       confirmed: true,
     } as any);

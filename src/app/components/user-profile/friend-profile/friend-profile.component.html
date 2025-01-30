@@ -1,5 +1,5 @@
 <div
-  *ngIf="friendProfile.displayName !== ''"
+  *ngIf="friendProfile?.displayName !== ''"
   class="d-flex justify-content-center"
 >
   <mat-card class="example-card">
@@ -88,8 +88,8 @@
           class="text-white user-name-cell"
           *matCellDef="let friend"
         >
-          @if(friend.displayName){ {{ friend.displayName }} } @else{Nem
-          megerősített profil}
+          @if(friend?.displayName && friend?.displayName !== 'Dynus'){
+          {{ friend.displayName }} } @else{Nem megerősített profil}
         </mat-cell>
       </ng-container>
 
@@ -99,6 +99,7 @@
           Profilkép
         </mat-header-cell>
         <mat-cell *matCellDef="let friend">
+          @if(friend?.displayName !== 'Dynus') {
           <img
             class="rounded-circle"
             width="50px"
@@ -106,6 +107,7 @@
             [src]="friend.profilePicture"
             alt="Profilkép"
           />
+          }
         </mat-cell>
       </ng-container>
       <!-- Birthdate Column -->
@@ -114,7 +116,7 @@
           Kor
         </mat-header-cell>
         <mat-cell class="text-white" *matCellDef="let friend">
-          @if(friend.age){
+          @if(friend.age && friend?.displayName !== 'Dynus'){
           {{ friend.age }} éves } @else{Nincs megadott kor}
         </mat-cell>
       </ng-container>

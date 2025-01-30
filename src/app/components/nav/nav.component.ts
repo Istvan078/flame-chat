@@ -6,6 +6,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
+import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
   selector: 'app-nav',
@@ -31,7 +32,8 @@ export class NavComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private base: BaseService,
     private modalRef: NgbModal,
-    private fireStoreService: FirestoreService
+    private fireStoreService: FirestoreService,
+    private utilService: UtilityService
   ) {}
 
   ngOnInit(): void {

@@ -42,7 +42,7 @@
   <h4 class="text-center mt-3 fs-5">
     {{ 'Regisztráció egyszerűen -->' }}
     <a
-      (click)="facebookOrGoogle = true; booleanFunction()"
+      (click)="loginWithGoogle()"
       type="button"
       class="btn btn-warning ms-2 me-2"
       ><i class="bi bi-google h4"></i
@@ -54,7 +54,7 @@
       ><i class="bi bi-facebook h4"></i
     ></a> -->
     <button
-      (click)="booleanFunction(); isPhone = !isPhone"
+      (click)="isPhone = !isPhone"
       class="btn btn-secondary"
       type="button"
     >
@@ -63,7 +63,7 @@
   </h4>
 </form>
 
-<div class="google-container-main" *ngIf="emailOrGoogle && !isPhone">
+<!-- <div class="google-container-main" *ngIf="emailOrGoogle && !isPhone">
   <div
     *ngIf="emailOrGoogle"
     class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
@@ -79,8 +79,8 @@
       <i class="bi bi-google"></i> Bejelentkezés
     </button>
   </div>
-
-  <!-- <div
+</div> -->
+<!-- <div
   *ngIf="emailOrGoogle"
   class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
 >
@@ -95,7 +95,6 @@
     <i class="bi bi-facebook"></i> Bejelentkezés
   </button>
 </div> -->
-</div>
 
 <ng-container *ngIf="emailOrGoogle && !reCapthcaOff">
   <div id="reCaptchaContainer" class="flexToMiddleContainer"></div>
