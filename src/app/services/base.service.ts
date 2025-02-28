@@ -145,59 +145,152 @@ export class BaseService {
     return ref.remove(userProfKey);
   }
 
+  // getLastMessageWithFr(userKey: string, friendKey: string) {
+  //   const threeMthsAgo = new Date();
+  //   threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
+  //   const currTime = new Date().getTime();
+  //   const ref = this.realTimeDatabase.list(`chats/${userKey}/${friendKey}`);
+  //   ref.query
+  //     .orderByChild('participants/2')
+  //     .startAt(threeMthsAgo.getTime())
+  //     .endAt(currTime)
+  //     .limitToLast(1)
+  //     .get()
+  //     .then(val => console.log(val.val()));
+  // }
+
   getUserMessagesRefactored(
     userUid: string,
     friendUid: string,
     userKey: string,
-    friendKey: string
-  ): Promise<any[]> {
+    friendKey: string,
+    isGetLastMsgWithFr?: boolean
+  ): Observable<Promise<any[]>> {
     if (friendUid) {
       const threeMthsAgo = new Date();
       threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
-      const promise1 = new Promise(res => {
-        const ref2 = this.realTimeDatabase.list(
-          `chats/${userKey}/${friendKey}`,
-          ref2 => {
-            return ref2
-              .orderByChild('participants/2')
-              .startAt(
-                ((userUid + friendUid) as string) + '-' + threeMthsAgo.getTime()
-              )
-              .endAt(
-                ((userUid + friendUid) as string) + '-' + new Date().getTime()
-              )
-              .limitToLast(15);
-          }
-        );
-        ref2.valueChanges(['child_added']).subscribe(val => {
-          return res(val);
+      return new Observable(obs => {
+        const currTime = new Date().getTime();
+        const promise1 = new Promise(res => {
+          const ref2 = this.realTimeDatabase.list(
+            `chats/${userKey}/${friendKey}`,
+            ref2 => {
+              return isGetLastMsgWithFr
+                ? ref2
+                    .orderByChild('participants/2')
+                    .startAt(
+                      ((userUid + friendUid) as string) +
+                        '-' +
+                        threeMthsAgo.getTime()
+                    )
+                    .endAt(((userUid + friendUid) as string) + '-' + currTime)
+                    .limitToLast(1)
+                : ref2
+                    .orderByChild('participants/2')
+                    .startAt(
+                      ((userUid + friendUid) as string) +
+                        '-' +
+                        threeMthsAgo.getTime()
+                    )
+                    .endAt(((userUid + friendUid) as string) + '-' + currTime)
+                    .limitToLast(15);
+            }
+          );
+          ref2.valueChanges(['child_added']).subscribe(val => {
+            return res(val);
+          });
         });
-      });
 
-      const promise2 = new Promise(res => {
-        const ref3 = this.realTimeDatabase.list(
-          `chats/${friendKey}/${userKey}`,
-          ref3 =>
-            ref3
-              .orderByChild('message/senderId_receiverId')
-              .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
-              .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`)
-              .limitToLast(15)
-          // .equalTo(`${userUid}_${friendUid}`)
-        );
-        ref3.valueChanges(['child_added']).subscribe(val => {
-          res(val);
+        const promise2 = new Promise(res => {
+          const ref3 = this.realTimeDatabase.list(
+            `chats/${friendKey}/${userKey}`,
+            ref3 => {
+              return isGetLastMsgWithFr
+                ? ref3
+                    .orderByChild('message/senderId_receiverId')
+                    .startAt(
+                      `${friendUid}_${userUid}_${threeMthsAgo.getTime()}`
+                    )
+                    .endAt(`${friendUid}_${userUid}_${currTime}`)
+                    .limitToLast(1)
+                : ref3
+                    .orderByChild('message/senderId_receiverId')
+                    .startAt(
+                      `${friendUid}_${userUid}_${threeMthsAgo.getTime()}`
+                    )
+                    .endAt(`${friendUid}_${userUid}_${currTime}`)
+                    .limitToLast(15);
+              // .equalTo(`${userUid}_${friendUid}`)
+            }
+          );
+          ref3.valueChanges(['child_added']).subscribe(val => {
+            res(val);
+          });
         });
+        const myAllMessagesArr = [promise1, promise2];
+        const frAndMyMessages: Promise<any[]> = Promise.all(
+          myAllMessagesArr
+        ).then(res => {
+          return res.flat();
+        });
+        obs.next(frAndMyMessages);
       });
-      const myAllMessagesArr = [promise1, promise2];
-      const frAndMyMessages: Promise<any[]> = Promise.all(
-        myAllMessagesArr
-      ).then(res => {
-        return res.flat();
-      });
-      return frAndMyMessages;
-    } else return new Promise(res => res([]));
+    } else return of(new Promise<any[]>(res => res([])));
+    // new Promise(res => res([]));
   }
+
+  // getUserMessagesRefactored(
+  //   userUid: string,
+  //   friendUid: string,
+  //   userKey: string,
+  //   friendKey: string
+  // ): Observable<Promise<any[]>> {
+  //   if (friendUid) {
+  //     return new Observable(obs => {
+  //       const int = setInterval(() => {
+  //         const promise1 = new Promise(res => {
+  //           const ref2 = this.realTimeDatabase.list(
+  //             `chats/${userKey}/${friendKey}`,
+  //             ref2 => {
+  //               return ref2
+  //                 .orderByChild('key')
+  //                 .startAt((userUid as string) + '_' + 0)
+  //                 .endAt((userUid as string) + '_' + 90000)
+  //                 .limitToLast(15);
+  //             }
+  //           );
+  //           ref2.valueChanges(['child_added']).subscribe(val => {
+  //             return res(val);
+  //           });
+  //         });
+
+  //         const promise2 = new Promise(res => {
+  //           const ref3 = this.realTimeDatabase.list(
+  //             `chats/${friendKey}/${userKey}`,
+  //             ref3 =>
+  //               ref3
+  //                 .orderByChild('key')
+  //                 .startAt(`${friendUid}_${0}`)
+  //                 .endAt(`${friendUid}_${90000}`)
+  //                 .limitToLast(15)
+  //           );
+  //           ref3.valueChanges(['child_added']).subscribe(val => {
+  //             res(val);
+  //           });
+  //         });
+  //         const myAllMessagesArr = [promise1, promise2];
+  //         const frAndMyMessages: Promise<any[]> = Promise.all(
+  //           myAllMessagesArr
+  //         ).then(res => {
+  //           clearInterval(int);
+  //           return res.flat();
+  //         });
+  //         obs.next(frAndMyMessages);
+  //       }, 200);
+  //     });
+  //   } else return of(new Promise<any[]>(res => res([])));
+  //   // new Promise(res => res([]));
+  // }
 
   getScrolledMessages(userKey: string, friendKey: string) {
     const ref2 = this.realTimeDatabase.list(
@@ -206,6 +299,7 @@ export class BaseService {
     );
     return ref2.valueChanges();
   }
+  messageKeysArr: string[] = [];
   getMessageByKey(
     userKey: string,
     friendKey: string,
@@ -219,32 +313,14 @@ export class BaseService {
       .then(val => (value = val));
     return new Observable(obs => {
       const int = setInterval(() => {
-        if (value) {
+        if (value && !this.messageKeysArr.includes(value?.key)) {
           obs.next(value.val());
+          this.messageKeysArr.push(value.key);
+          value = undefined;
           clearInterval(int);
         }
       }, 100);
     });
-  }
-
-  // CSAK DEV FUNKCIÓ
-  getAllMessagesFromFriend(
-    friendKey: string,
-    userKey: string,
-    friendUid: string,
-    userUid: string
-  ) {
-    const threeMthsAgo = new Date();
-    threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
-    const ref = this.realTimeDatabase.list(
-      'chats/' + friendKey + '/' + userKey,
-      ref =>
-        ref
-          .orderByChild('message/senderId_receiverId')
-          .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
-          .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`)
-    );
-    return ref.valueChanges();
   }
 
   getNewMessages(userKey: string, friendKey?: string) {
@@ -261,19 +337,6 @@ export class BaseService {
           )
         );
     }
-    // if(!friendKey) {  // MEGCSINÁLNI ///
-    //   const ref = this.realTimeDatabase.list(  gdsgsdggd
-    //     `chats/${userKey}`,
-    //     ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
-    //   );
-    //   return ref
-    //     .snapshotChanges(['child_added'])
-    //     .pipe(
-    //       map(ch =>
-    //         ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
-    //       )
-    //     );
-    // }
   }
 
   getUpdatedMessages(userKey: string, friendKey: string) {
@@ -503,6 +566,27 @@ export class BaseService {
       templateParams
     );
     console.log(res, 'E-mail sikeresen elküldve');
+  }
+
+  ///////////////////////// DEV FUNKCIÓK ///////////////////////////////
+
+  getAllMessagesFromFriend(
+    friendKey: string,
+    userKey: string,
+    friendUid: string,
+    userUid: string
+  ) {
+    const threeMthsAgo = new Date();
+    threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
+    const ref = this.realTimeDatabase.list(
+      'chats/' + friendKey + '/' + userKey,
+      ref =>
+        ref
+          .orderByChild('message/senderId_receiverId')
+          .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
+          .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`)
+    );
+    return ref.valueChanges();
   }
 
   /////////// SEGÍTŐ FUNKCIÓK ///////////////////

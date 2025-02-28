@@ -115,6 +115,9 @@ export class MessageComponent implements OnInit, OnDestroy {
   audioChunks: Blob[] = [];
   mediaRecorder!: MediaRecorder;
 
+  // OBSERVER //
+  intsectObsForMsgs!: IntersectionObserver;
+
   // FELIRATKOZÁSOK //
   userProfilesSub: Subscription = Subscription.EMPTY;
   getAllMessagesSubjectSub: Subscription = Subscription.EMPTY;
@@ -183,12 +186,19 @@ export class MessageComponent implements OnInit, OnDestroy {
               uP => uP.uid === this.selectedFriendId
             );
             this.base.selectedFriendSubject.next(this.selectedFriend);
-            this.allChatsArray = await this.base.getUserMessagesRefactored(
-              this.userProfile.uid,
-              this.selectedFriendId!,
-              this.userProfile.key,
-              this.selectedFriend.key
-            );
+            const sub = this.base
+              .getUserMessagesRefactored(
+                this.userProfile.uid,
+                this.selectedFriendId!,
+                this.userProfile.key,
+                this.selectedFriend.key
+              )
+              .subscribe(async promise => {
+                this.allChatsArray = await promise;
+                this.getVisibleMessagesForSelectedFriend();
+                console.log(this.allChatsArray);
+                sub.unsubscribe();
+              });
             this.base.messageTransferSub.next(false);
 
             // if (
@@ -198,7 +208,7 @@ export class MessageComponent implements OnInit, OnDestroy {
 
             // }
             this.messSubscription = this.getNewMessages();
-            this.getVisibleMessagesForSelectedFriend();
+
             this.animateMessages();
             this.updMessSub = this.getUpdatedMessages();
             this.updateSeenMessages(this.allChatsArray, true);
@@ -378,6 +388,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       const lastMsgKeyArr = this.visibleMessages[0].key.split('_');
       newMsgNum = +lastMsgKeyArr[1] + 1;
     } else newMsgNum = 1;
+    console.log(newMsgNum);
     newMsgNum.toString();
     message._setKey = this.userProfile.uid + '_' + newMsgNum;
     message.participants[1] = this.selectedFriendId!;
@@ -403,6 +414,9 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.updateFrsFrObj.areFriends = meForFr.areFriends;
       if (meForFr?.confirmed) this.updateFrsFrObj.confirmed = meForFr.confirmed;
       if (meForFr?.messaging) this.updateFrsFrObj.messaging = meForFr.messaging;
+      this.updateFrsFrObj.newMessSentTime = meForFr.newMessSentTime =
+        new Date().getTime();
+      console.log(meForFr);
       uProfsSub.unsubscribe();
     });
 
@@ -420,7 +434,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       rootMargin: '0px',
       threshold: 1.0,
     };
-    const observer = new IntersectionObserver(
+    this.intsectObsForMsgs = new IntersectionObserver(
       (
         entries: IntersectionObserverEntry[],
         observer: IntersectionObserver
@@ -432,7 +446,7 @@ export class MessageComponent implements OnInit, OnDestroy {
         }, 1500);
         const [entry] = entries;
         if (entry.isIntersecting) {
-          console.log('****INTERSECTIONOBS***');
+          console.log('****INTERSECTIONOBS***', entry);
           this.scrollMsgs();
           observer.unobserve(this.lastMsgPos!);
           setTimeout(() => {
@@ -447,11 +461,11 @@ export class MessageComponent implements OnInit, OnDestroy {
         `msg-${this.visibleMessages.length - 1}`
       );
       if (this.lastMsgPos) {
-        observer.observe(this.lastMsgPos!);
+        this.intsectObsForMsgs.observe(this.lastMsgPos!);
         clearInterval(int);
       }
     }, 200);
-    return observer;
+    return this.intsectObsForMsgs;
   }
 
   async toDoDevFunction() {}
@@ -629,7 +643,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     const reaction = `Reagált az üzenetedre: ${chosenReaction}\n`;
     this.sendMessNotifications(reactedMsg, reaction);
   }
-
+  sortingMsgsArr: any[] = [];
   scrollMsgs() {
     let counter: any = 1;
     let msgScrolled: number = 0;
@@ -649,11 +663,17 @@ export class MessageComponent implements OnInit, OnDestroy {
             lastMsgNum,
             this.selectedFriendId
           )
-          .subscribe((val: any) => {
-            if (!val) isMyMsg = true;
-            if (val) {
-              this.visibleMessages.push(val);
+          .subscribe((msg: any) => {
+            if (!msg) isMyMsg = true;
+            if (msg) {
+              msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
+                msg.message.timeStamp
+              );
+              if (!msg.message?.message.includes('https://'))
+                this.textMessages.push(msg);
+              this.sortingMsgsArr.push(msg);
               msgScrolled++;
+              console.log('****LEFUTÁS****', msg);
             }
             sub.unsubscribe();
           });
@@ -667,10 +687,17 @@ export class MessageComponent implements OnInit, OnDestroy {
               lastMsgNum,
               this.userProfile.uid
             )
-            .subscribe((val: any) => {
-              if (val) {
-                this.visibleMessages.push(val);
+            .subscribe((msg: any) => {
+              if (msg) {
+                msg.message.viewTimeStamp = this.utilService.calcMinutesPassed(
+                  msg.message.timeStamp
+                );
+                this.sortingMsgsArr.push(msg);
+                // Leszűröm a csak szöveget tartalmazó üzeneteket és elmentem egy tömbbe
+                if (!msg.message?.message.includes('https://'))
+                  this.textMessages.push(msg);
                 msgScrolled++;
+                console.log('****LEFUTÁS****', msg);
               }
               clearInterval(int);
               sub.unsubscribe();
@@ -680,22 +707,12 @@ export class MessageComponent implements OnInit, OnDestroy {
     }
     const int = setInterval(() => {
       if (msgScrolled >= 15) {
-        console.log(this.visibleMessages);
-        let tomb: any[] = [];
-        this.visibleMessages = this.visibleMessages.filter(msg => {
-          if (!tomb.includes(msg.key)) {
-            tomb.push(msg.key);
-            return msg;
-          }
-        });
-        this.visibleMessages.sort((a: any, b: any) => {
+        this.sortingMsgsArr.sort((a: any, b: any) => {
           if (a.message.timeStamp < b.message.timeStamp) return 1;
           else return -1;
         });
-        // Leszűröm a csak szöveget tartalmazó üzeneteket és elmentem egy tömbbe
-        this.textMessages = this.visibleMessages.filter(
-          mess => !mess.message?.message.includes('https://')
-        );
+        this.visibleMessages.push(...this.sortingMsgsArr);
+        this.sortingMsgsArr = [];
         console.log(`MESSAGE SORT AND FILTER AFTER SCROLL****`);
         clearInterval(int);
       }
@@ -828,7 +845,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     return fileName;
   }
 
-  getVisibleMessagesForSelectedFriend(): any {
+  async getVisibleMessagesForSelectedFriend() {
     this.allChatsArray = this.allChatsArray.filter(
       ch =>
         ch.message.senderId === this.selectedFriendId ||
@@ -1028,10 +1045,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.firestore.filesSubject = new Subject();
     this.haventSeenMessagesArr = this.haventSeenMessagesArr.filter(
       mess => !mess.message.seen
-    );
-    this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
-      this.haventSeenMessagesArr,
-      this.showFriendsMess
     );
     this.base.getAllMessagesSubject.next({
       allChatsArray: this.visibleMessages,

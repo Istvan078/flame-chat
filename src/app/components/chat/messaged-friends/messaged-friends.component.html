@@ -122,6 +122,21 @@
               height="50px"
               class="rounded-circle"
             />
+            <ng-container *ngFor="let lastMsgWithFr of lastMsgsWithFriends">
+              <div
+                class="mb-0 mt-2"
+                *ngIf="
+                  lastMsgWithFr?.message.senderId === mess.friendId ||
+                  lastMsgWithFr?.participants[1] === mess.friendId
+                "
+              >
+                {{
+                  lastMsgWithFr?.replyMessage
+                    ? lastMsgWithFr?.replyMessage.message
+                    : lastMsgWithFr?.message.message
+                }}
+              </div>
+            </ng-container>
             <div
               *ngIf="mess.online && mess.visibility"
               class="card-text online-dot-container"

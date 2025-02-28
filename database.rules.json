@@ -9,7 +9,8 @@
             "message/timeStamp",
             "participants/2",
             "message/senderId_receiverId",
-            "message/seen"
+            "message/seen",
+            "key"
           ]
         }
       }

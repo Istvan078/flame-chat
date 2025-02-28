@@ -69,7 +69,6 @@ export class NavComponent implements OnInit, OnDestroy {
               ...this.userProfile.positions,
               { time: time, position: currentPosition },
             ];
-            console.log('**Jelenlegi pozíció hozzáadva**');
           } else if (!this.userProfile?.positions?.length) {
             this.userProfile.positions = [
               { time: time, position: currentPosition },

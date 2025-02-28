@@ -200,10 +200,11 @@ export class UtilityService {
       ...friendNewMessageFrom,
       ...(this.userFriends || ''),
     ];
+    console.log(friendNewMessageFrom);
     // objektum ami segít kiszűrni a duplikációkat a tömbből
     const seenFriendIds: any = {};
     const friendsWithNewMess: any[] = [];
-    let filteredFriendsArr = allFriendsAndNMessFromArr.filter((fr, i) => {
+    showFriendsMess = allFriendsAndNMessFromArr.filter((fr, i) => {
       if (fr?.newMessageNumber) {
         friendsWithNewMess.push(fr);
       }
@@ -214,10 +215,12 @@ export class UtilityService {
       }
       return false;
     });
-    filteredFriendsArr = filteredFriendsArr.filter(fr => !fr.newMessageNumber);
-    filteredFriendsArr.unshift(...friendsWithNewMess);
-    showFriendsMess = filteredFriendsArr;
+    friendsWithNewMess.sort((a, b) => b?.newMessSentTime - a?.newMessSentTime);
+    console.log(showFriendsMess);
+    showFriendsMess = showFriendsMess.filter(fr => !fr.newMessageNumber);
+    showFriendsMess.unshift(...friendsWithNewMess);
     console.log('***ISMERŐS ÜZENETFEJEK SZŰRVE(FSM)***');
+    console.log(showFriendsMess);
     return showFriendsMess;
   }
 
@@ -369,7 +372,9 @@ export class UtilityService {
     // A különbség milliszekundumokban
     const diffMilliseconds = newDate - sentMessDate;
     // A különbség percekben
-    const passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
+    let passedMinsSMessSent: number = 0;
+    if (Math.sign(diffMilliseconds) === -1) passedMinsSMessSent = 0;
+    else passedMinsSMessSent = Math.floor(diffMilliseconds / 1000 / 60);
     let hours: number = 0;
     for (let i = 60; i < passedMinsSMessSent && i <= 1440; i += 60) {
       hours += 1;

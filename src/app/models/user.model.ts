@@ -28,6 +28,7 @@ export interface Friends {
   visibility: boolean;
   newMessageNumber?: number;
   messaging?: boolean;
+  newMessSentTime?: number;
 }
 
 export class ForUserSubject {
