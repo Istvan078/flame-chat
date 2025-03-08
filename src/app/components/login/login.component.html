@@ -47,12 +47,6 @@
       class="btn btn-warning ms-2 me-2"
       ><i class="bi bi-google h4"></i
     ></a>
-    <!-- <a
-      (click)="facebookOrGoogle = false; booleanFunction()"
-      type="button"
-      class="btn btn-primary mx-2"
-      ><i class="bi bi-facebook h4"></i
-    ></a> -->
     <button
       (click)="isPhone = !isPhone"
       class="btn btn-secondary"
@@ -63,47 +57,15 @@
   </h4>
 </form>
 
-<!-- <div class="google-container-main" *ngIf="emailOrGoogle && !isPhone">
-  <div
-    *ngIf="emailOrGoogle"
-    class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
-  >
-    <button
-      [disabled]="!facebookOrGoogle"
-      class="btn btn-lg"
-      (click)="loginWithGoogle()"
-      color="warn"
-      mat-raised-button
-      type="button"
-    >
-      <i class="bi bi-google"></i> Bejelentkezés
-    </button>
-  </div>
-</div> -->
-<!-- <div
-  *ngIf="emailOrGoogle"
-  class="mt-4 d-grid gap-2 col-6 mx-auto google-container"
->
-  <button
-    [disabled]="facebookOrGoogle"
-    class="btn btn-lg"
-    (click)="loginWithFacebook()"
-    color="primary"
-    mat-raised-button
-    type="button"
-  >
-    <i class="bi bi-facebook"></i> Bejelentkezés
-  </button>
-</div> -->
-
-<ng-container *ngIf="emailOrGoogle && !reCapthcaOff">
-  <div id="reCaptchaContainer" class="flexToMiddleContainer"></div>
+<ng-container *ngIf="!reCapthcaOff">
+  <div id="reCaptchaContainer"></div>
 
   <div
     class="row no-padding justify-content-center align-items-center"
     [ngClass]="isPhone ? 'd-flex' : 'd-none'"
+    *ngIf="!reCapthcaOff"
   >
-    <div class="form-floating mt-4 col-6 no-padding">
+    <div class="form-floating mt-4 col-12 no-padding">
       <input
         class="form-control"
         [(ngModel)]="phoneNumber"
@@ -112,7 +74,18 @@
         type="text"
         placeholder="Telefonszám"
       />
-      <label for="phoneNumber">+36</label>
+      <label for="phoneNumber">Magyar (+36201234567)</label>
+    </div>
+    <div class="form-floating mt-4 col-12 no-padding">
+      <input
+        class="form-control"
+        [(ngModel)]="phoneNumber"
+        id="phoneNumber"
+        name="phoneNumber"
+        type="text"
+        placeholder="Telefonszám"
+      />
+      <label for="phoneNumber">Angol (+44123456789)</label>
     </div>
     <div class="col-6 mt-4 ms-2 no-padding text-center span-div">
       <span

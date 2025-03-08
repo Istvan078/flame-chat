@@ -71,6 +71,7 @@
             [(ngModel)]="message.message.message"
             matInput
             rows="2"
+            (keydown.enter)="addMessage(); messageButtonClicked = false"
             [disabled]="message.message.voiceMessage !== undefined"
           ></textarea>
         </mat-form-field>

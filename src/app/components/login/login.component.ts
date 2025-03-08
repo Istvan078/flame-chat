@@ -84,9 +84,7 @@ export class LoginComponent {
           if (user?.emailVerified) {
             if (userProfile[0]?.uid) {
               this.utilService.forUserSubject.userProfile = userProfile[0];
-              this.utilService.userSubject.next(
-                this.utilService.forUserSubject
-              );
+              this.utilService.getFriends().subscribe();
             }
             if (
               userProfile[0].birthDate === undefined ||
@@ -113,29 +111,24 @@ export class LoginComponent {
           this.base.getUserProfiles().subscribe((userProfiles: any) => {
             this.userProfiles = userProfiles;
 
-            let userProfile = this.userProfiles.filter(
+            let userProfile = this.userProfiles.find(
               (userProfile: any) => userProfile.uid === user.uid
             );
-            if (userProfile[0]?.uid) {
-              this.utilService.forUserSubject.userProfile = userProfile[0];
-              this.utilService.userSubject.next(
-                this.utilService.forUserSubject
-              );
+            if (userProfile?.uid) {
+              this.utilService.forUserSubject.userProfile = userProfile;
+              this.utilService.getFriends().subscribe();
             }
 
-            if (userProfile.length === 0) {
-              userProfile.push(user);
+            if (!userProfile?.uid) {
+              userProfile = user;
               for (let i = 0; i < 1; i++) {
                 this.base.addUserData({
-                  uid: userProfile[0].uid,
+                  uid: userProfile.uid,
                   email: user.email,
                 });
               }
             }
-            if (
-              userProfile[0].birthDate === undefined ||
-              userProfile[0].birthDate === ''
-            ) {
+            if (!userProfile?.birthDate) {
               this.router.navigate(['/profile/' + user.uid]);
             } else {
               this.router.navigate(['/chat']);
@@ -146,23 +139,11 @@ export class LoginComponent {
     });
   }
 
-  loginWithFacebook(): void {
-    this.authService
-      .signInWithFacebook()
-      .then(() => this.router.navigate(['']));
-  }
-
-  // booleanFunction() {
-  //   this.emailOrGoogle = !this.emailOrGoogle;
-  // }
-
   startLoginWithPhoneNumber() {
-    this.authService
-      .signInWithPhoneNumber('+36' + this.phoneNumber)
-      .then(result => {
-        this.verificationId = result.verificationId;
-        this.reCapthcaOff = true;
-      });
+    this.authService.signInWithPhoneNumber(this.phoneNumber).then(result => {
+      this.verificationId = result.verificationId;
+      this.reCapthcaOff = true;
+    });
   }
 
   verifyPhoneNumberAndLogin() {
@@ -173,33 +154,26 @@ export class LoginComponent {
     this.authService.verifyPhoneNumberAndSignIN(credentials).then(() => {
       this.authService.isLoggedIn().subscribe((user: any) => {
         this.base.getUserProfiles().subscribe((userProfiles: any[]) => {
-          let userProfile = userProfiles.filter(
-            (userProfile: UserClass) => userProfile.uid === user.uid
+          let userProfile = userProfiles.find(
+            (userProf: UserClass) => userProf.uid === user.uid
           );
-          if (userProfile.length === 0) {
-            userProfile.push(user);
+          if (!userProfile?.uid) {
+            userProfile = user;
             this.base.addUserData({
               uid: user.uid,
               phoneNumber: user.phoneNumber,
             });
+          } else {
+            this.utilService.forUserSubject.userProfile = userProfile;
+            this.utilService.getFriends().subscribe();
           }
-          if (
-            userProfile[0]['birthDate'] === undefined ||
-            userProfile[0]['birthDate'] === ''
-          ) {
+          if (!userProfile['birthDate']) {
             this.router.navigate(['/profile/' + user.uid]);
           } else {
             this.router.navigate(['/chat']);
           }
         });
       });
-    });
-  }
-
-  fillSignInValues() {
-    this.loginForm.form.patchValue({
-      email: 'pelda078@gmail.com',
-      password: 'xy',
     });
   }
 }

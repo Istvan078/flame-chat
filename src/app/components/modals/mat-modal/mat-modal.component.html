@@ -3,7 +3,6 @@
   <h2 mat-dialog-title>Új verzió elérhető</h2>
   <mat-dialog-content class="mat-typography">1.1.4</mat-dialog-content>
   <mat-dialog-actions>
-    <!-- <button mat-button mat-dialog-close type="button">Nem</button> -->
     <button mat-button [mat-dialog-close]="true" cdkFocusInitial type="button">
       Rendben
     </button>
@@ -60,11 +59,11 @@
       <textarea
         [(ngModel)]="replyMessage.replyMessage.message"
         matInput
+        (keydown.enter)="sendReplyMessage()"
       ></textarea>
     </mat-form-field>
   </mat-dialog-content>
   <mat-dialog-actions class="ms-3 pt-0">
-    <!-- <button mat-button mat-dialog-close type="button">Nem</button> -->
     <button
       mat-button
       class="send-button"
