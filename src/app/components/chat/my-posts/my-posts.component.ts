@@ -237,7 +237,7 @@ export class MyPostsComponent {
         ) as HTMLCollectionOf<HTMLIFrameElement>;
         (this.iFrames as any) = Array.from(this.iFrames);
         if (this.iFrames.length) {
-          observer.next();
+          observer.next(null);
           observer.complete();
           clearInterval(interval);
         }

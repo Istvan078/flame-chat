@@ -30,19 +30,19 @@ import { FilesModalComponent } from '../modals/files-modal/files-modal.component
       state(
         'in-1',
         style({
-          transform: 'translateX(0) scale(0.2)',
+          transform: 'translateX(0) scale(1)',
           opacity: 1,
         })
       ),
       transition('void => *', [
-        style({ opacity: 0, transform: 'translateX(-50%)' }),
-        animate(2000),
+        style({ opacity: 0, transform: 'translateX(-20px)' }),
+        animate('300ms ease-out'),
       ]),
       transition('* => void', [
         animate(
-          300,
+          '200ms ease-in',
           style({
-            transform: 'translateX(50%)',
+            transform: 'translateX(20px)',
             opacity: 0,
           })
         ),
@@ -52,28 +52,23 @@ import { FilesModalComponent } from '../modals/files-modal/files-modal.component
       state(
         'in-0',
         style({
-          transform: 'translateX(0) scale(0.2)',
+          transform: 'translateX(0) scale(1)',
           opacity: 1,
         })
       ),
       transition('void => *', [
         animate(
-          1000,
+          '300ms ease-out',
           keyframes([
             style({
               opacity: 0,
-              transform: 'translateX(-50%)',
+              transform: 'translateX(-20px)',
               offset: 0,
             }),
             style({
-              transform: 'translateX(-25%)',
+              transform: 'translateX(-10px)',
               opacity: 0.5,
-              offset: 0.3,
-            }),
-            style({
-              transform: 'translateX(-10%)',
-              opacity: 1,
-              offset: 0.6,
+              offset: 0.5,
             }),
             style({
               transform: 'translateX(0)',

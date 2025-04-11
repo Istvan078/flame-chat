@@ -1,5 +1,20 @@
 .matCardBg {
-  background-color: rgba(21, 154, 255, 0.1);
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, transform 0.3s ease;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+}
+.friend-email {
+  color: white;
+}
+.notification-icon{
+  position: absolute;
 }
 
 // mat-expansion-panel-header:hover {
@@ -96,11 +111,15 @@ mat-expansion-panel-header:hover {
 }
 
 .user-searched-container {
-  cursor: pointer;
-  width: fit-content;
-}
-.user-searched-container:hover {
-  background: grey;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  margin: 0.5rem 0;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
 }
 
 .left {
@@ -449,5 +468,846 @@ ol {
   }
   .mainDivUsers {
     margin-left: 10vw;
+  }
+}
+
+// Friend Toast Styles
+.friend-toast-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0.5rem;
+  perspective: 1000px;
+}
+
+.friend-toast {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  }
+
+  .toast-header {
+    padding: 1rem;
+    background: transparent;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .profile-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .profile-picture {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    .user-details {
+      h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #2c3e50;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0.25rem 0 0;
+        font-size: 0.9rem;
+        color: #7f8c8d;
+      }
+    }
+  }
+
+  .toast-actions {
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+
+    .add-friend-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+      }
+
+      mat-icon {
+        font-size: 1.2rem;
+        height: 1.2rem;
+        width: 1.2rem;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 768px) {
+  .friend-toast-container {
+    max-width: 100%;
+  }
+
+  .friend-toast {
+    .profile-info {
+      .profile-picture {
+        width: 50px;
+        height: 50px;
+      }
+
+      .user-details {
+        h4 {
+          font-size: 1rem;
+        }
+
+        p {
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    .toast-actions {
+      .add-friend-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Friend Card Styles
+.friend-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .friend-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(135deg, #f6f7f9 0%, #e9ecef 100%);
+  }
+
+  .friend-avatar {
+    position: relative;
+    width: 70px;
+    height: 70px;
+
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .friend-info {
+    flex: 1;
+    min-width: 0;
+
+    .friend-name {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #2c3e50;
+      word-break: break-word;
+    }
+
+    .friend-email {
+      margin: 0.25rem 0 0;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      word-break: break-word;
+    }
+  }
+
+  .friend-actions {
+    padding: 1.25rem;
+    display: flex;
+    justify-content: center;
+    background: #fff;
+
+    .add-friend-button {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 6px rgba(33, 150, 243, 0.2);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(33, 150, 243, 0.3);
+        background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+      }
+
+      mat-icon {
+        font-size: 1.2rem;
+        height: 1.2rem;
+        width: 1.2rem;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 768px) {
+  .friend-card {
+    max-width: 100%;
+
+    .friend-header {
+      padding: 1rem;
+    }
+
+    .friend-avatar {
+      width: 60px;
+      height: 60px;
+    }
+
+    .friend-info {
+      .friend-name {
+        font-size: 1.1rem;
+      }
+
+      .friend-email {
+        font-size: 0.85rem;
+      }
+    }
+
+    .friend-actions {
+      padding: 1rem;
+
+      .add-friend-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Modern Accordion Styles
+.modern-accordion {
+  .modern-panel {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin-bottom: 1rem;
+
+    .modern-panel-header {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .modern-panel-title {
+        color: #ffffff;
+        font-weight: 500;
+      }
+    }
+
+    .panel-content {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 0 0 12px 12px;
+      margin-top: 0.5rem;
+    }
+  }
+
+  // Panel specific styles
+  .my-posts-header {
+    background: linear-gradient(135deg, rgba(78, 90, 162, 0.7) 0%, rgba(78, 90, 162, 0.5) 100%) !important;
+  }
+
+  .exp-panel-headers {
+    background: linear-gradient(135deg, rgba(141, 148, 190, 0.7) 0%, rgba(141, 148, 190, 0.5) 100%) !important;
+  }
+
+  .newMessage {
+    background: linear-gradient(135deg, rgba(255, 166, 0, 0.7) 0%, rgba(255, 166, 0, 0.5) 100%) !important;
+  }
+
+  // Icon colors
+  .album-icon {
+    color: rgb(46, 46, 219);
+  }
+
+  .feeds-icon {
+    color: #4CAF50;
+  }
+
+  .messages-icon {
+    color: #FF9800;
+  }
+
+  .friends-icon {
+    color: #9C27B0;
+  }
+
+  .profile-icon {
+    color: #F44336;
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 768px) {
+  .modern-accordion {
+    .modern-panel {
+      .modern-panel-header {
+        padding: 0.5rem;
+
+        .modern-panel-title {
+          .user-info {
+            .user-name {
+              font-size: 1rem;
+            }
+          }
+
+          .panel-title-content {
+            span {
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Modern Retro Theme
+:host {
+  display: block;
+  background: #f0f0f0;
+  min-height: 100vh;
+  color: #333333;
+  font-family: 'Courier New', monospace;
+}
+
+.matCardBg {
+  background-color: #ffffff;
+  border: 2px solid #333333;
+  box-shadow: 4px 4px 0 #333333;
+}
+
+.modern-accordion {
+  .modern-panel {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin-bottom: 1rem;
+
+    .modern-panel-header {
+      background: #ffffff;
+      border-radius: 0;
+      padding: 1rem;
+      transition: all 0.2s ease;
+      border: 2px solid #333333;
+      box-shadow: 4px 4px 0 #333333;
+
+      &:hover {
+        background: #f0f0f0;
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 #333333;
+      }
+
+      .modern-panel-title {
+        color: #333333;
+        font-weight: bold;
+        letter-spacing: 0;
+      }
+    }
+  }
+}
+
+.friend-card {
+  background: #ffffff;
+  border-radius: 0;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 2px solid #333333;
+  box-shadow: 4px 4px 0 #333333;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f0f0f0;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #333333;
+  }
+}
+
+.user-searched-container {
+  background: #ffffff;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  transition: all 0.2s ease;
+  border: 2px solid #333333;
+  box-shadow: 4px 4px 0 #333333;
+
+  &:hover {
+    background: #f0f0f0;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #333333;
+  }
+}
+
+input.form-control {
+  background: #ffffff;
+  border: 2px solid #333333;
+  color: #333333;
+  border-radius: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  box-shadow: 4px 4px 0 #333333;
+
+  &:focus {
+    background: #ffffff;
+    border-color: #333333;
+    box-shadow: 6px 6px 0 #333333;
+  }
+
+  &::placeholder {
+    color: #666666;
+  }
+}
+
+button.mat-raised-button {
+  background: #333333;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 0.75rem 1.25rem;
+  transition: all 0.2s ease;
+  border: 2px solid #333333;
+  box-shadow: 4px 4px 0 #333333;
+  font-weight: bold;
+  letter-spacing: 0;
+
+  &:hover {
+    background: #444444;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 #333333;
+  }
+}
+
+// Panel specific styles
+.my-posts-header {
+  background: #ffcc00 !important;
+  color: #333333 !important;
+}
+
+.exp-panel-headers {
+  background: #ffffff !important;
+}
+
+.newMessage {
+  background: #ff6666 !important;
+  color: #ffffff !important;
+}
+
+// Icon colors
+.album-icon {
+  color: #333333;
+}
+
+.feeds-icon {
+  color: #333333;
+}
+
+.messages-icon {
+  color: #333333;
+}
+
+.friends-icon {
+  color: #333333;
+}
+
+.profile-icon {
+  color: #333333;
+}
+
+// Title style
+.title-container h2 {
+  font-weight: bold;
+  letter-spacing: 0;
+  margin: 0;
+  color: #333333;
+  text-transform: uppercase;
+}
+
+// Message styles
+.left {
+  background-color: #ffffff;
+  color: #333333;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+  max-width: 70%;
+  margin-right: auto;
+  border: 2px solid #333333;
+  box-shadow: 4px 4px 0 #333333;
+}
+
+.right {
+  background-color: #333333;
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 0;
+  max-width: 70%;
+  margin-left: auto;
+  border: 2px solid #333333;
+  box-shadow: 4px 4px 0 #333333;
+}
+
+// Notification styles
+.notification-badge {
+  background: #ff6666;
+  color: #ffffff;
+  border-radius: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border: 2px solid #333333;
+  box-shadow: 2px 2px 0 #333333;
+}
+
+// Search bar styles
+.search-container {
+  position: relative;
+  margin-bottom: 1rem;
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #333333;
+  }
+
+  input {
+    padding-left: 2.5rem;
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 768px) {
+  .modern-accordion {
+    .modern-panel {
+      .modern-panel-header {
+        padding: 0.75rem;
+      }
+    }
+  }
+  
+  .friend-card {
+    padding: 1rem;
+  }
+  
+  input.form-control {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  button.mat-raised-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+// Modern Holographic Theme
+:host {
+  display: block;
+  background: linear-gradient(135deg, #0a0a2a 0%, #1a1a3a 100%);
+  min-height: 100vh;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+.matCardBg {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.modern-accordion {
+  .modern-panel {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin-bottom: 1rem;
+
+    .modern-panel-header {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 1rem;
+      transition: all 0.3s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+      }
+
+      .modern-panel-title {
+        color: #ffffff;
+        font-weight: 500;
+        letter-spacing: -0.5px;
+      }
+    }
+  }
+}
+
+.friend-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+  }
+}
+
+.user-searched-container {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+  }
+}
+
+input.form-control {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+
+  &:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(0, 255, 255, 0.3);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.2);
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+button.mat-raised-button {
+  background: linear-gradient(135deg, #00ffff 0%, #00bfff 100%);
+  color: #0a0a2a;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  transition: all 0.3s ease;
+  border: none;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+
+  &:hover {
+    background: linear-gradient(135deg, #00bfff 0%, #00ffff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+  }
+}
+
+// Panel specific styles
+.my-posts-header {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(0, 191, 255, 0.2) 100%) !important;
+}
+
+.exp-panel-headers {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.newMessage {
+  background: linear-gradient(135deg, rgba(255, 0, 128, 0.2) 0%, rgba(255, 0, 0, 0.2) 100%) !important;
+}
+
+// Icon colors
+.album-icon {
+  color: #00ffff;
+}
+
+.feeds-icon {
+  color: #00ff00;
+}
+
+.messages-icon {
+  color: #ff00ff;
+}
+
+.friends-icon {
+  color: #ffff00;
+}
+
+.profile-icon {
+  color: #ff0000;
+}
+
+// Title style
+.title-container h2 {
+  font-weight: 600;
+  letter-spacing: -1px;
+  margin: 0;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+// Message styles
+.left {
+  background: rgba(0, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  max-width: 70%;
+  margin-right: auto;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+}
+
+.right {
+  background: rgba(255, 0, 128, 0.1);
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  max-width: 70%;
+  margin-left: auto;
+  border: 1px solid rgba(255, 0, 128, 0.2);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.1);
+}
+
+// Notification styles
+.notification-badge {
+  background: linear-gradient(135deg, #ff0000 0%, #ff00ff 100%);
+  color: #ffffff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+// Search bar styles
+.search-container {
+  position: relative;
+  margin-bottom: 1rem;
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  input {
+    padding-left: 2.5rem;
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 768px) {
+  .modern-accordion {
+    .modern-panel {
+      .modern-panel-header {
+        padding: 0.75rem;
+      }
+    }
+  }
+  
+  .friend-card {
+    padding: 1rem;
+  }
+  
+  input.form-control {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+  
+  button.mat-raised-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 }

@@ -1,147 +1,93 @@
 <ng-container *ngIf="!isNavDisappeared">
-  <p>
-    <mat-toolbar
-      class="justify-content-center"
-      [ngClass]="isMenuClicked ? 'matToolbarHeight' : ''"
-      color="primary"
-    >
-      <div class="columnDisp">
-        <div class="text-center">
-          <span>Menü</span
-          ><button
-            mat-icon-button
-            (click)="isMenuClicked = !isMenuClicked"
-            type="button"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <mat-icon class="align-middle">menu</mat-icon>
-          </button>
+  <nav class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-brand">
+        <button mat-icon-button class="menu-button" (click)="isMenuClicked = !isMenuClicked">
+          <mat-icon>{{ isMenuClicked ? 'close' : 'menu' }}</mat-icon>
+        </button>
+      </div>
+
+      <div class="navbar-menu" [ngClass]="{'is-active': isMenuClicked}">
+        <div class="navbar-start">
+          <a class="navbar-item" 
+             routerLink="/home" 
+             routerLinkActive="active-link"
+             [routerLinkActiveOptions]="{ exact: true }"
+             (click)="isMenuClicked = false">
+            <mat-icon>home</mat-icon>
+            <span>Kezdőlap</span>
+          </a>
+
+          <a class="navbar-item" 
+             *ngIf="isSuperAdmin || user.claims?.admin"
+             routerLink="/admin"
+             routerLinkActive="active-link"
+             (click)="navDisappear()">
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>Admin</span>
+          </a>
+
+          <a class="navbar-item" 
+             *ngIf="isSuperAdmin || user.claims?.admin || user?.email === 'kalmaristvan078@gmail.com'"
+             routerLink="/users"
+             routerLinkActive="active-link"
+             (click)="navDisappear()">
+            <mat-icon>people</mat-icon>
+            <span>Felhasználók</span>
+          </a>
+
+          <a class="navbar-item" 
+             *ngIf="user.uid && user?.displayName"
+             [routerLink]="userProfile?.displayName ? '/chat' : '/chat/' + user.uid"
+             routerLinkActive="active-link"
+             (click)="isMenuClicked = false">
+            <mat-icon>chat</mat-icon>
+            <span>Chat</span>
+          </a>
+        </div>
+
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <div class="buttons">
+              <ng-container *ngIf="!user.uid">
+                <a class="button is-primary" routerLink="/signup" (click)="isMenuClicked = false">
+                  <mat-icon>person_add</mat-icon>
+                  <span>Regisztráció</span>
+                </a>
+                <a class="button is-light" routerLink="/login" (click)="isMenuClicked = false">
+                  <mat-icon>login</mat-icon>
+                  <span>Bejelentkezés</span>
+                </a>
+              </ng-container>
+
+              <ng-container *ngIf="user.uid">
+                <button class="button is-light notification-button" 
+                        [matBadge]="allNotifications" 
+                        matBadgeColor="warn"
+                        (click)="rOutletOn()">
+                  <mat-icon [ngClass]="{'no-notification': allNotifications === 0}">notifications</mat-icon>
+                </button>
+
+                <div class="user-profile">
+                  <img class="profile-picture" 
+                       [src]="userProfile.profilePicture" 
+                       alt="Profilkép"
+                       (click)="showProfPics()">
+                  <div class="user-info">
+                    <span class="username">{{ userProfile.displayName }}</span>
+                    <button class="button is-text sign-out" (click)="signOut()">
+                      <mat-icon>logout</mat-icon>
+                      <span>Kijelentkezés</span>
+                    </button>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- <span class="spacer"></span> -->
-
-      <div
-        [ngbCollapse]="isMenuClicked"
-        class="justify-content-center"
-        [ngClass]="[isMenuClicked ? 'columnDisp' : 'flexDisp']"
-      >
-        <span
-          (click)="isMenuClicked = false"
-          [routerLinkActiveOptions]="{ exact: true }"
-          routerLink="/home"
-          routerLinkActive="active-link"
-          class="navbar-brand nav-link me-3"
-        >
-          <mat-icon class="bi bi-house-fill"></mat-icon>
-          Kezdőlap
-        </span>
-
-        <span
-          *ngIf="isSuperAdmin || user.claims?.admin"
-          (click)="navDisappear()"
-          routerLink="/admin"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-        >
-          Admin
-        </span>
-
-        <span
-          *ngIf="
-            isSuperAdmin ||
-            user.claims?.admin ||
-            user?.email === 'kalmaristvan078@gmail.com'
-          "
-          (click)="navDisappear()"
-          routerLink="/users"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-        >
-          Felhasználók
-        </span>
-
-        <span
-          (click)="isMenuClicked = false"
-          *ngIf="user.uid && user?.displayName"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-          [routerLink]="
-            userProfile?.displayName ? '/chat' : '/chat/' + user.uid
-          "
-          >Chat
-        </span>
-
-        <span
-          *ngIf="!user.uid"
-          (click)="isMenuClicked = false"
-          class="nav-link me-3"
-          routerLink="/signup"
-          routerLinkActive="active-link"
-        >
-          Regisztráció
-        </span>
-
-        <span
-          *ngIf="!user.uid"
-          (click)="isMenuClicked = false"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-          [routerLinkActiveOptions]="{ exact: true }"
-          routerLink="/login"
-          >Bejelentkezés
-        </span>
-
-        <span
-          *ngIf="user.uid"
-          class="nav-link me-3 sign-out"
-          routerLink=""
-          (click)="signOut()"
-          >Kijelentkezés
-        </span>
-
-        <div class="notiFlexDiv">
-          <span
-            *ngIf="user.uid && !isMenuClicked"
-            class="text-center me-3 notiFlex"
-            [matBadge]="allNotifications"
-            matBadgeColor="warn"
-            (click)="rOutletOn()"
-            ><mat-icon [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
-              >notifications</mat-icon
-            ></span
-          >
-        </div>
-      </div>
-
-      <span
-        *ngIf="user.uid"
-        class="text-center noti"
-        [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
-        [matBadge]="allNotifications"
-        matBadgeColor="warn"
-        (click)="rOutletOn()"
-        ><mat-icon>notifications</mat-icon></span
-      >
-      <div *ngIf="user.uid && userProfile" class="ms-1 mt-1 d-flex">
-        <img
-          class="rounded-circle"
-          width="50px"
-          height="50px"
-          [src]="userProfile.profilePicture"
-          alt="Profilkép"
-          (click)="showProfPics()"
-        />
-        <p
-          style="line-height: 17px; font-size: x-small"
-          class="pt-2 ms-2 signedInAs"
-        >
-          Bejelenkezve, mint <br /><b>{{ userProfile.displayName }}</b>
-        </p>
-      </div>
-    </mat-toolbar>
-  </p>
+    </div>
+  </nav>
 </ng-container>
 
 <app-notifications
@@ -149,5 +95,5 @@
   [sideNavToggle]="sideNavToggle"
   (compOfNoti)="compOfNoti = $event"
   [toVisitedMeOn]="compOfNoti"
-  (sideNavToggleToNav)="sideNavToggle = $event"
-></app-notifications>
+  (sideNavToggleToNav)="sideNavToggle = $event">
+</app-notifications>
