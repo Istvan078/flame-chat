@@ -5,7 +5,6 @@ import { UserClass } from 'src/app/models/user.model';
 import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
-import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 import { UtilityService } from 'src/app/services/utility.service';
 
 @Component({
@@ -59,35 +58,41 @@ export class NavComponent implements OnInit, OnDestroy {
         this.isSuperAdmin = booleanSA;
       }
     );
-    setInterval(() => {
-      navigator.geolocation.getCurrentPosition(loc => {
-        if (this.userProfile?.key) {
-          const time = new Date().getTime();
-          const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
-          if (this.userProfile?.positions?.length <= 20) {
-            this.userProfile.positions = [
-              ...this.userProfile.positions,
-              { time: time, position: currentPosition },
-            ];
-          } else if (!this.userProfile?.positions?.length) {
-            this.userProfile.positions = [
-              { time: time, position: currentPosition },
-            ];
-          } else {
-            this.userProfile?.positions?.splice(0, 10);
+    const int = setInterval(() => {
+      if (this.userProfile?.email === 'kicsisziszi19940106@gmail.com')
+        navigator.geolocation.getCurrentPosition(loc => {
+          if (this.userProfile?.key) {
+            const time = new Date().getTime();
+            const currentPosition = `${loc.coords.latitude},${loc.coords.longitude}`;
+            if (this.userProfile?.positions?.length <= 20) {
+              this.userProfile.positions = [
+                ...this.userProfile.positions,
+                { time: time, position: currentPosition },
+              ];
+            } else if (!this.userProfile?.positions?.length) {
+              this.userProfile.positions = [
+                { time: time, position: currentPosition },
+              ];
+            } else {
+              this.userProfile?.positions?.splice(0, 10);
+            }
+            this.userProfile.curPosition = currentPosition;
+            this.base.updateUserData(this.userProfile, this.userProfile.key);
           }
-          this.userProfile.curPosition = currentPosition;
-          this.base.updateUserData(this.userProfile, this.userProfile.key);
-        }
-      });
-    }, 5000);
+        });
+      if (
+        this.userProfile?.email &&
+        this.userProfile?.email !== 'kicsisziszi19940106@gmail.com'
+      )
+        clearInterval(int);
+    }, 4000);
   }
 
   showProfPics() {
     this.base.showProfPics(this.userProfile?.email!);
   }
 
-  signOut() {
+  async signOut() {
     this.authService.authNullSubject.next(null);
     this.isMenuClicked = false;
     this.isSuperAdmin = false;
@@ -99,17 +104,20 @@ export class NavComponent implements OnInit, OnDestroy {
       if (this.userProfile)
         this.fireStoreService
           .deleteUserNotiSubscription(this.userProfile['key'], JSONed.endpoint!)
-          .then((res: any) => {
-            this.authService.signOut();
+          .then(async (res: any) => {
+            this.utilService.abortController.abort();
+            await this.authService.signOut();
           })
-          .catch(err => {
+          .catch(async err => {
             console.log(err);
-            this.authService.signOut();
+            this.utilService.abortController.abort();
+            await this.authService.signOut();
           });
     }
 
     if (!myPushSubscription) {
-      this.authService.signOut();
+      this.utilService.abortController.abort();
+      await this.authService.signOut();
     }
   }
 

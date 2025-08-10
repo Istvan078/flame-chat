@@ -1,179 +1,267 @@
-<div
-  [@slide-in-keyframed]="chatAnimationState"
-  class="row justify-content-center"
->
-  <button
-    routerLink="/chat"
-    class="green ms-2 me-2 mt-2"
-    type="button"
-    mat-raised-button
-  >
-    <mat-icon> keyboard_backspace </mat-icon>
-
-    Vissza a főoldalra
-  </button>
-  <div class="text-center mt-2">
+<div class="messages-page">
+  <!-- Header / App bar -->
+  <mat-toolbar color="primary" class="appbar" role="heading" aria-level="1">
     <button
-      (click)="showFriendsToChoose = !showFriendsToChoose"
-      class="btn btn-primary"
-      type="button"
+      mat-icon-button
+      (click)="openMainMenu?.()"
+      aria-label="Menü megnyitása"
     >
-      <mat-icon class="align-middle">message</mat-icon>
-      Új üzenet (ismerős keresése)
+      <mat-icon>menu</mat-icon>
     </button>
-    <!-- MEGCSINÁLNI -->
-    <ng-container *ngIf="showFriendsToChoose">
+
+    <span class="title">Üzenetek</span>
+
+    <span class="spacer"></span>
+
+    <button
+      mat-icon-button
+      (click)="openNotifications?.()"
+      aria-label="Értesítések"
+    >
+      <mat-icon
+        [ngClass]="haventSeenMessagesArr?.length ? 'text-primary' : ''"
+        [matBadge]="haventSeenMessagesArr?.length"
+        [matBadgeColor]="haventSeenMessagesArr?.length ? 'warn' : 'primary'"
+        >notifications</mat-icon
+      >
+    </button>
+
+    <button mat-icon-button (click)="openProfile?.()" aria-label="Profil">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <!-- Top actions (Új üzenet / Archív) -->
+  <div class="text-center mb-0 mt-2 mess-search-cont">
+    <mat-form-field appearance="outline" class="friend-search-field">
+      <mat-label>Keresés</mat-label>
       <input
+        (keyup)="searchMessage()"
+        matInput
         [(ngModel)]="friendSearch"
         placeholder="Ismerős neve"
-        class="form-control my-2"
-        type="text"
       />
-      <ng-container
-        *ngFor="let mess of showFriendsMess | filter : friendSearch"
+      <button
+        *ngIf="friendSearch"
+        matSuffix
+        mat-icon-button
+        (click)="friendSearch = ''; searchMessage()"
+        aria-label="Keresőmező törlése"
       >
-        <h4 *ngIf="!mess.messaging">
-          <h2 *ngIf="friendSearch">
-            <img
-              class="rounded-circle"
-              width="50px"
-              height="50px"
-              [src]="mess.profilePicture"
-              alt=""
-            />
-            {{ mess.displayName }}
-            <a
-              (click)="firstMessageToFriend(mess)"
-              class="btn btn-success text-white fs-5 mx-2"
-              ><span>Üzenet írása </span
-              ><mat-icon class="align-middle"> message </mat-icon>
-            </a>
-          </h2>
-        </h4>
-      </ng-container>
-    </ng-container>
-    <button
-      (click)="showAllFriends = !showAllFriends"
-      class="btn btn-success my-2 mx-2"
-      type="button"
-    >
-      <mat-icon class="align-middle">message</mat-icon>
-      Új üzenet (összes ismerős listázása)
-    </button>
-    <ng-container *ngIf="showAllFriends">
-      <div class="row justify-content-center showAllFriendsCont">
-        @for(mess of showFriendsMess; track mess.friendId){
-        <ng-container>
-          <div
-            class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2 mb-2"
-            *ngIf="!mess.messaging"
-          >
-            <h4 class="mb-0 mt-2">{{ mess.displayName }}</h4>
-            <img
-              class="rounded-circle"
-              width="50px"
-              height="50px"
-              [src]="mess.profilePicture"
-              alt=""
-            />
-            <button
-              (click)="
-                firstMessageToFriend(mess); showAllFriends = !showAllFriends
-              "
-              class="btn btn-success fs-5 ms-2"
-              type="button"
-            >
-              Új üzenet
-            </button>
-          </div>
-        </ng-container>
-        }
-      </div>
-    </ng-container>
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
   </div>
-  @for(mess of showFriendsMess; track mess.friendId){
-  <div
-    *ngIf="mess.messaging || mess.seen === false"
-    class="col-12 col-md-4 col-lg-3 col-xl-2"
+  <div class="top-actions">
+    <button
+      mat-button
+      class="top-action"
+      (click)="showFriendsToChoose = !showFriendsToChoose"
+    >
+      <mat-icon>note_add</mat-icon>
+      <span>Új üzenet</span>
+    </button>
+
+    <!-- <button mat-button class="top-action"> -->
+    <!-- <mat-icon>search</mat-icon>
+      <span>Kereses</span> -->
+
+    <!-- </button> -->
+
+    <!-- <button
+      mat-button
+      class="top-action"
+      (click)="showAllFriends = !showAllFriends"
+    >
+      <mat-icon>group</mat-icon>
+      <span>Új üzenet</span>
+    </button> -->
+
+    <!-- <button mat-button class="top-action" (click)="toArchivedMsgs()">
+      <mat-icon>archive</mat-icon>
+      <span>Archivált üzenetek</span>
+    </button> -->
+  </div>
+
+  <!-- Friend search reveal -->
+  <section *ngIf="showFriendsToChoose" class="friend-search">
+    <mat-form-field appearance="outline" class="friend-search-field">
+      <mat-label>Keresés ismerősre</mat-label>
+      <input matInput [(ngModel)]="friendSearch" placeholder="Ismerős neve" />
+      <button
+        *ngIf="friendSearch"
+        matSuffix
+        mat-icon-button
+        (click)="friendSearch = ''"
+        aria-label="Keresőmező törlése"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <div *ngFor="let friend of showFriendsMess | filter : friendSearch">
+      <div *ngIf="friendSearch && !friend.messaging" class="search-result-item">
+        <img
+          [src]="friend.profilePicture"
+          [alt]="friend.displayName + ' profilképe'"
+          class="avatar-small"
+        />
+        <span class="friend-name">{{ friend.displayName }}</span>
+        <button
+          mat-stroked-button
+          color="primary"
+          class="start-chat-btn"
+          (click)="firstMessageToFriend(friend)"
+        >
+          <mat-icon class="align-middle">message</mat-icon>
+          Üzenet írása
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- All friends list (expand) -->
+  <section *ngIf="showAllFriends" class="show-all-friends">
+    <div *ngFor="let friend of showFriendsMess" class="friend-tile">
+      <img
+        [src]="friend.profilePicture"
+        [alt]="friend.displayName + ' profilképe'"
+        class="avatar-small"
+      />
+      <div class="name">{{ friend.displayName }}</div>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="firstMessageToFriend(friend); showAllFriends = false"
+      >
+        Új üzenet
+      </button>
+    </div>
+  </section>
+
+  <!-- Archived toggle mirror (only if there are archived) -->
+  <section
+    *ngIf="archivedFriends?.length && isShowArchMsgs"
+    class="archived-controls"
   >
-    <ng-container>
-      <ng-container>
-        <div
-          class="mt-2 text-center text-danger mb-0 pb-0"
-          *ngIf="mess.newMessageNumber"
-        >
-          <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
-        </div>
-        <div
-          #messageCardCont
-          class="card text-white text-center mb-2 messageCardCont"
-          [ngClass]="
-            mess.newMessageNumber ? 'newMessageColorOnCard' : 'messageCardBg'
-          "
-        >
-          <!-- <h5 class="card-header">
-                            <h2>{{ mess.displayName }}</h2>
-                          </h5> -->
-          <div class="card-body mt-0">
-            <h2>{{ mess.displayName }}</h2>
-            <img
-              [src]="mess.profilePicture"
-              width="50px"
-              height="50px"
-              class="rounded-circle"
-            />
-            <ng-container *ngFor="let lastMsgWithFr of lastMsgsWithFriends">
-              <div
-                class="mb-0 mt-2"
-                *ngIf="
-                  lastMsgWithFr?.message.senderId === mess.friendId ||
-                  lastMsgWithFr?.participants[1] === mess.friendId
-                "
-              >
-                {{
-                  lastMsgWithFr?.replyMessage
-                    ? lastMsgWithFr?.replyMessage.message
-                    : lastMsgWithFr?.message.message
-                }}
-              </div>
-            </ng-container>
-            <div
-              *ngIf="mess.online && mess.visibility"
-              class="card-text online-dot-container"
-            >
-              <div class="online-dot"></div>
-              <div class="online-text">Elérhető</div>
+    <button mat-stroked-button color="primary" (click)="backToMsgs()">
+      <mat-icon>message</mat-icon>
+      Üzenetek
+    </button>
+  </section>
+
+  <!-- Conversation list -->
+  <section class="chat-list" *ngIf="!isShowArchMsgs">
+    <ng-container *ngFor="let friend of showFriendsMess; let i = index">
+      <ng-container *ngIf="friend.messaging || friend.seen === false">
+        <mat-card class="conversation-card" (click)="getMessageUser(friend)">
+          <div class="left">
+            <div class="avatar-container">
+              <img
+                [src]="friend.profilePicture"
+                [alt]="friend.displayName + ' profilképe'"
+                class="avatar"
+              />
+              <span
+                *ngIf="friend.online && friend.visibility"
+                class="online-dot"
+              ></span>
             </div>
-            <div
-              *ngIf="!mess.online"
-              class="card-text last-time-online-container"
-            >
-              <ng-container *ngIf="!mess.newMessageNumber && mess.visibility">
-                <p class="mt-1 text-dark mb-0">
-                  <b>Utoljára elérhető:</b>
-                </p>
-                <p class="mb-0 my-0 text-success">
-                  {{ mess.lastTimeOnline }}
-                </p>
+          </div>
+
+          <div class="center">
+            <div class="name">{{ friend.displayName }}</div>
+            <div class="last-msg" [class.unread]="friend.newMessageNumber">
+              <ng-container *ngIf="lastMsgsWithFriends">
+                <ng-container *ngFor="let lastMsgWithFr of lastMsgsWithFriends">
+                  <span
+                    *ngIf="
+                      lastMsgWithFr?.message.senderId === friend.friendId ||
+                      lastMsgWithFr?.participants[1] === friend.friendId
+                    "
+                  >
+                    {{
+                      lastMsgWithFr?.replyMessage
+                        ? lastMsgWithFr.replyMessage.message
+                        : lastMsgWithFr?.message.message
+                    }}
+                  </span>
+                </ng-container>
               </ng-container>
             </div>
-          </div>
-          <div class="card-footer">
-            <button
-              (click)="getMessageUser(mess)"
-              mat-raised-button
-              class="btn btn-sm ms-2 blue msg-button"
-              type="button"
+            <!-- <div
+              class="last-seen"
+              *ngIf="
+                !friend.newMessageNumber && friend.visibility && !friend.online
+              "
             >
-              Üzenetek
-              <mat-icon> chat </mat-icon>
-            </button>
+              Utoljára elérhető: {{ friend.lastTimeOnline }}
+            </div> -->
           </div>
-        </div>
+
+          <div class="right">
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="menu"
+              (click)="$event.stopPropagation()"
+              aria-label="Műveletek"
+            >
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <div *ngIf="friend.newMessageNumber" class="unread-badge">
+              {{ friend.newMessageNumber }}
+            </div>
+          </div>
+        </mat-card>
+
+        <mat-menu #menu="matMenu">
+          <button
+            mat-menu-item
+            (click)="archiveFriend(friend, userProfile.key, i)"
+          >
+            <mat-icon>archive</mat-icon>
+            <span>Archíválás</span>
+          </button>
+          <button
+            mat-menu-item
+            (click)="deleteAllMsgsWithFriend(friend.friendKey)"
+          >
+            <mat-icon>delete</mat-icon>
+            <span>Törlés</span>
+          </button>
+        </mat-menu>
       </ng-container>
     </ng-container>
-  </div>
-  } @empty {
-  <p>Válassz ki egy ismerőst új üzenet írásához!</p>
-  }
+
+    <div *ngIf="showFriendsMess?.length === 0" class="no-friends-msg">
+      Válassz ki egy ismerőst új üzenet írásához!
+    </div>
+  </section>
+
+  <!-- Archived list -->
+  <app-archived-messages
+    *ngIf="isShowArchMsgs"
+    [archivedFriendsMess]="archivedFriends"
+    [lastMsgsWithFriends]="lastMsgsWithFriends"
+    [userProfile]="userProfile"
+    (toFriendsMessage)="getMessageUser($event)"
+    (cancelArchiFriend)="cancelArcFriend($event)"
+  >
+  </app-archived-messages>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" (click)="backToMsgs()">
+      <mat-icon>chat_bubble_outline</mat-icon>
+      <span>Üzenetek</span>
+    </button>
+    <button class="nav-item" (click)="backToMainPage()">
+      <mat-icon>home</mat-icon>
+      <span>Főoldal</span>
+    </button>
+    <button class="nav-item" (click)="openMainMenu?.()">
+      <mat-icon>menu</mat-icon>
+      <span>Menü</span>
+    </button>
+  </nav>
 </div>

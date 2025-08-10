@@ -47,11 +47,10 @@ export class SignupComponent {
         });
         actModal.componentInstance.userEmail = usr?.email;
       })
-      .then(() => {
-        this.authService.signOut().then(() => {
-          this.authService.userLoggedInSubject.next(new UserClass());
-          this.router.navigate(['/login']);
-        });
+      .then(async () => {
+        await this.authService.signOut();
+        this.authService.userLoggedInSubject.next(new UserClass());
+        this.router.navigate(['/login']);
       });
   }
 }

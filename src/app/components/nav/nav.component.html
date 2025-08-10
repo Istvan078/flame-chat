@@ -28,17 +28,6 @@
         [ngClass]="[isMenuClicked ? 'columnDisp' : 'flexDisp']"
       >
         <span
-          (click)="isMenuClicked = false"
-          [routerLinkActiveOptions]="{ exact: true }"
-          routerLink="/home"
-          routerLinkActive="active-link"
-          class="navbar-brand nav-link me-3"
-        >
-          <mat-icon class="bi bi-house-fill"></mat-icon>
-          Kezdőlap
-        </span>
-
-        <span
           *ngIf="isSuperAdmin || user.claims?.admin"
           (click)="navDisappear()"
           routerLink="/admin"

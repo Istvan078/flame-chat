@@ -43,7 +43,7 @@ export class AuthService {
   userLoggedInSubject: BehaviorSubject<any> = new BehaviorSubject(
     new UserClass()
   );
-  // isLoggedInSub!: Subscription;
+  isUserReadySubj: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   constructor(
     private aFireAuth: AngularFireAuth,
@@ -57,12 +57,12 @@ export class AuthService {
         this.user = user;
         this.getIdToken(user);
         this.userLoggedInSubject.next(this.user);
+        this.isUserReadySubj.next(true);
       }
       if (!user) {
         this.user = new UserClass();
-        // this.isLoggedInSub.unsubscribe();
         this.userLoggedInSubject.next(new UserClass());
-        this.router.navigate(['/home']);
+        this.isUserReadySubj.next(true);
       }
     });
     this.subscribeToNotifications();
@@ -96,15 +96,6 @@ export class AuthService {
       this.getClaims().subscribe((claims: any) => {
         if (claims) {
           this.user.claims = claims;
-          // this.userLoggedInSubject.next(this.user);
-          // this.isLoggedInSub = this.myCustomObservable({
-          //   successCondition: this.user.uid,
-          //   failureCondition: !this.user.uid,
-          //   failureData: this.user,
-          //   nextData: this.user,
-          //   failureTimeOut: 5000,
-          //   intervalCheckTime: 200,
-          // }).subscribe();
           this.isSuperAdmin.next(this.user.claims?.superAdmin);
           this.isAdmin.next(this.user.claims?.admin);
           this.userClaimsSubj.next(claims);
@@ -197,7 +188,6 @@ export class AuthService {
 
   getUsers(): Observable<FirebaseUser[]> {
     if (this.user.idToken) {
-      // let headers = new HttpHeaders().set('Authorization', this.user.idToken);
       return this.http.get<FirebaseUser[]>(this.usersApiUrl + 'users', {
         headers: this.httpHeaders,
       });
@@ -224,8 +214,10 @@ export class AuthService {
       });
   }
 
-  signOut() {
-    return this.aFireAuth.signOut();
+  async signOut() {
+    this.isUserReadySubj.next(false);
+    await this.aFireAuth.signOut();
+    this.router.navigate(['/login']);
   }
 
   signInWithGoogle() {

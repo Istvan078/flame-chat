@@ -15,6 +15,7 @@ import { ModalComponent } from '../modals/modal/modal.component';
 import { BaseService } from 'src/app/services/base.service';
 import { Environments } from 'src/app/environments';
 import { UtilityService } from 'src/app/services/utility.service';
+import { FirestoreService } from 'src/app/services/firestore.service';
 
 @Component({
   selector: 'app-users',
@@ -39,6 +40,9 @@ export class UsersComponent implements OnInit, OnDestroy {
   usersApiUrl = Environments.API_URL;
   @ViewChild('saveChanges', { static: false }) saveChanges!: ElementRef;
   @ViewChild('sidenav') sidenav!: MatSidenav;
+  gettingSaved: boolean = false;
+  isProgressSpinner: boolean = false;
+  textColors: any[] = [];
 
   constructor(
     private authService: AuthService,
@@ -46,8 +50,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private modalRef: NgbModal,
     private base: BaseService,
-    private utilService: UtilityService
-  ) {}
+    private utilService: UtilityService,
+    private fireStoreService: FirestoreService
+  ) {
+    this.setTextColors();
+  }
 
   ngOnInit(): void {
     this.authService.getUsersSubject().subscribe((users: UserClass[]) => {
@@ -85,6 +92,25 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   getIndexOfUser(index: number) {
     this.user = this.users[index];
+  }
+
+  setTextColors() {
+    this.textColors = [
+      { color: 'green' },
+      { color: 'blue' },
+      { color: 'red' },
+      { color: 'purple' },
+      { color: 'orange' },
+      { color: 'darkgreen' },
+      { color: 'black' },
+      { color: 'darkblue' },
+      { color: 'green' },
+      { color: 'green' },
+    ];
+  }
+
+  scrollToTop() {
+    window.scrollTo(0, 0);
   }
 
   getUserProfiles() {

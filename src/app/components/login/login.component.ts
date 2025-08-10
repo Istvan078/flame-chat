@@ -54,10 +54,9 @@ export class LoginComponent {
             });
             actModal.componentInstance.userEmail = user.email;
           })
-          .then(() => {
-            this.authService.signOut().then(() => {
-              this.authService.userLoggedInSubject.next(new UserClass());
-            });
+          .then(async () => {
+            await this.authService.signOut();
+            this.authService.userLoggedInSubject.next(new UserClass());
           })
           .catch(err => console.log(err));
       }

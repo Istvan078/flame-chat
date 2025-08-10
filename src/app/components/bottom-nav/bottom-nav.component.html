@@ -1,0 +1,27 @@
+<nav class="bottom-nav mat-elevation-z6">
+  <button
+    mat-icon-button
+    [routerLink]="['/message']"
+    [class.active]="isRouteActive('/message')"
+  >
+    <mat-icon>chat</mat-icon>
+    <span>Üzenetek</span>
+  </button>
+  <button
+    mat-icon-button
+    [routerLink]="['/chats']"
+    [class.active]="isRouteActive('/chats')"
+  >
+    <mat-icon>group</mat-icon>
+    <span>Fooldal</span>
+  </button>
+  <button
+    mat-icon-button
+    disabled
+    [routerLink]="['/profile']"
+    [class.active]="isRouteActive('/profile')"
+  >
+    <mat-icon>menu</mat-icon>
+    <span>Menu</span>
+  </button>
+</nav>

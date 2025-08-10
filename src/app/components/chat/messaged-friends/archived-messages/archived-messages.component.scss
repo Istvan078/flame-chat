@@ -1,0 +1,44 @@
+.mess-menu-btn {
+  position: absolute;
+  right: 0px;
+  top: 5px;
+  background: transparent;
+  border: none;
+}
+.newMessageColorOnCard {
+  background-image: linear-gradient(
+    to right,
+    rgba(39, 86, 29, 1),
+    rgba(53, 132, 35, 0.7)
+  );
+}
+.messageCardBg {
+  background-color: rgba(93, 93, 237, 0.3);
+}
+.messageCardCont {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: rgb(243, 251, 255);
+}
+.new-mess-text {
+  color: white;
+}
+.last-msg-container {
+  overflow: hidden;
+  height: 3vh;
+  width: 95%;
+}
+.msg-button {
+  color: white !important;
+  font-size: 1.2rem;
+}
+.blue {
+  background-color: rgba(8, 8, 156, 0.6) !important;
+}
+.card-footer {
+  border: none;
+  background: transparent;
+}

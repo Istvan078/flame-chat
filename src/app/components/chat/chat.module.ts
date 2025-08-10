@@ -11,6 +11,7 @@ import { ToastComponent } from '../toast/toast.component';
 import { PostsComponent } from './shared/posts/posts.component';
 import { MessageComponent } from './message/message.component';
 import { MessagedFriendsComponent } from './messaged-friends/messaged-friends.component';
+import { ArchivedMessagesComponent } from './messaged-friends/archived-messages/archived-messages.component';
 
 // HA NINCS DISPLAYNAME A USERNEK NEM LÉPHET BE A CHAT ÚTVONALRA //
 // Visszanavigálom profillétrehozó felületre
@@ -35,6 +36,7 @@ import { MessagedFriendsComponent } from './messaged-friends/messaged-friends.co
     PostsComponent,
     MessageComponent,
     MessagedFriendsComponent,
+    ArchivedMessagesComponent,
   ],
   imports: [
     SharedModule,
@@ -56,6 +58,7 @@ import { MessagedFriendsComponent } from './messaged-friends/messaged-friends.co
         path: ':uid/friend-profile',
         component: FriendProfileComponent,
       },
+      { path: 'archived-messages', component: ArchivedMessagesComponent },
       { path: '**', component: ChatComponent },
     ]),
   ],

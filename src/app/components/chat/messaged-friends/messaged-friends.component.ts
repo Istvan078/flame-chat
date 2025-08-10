@@ -13,6 +13,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { MatMenuTrigger } from '@angular/material/menu';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Friends, UserClass } from 'src/app/models/user.model';
@@ -82,8 +83,11 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
   userProfiles: UserClass[] = [];
   userProfile: UserClass = new UserClass();
   showFriendsMess: any[] = [];
+  showFriendsMessCopy: any[] = [];
   showAllFriends: boolean = false;
+  isShowArchMsgs: boolean = false;
   userFriends?: Friends[] = [];
+  archivedFriends: any[] = [];
 
   selectedFriend: any = {};
 
@@ -95,6 +99,8 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
   sendPrivateMessageOn: boolean = false;
   userMessages: boolean = false;
   isMessageOn: boolean = false;
+  isMessMenu: boolean = false;
+  isRemoveFrFromShowFriendsMess: boolean = false;
   allChatsArray: any[] = [];
   messagesAccordionTabCounter: number = 0;
   lastMsgsWithFriends: any[] = [];
@@ -121,7 +127,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         this.userProfile = AllUserDtls.userProfile;
         this.userFriends = AllUserDtls.userFriends!;
         console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-        console.log(this.selectedFriend);
         this.getNewMessages();
         this.userFriends.map(fr => {
           if (fr?.messaging) {
@@ -138,17 +143,13 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
                 (a, b) => a?.message.timeStamp - b?.message.timeStamp
               );
               const lastMsgObj = lastMsgsArr[1];
-              console.log(lastMsgsArr);
-              console.log(lastMsgObj);
               this.lastMsgsWithFriends.push(lastMsgObj);
             });
           }
         });
 
-        console.log(this.lastMsgsWithFriends);
         await this.areFriendsOnline();
-        console.log(this.userFriends);
-
+        this.archivedFriends = this.utilService.archivedFriends;
         this.onAnimate();
       }
       this.userProfilesSub.unsubscribe();
@@ -182,16 +183,79 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
   }
 
+  archiveFriend(friend: any, userKey: string, i: number) {
+    const body: any = friend?.newMessageNumber
+      ? { archivedAftNewMess: true }
+      : { archived: true };
+    friend.archivedAftNewMess = friend?.newMessageNumber ? true : false;
+    friend.archived = true;
+    this.base.updateFriend(friend.friendKey, body, userKey);
+  }
+  openMainMenu? = () => {};
+  openNotifications? = () => {};
+  openProfile? = () => {};
+  searchMessage() {
+    if (!this.showFriendsMessCopy?.length)
+      this.showFriendsMessCopy = this.showFriendsMess;
+    if (this.friendSearch)
+      return (this.showFriendsMess = this.showFriendsMess.filter(fr =>
+        fr.displayName.toLowerCase().includes(this.friendSearch)
+      ));
+    if (!this.friendSearch)
+      return (this.showFriendsMess = this.showFriendsMessCopy);
+  }
+
+  async deleteAllMsgsWithFriend(selectedFriendKey: string) {
+    await this.base.deleteAllMsgsWithFriend(
+      this.userProfile.key,
+      selectedFriendKey
+    );
+    this.isRemoveFrFromShowFriendsMess = true;
+    await this.base.updateFriend(
+      selectedFriendKey,
+      { messaging: false, archived: false } as any,
+      this.userProfile.key
+    );
+    await this.base.updateFriendsFriend(
+      selectedFriendKey,
+      this.userProfile.key,
+      {
+        messaging: false,
+        archived: false,
+      }
+    );
+    this.showFriendsMess = this.showFriendsMess.filter(
+      fr => fr.friendKey !== selectedFriendKey
+    );
+    this.isRemoveFrFromShowFriendsMess = false;
+    console.log('Üzenetek a barattal törölve az adatbázisból.');
+  }
+
+  toArchivedMsgs() {
+    this.isShowArchMsgs = true;
+  }
+
+  backToMsgs() {
+    this.isShowArchMsgs = false;
+  }
+  cancelArcFriend(event: any) {
+    this.showFriendsMess.push(event);
+  }
+
   areFriendsOnline() {
     return new Promise(res => {
       if (this.messagesAccordionTabCounter < 2)
         this.messagesAccordionTabCounter++;
       const initInterval = setInterval(() => {
+        const now = Date.now();
+        const fiveMinsAgo = now - 5 * 60 * 1000;
         this.userFriends?.map(fr => {
           return this.userProfiles.map(uP => {
             if (uP.uid === fr.friendId) {
               if (uP.visibility) {
-                fr.online = uP.online;
+                if (uP?.lastTimeOnline)
+                  fr.online =
+                    uP.lastTimeOnline < fiveMinsAgo ? false : uP.online;
                 fr.lastTimeOnline = this.utilService.calcMinutesPassed(
                   uP.lastTimeOnline
                 );
@@ -201,11 +265,15 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
           });
         });
         const repeatingInterval = setInterval(() => {
+          const now = Date.now();
+          const fiveMinsAgo = now - 5 * 60 * 1000;
           this.userFriends?.map(fr => {
             return this.userProfiles.map(uP => {
               if (uP.uid === fr.friendId) {
                 if (uP.visibility) {
-                  fr.online = uP.online;
+                  if (uP?.lastTimeOnline)
+                    fr.online =
+                      uP.lastTimeOnline < fiveMinsAgo ? false : uP.online;
                   fr.lastTimeOnline = this.utilService.calcMinutesPassed(
                     uP.lastTimeOnline
                   );
@@ -260,6 +328,17 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
     }, 5);
   }
 
+  backToMainPage() {
+    this.utilService.forUserSubject.userProfile = this.userProfile;
+    this.utilService.forUserSubject.userProfiles = this.userProfiles;
+    this.utilService.forUserSubject.userFriends = this.userFriends!;
+    this.utilService.subjectValueTransfer(
+      this.utilService.forUserSubject,
+      this.utilService.userSubject
+    );
+    this.router.navigate(['/chat']);
+  }
+
   async getMessageUser(user: any) {
     this.selectedFriend = user; // objektum
     this.sendPrivateMessageOn = true;
@@ -270,7 +349,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       forNewMessNotiSub = forNewMessNotiSub.filter(
         msg => msg.friendId !== user.friendId
       );
-      console.log(forNewMessNotiSub);
       this.base.newMessageNotiSubject.next(forNewMessNotiSub);
     }
 
@@ -280,9 +358,8 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
 
   updateSeenMessagesAndViewTime = (user: any) => {
     return new Promise((res, rej) => {
-      this.updateSeenMessages();
+      // this.updateSeenMessages();
       // Üzenetek a kiválasztott baráttól tömb iteráció
-      console.log(this.allChatsArray);
       this.allChatsArray.map(mess => {
         //////////////// LEÍRÁS  ////////////////////////
         // Ha van új üzenet és ez a legelső üzenet a baráttól, akkor frissítsük
@@ -328,10 +405,22 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       .getFriends(this.userProfile.key)
       .subscribe(frArr => {
         const nMessFrs = frArr.filter(fr => fr.newMessageNumber);
+        this.haventSeenMessagesArr = nMessFrs;
         let arr: any[] = [];
         let forNewMessNotiSub: any[] = [];
         nMessFrs.map(fr => {
           const frProf = this.userProfiles.find(uP => uP.uid === fr.friendId);
+          if (fr?.newMessageNumber && fr?.archived) {
+            const body: any = { archived: false };
+            fr.archived = false;
+            fr.displayName = frProf?.displayName;
+            fr.profilePicture = frProf?.profilePicture;
+            this.utilService.userFriends = this.utilService.userFriends.filter(
+              friend => friend.friendId !== fr.friendId
+            );
+            this.utilService.userFriends.unshift(fr);
+            this.base.updateFriend(fr.friendKey!, body, this.userProfile.key);
+          }
           forNewMessNotiSub.push({
             friendId: fr.friendId,
             newMessageNumber: fr.newMessageNumber,
@@ -351,8 +440,8 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
           }
         });
 
-        console.log(`GETNEWMESS FILTERSHOWFRMS`);
-        this.userFriends?.map(fr => {
+        console.log(`****GETNEWMESS FILTERSHOWFRMS****`);
+        this.userFriends?.map((fr, ind) => {
           if (fr?.messaging) {
             const msgsObs = this.base.getUserMessagesRefactored(
               this.userProfile.uid,
@@ -368,9 +457,12 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
               );
               const lastMsgObj = lastMsgsArr[1];
               const sentMessAlreadyArr: any[] = [];
-              this.lastMsgsWithFriends?.map(lastMsg => {
-                if (!sentMessAlreadyArr.includes(lastMsg?.message?.senderId))
-                  sentMessAlreadyArr.push(lastMsg?.message?.senderId);
+
+              this.lastMsgsWithFriends?.map((lastMsg, i) => {
+                if (ind === i && lastMsg?.message?.message) {
+                  if (!sentMessAlreadyArr.includes(lastMsg?.message?.senderId))
+                    sentMessAlreadyArr.push(lastMsg?.message?.senderId);
+                }
               });
               if (this.lastMsgsWithFriends?.length) {
                 const dsg = this.lastMsgsWithFriends?.find(
@@ -383,37 +475,42 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
                   );
                 this.lastMsgsWithFriends.push(lastMsgObj);
               }
+
+              sub.unsubscribe();
             });
           }
         });
-        this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
-          this.haventSeenMessagesArr!,
-          this.showFriendsMess
-        );
+        if (!this.isRemoveFrFromShowFriendsMess)
+          this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+            this.haventSeenMessagesArr!,
+            this.showFriendsMess
+          );
       });
   }
 
-  updateSeenMessages() {
-    // látott üzenetek kiszűrése a tömbből
-    this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
-      if (mess.message.senderId === this.selectedFriend.friendId) {
-        mess.message.seen = true;
-        return undefined;
-      }
-      if (mess.message.senderId !== this.selectedFriend.friendId) {
-        return mess;
-      }
-    });
-    this.haventSeenMessagesArr = this.haventSeenMessagesArr?.filter(
-      mess => mess !== undefined
-    );
-    this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
-      this.haventSeenMessagesArr!,
-      this.showFriendsMess
-    );
-    this.runMessagesSubjectValueTransfer();
-    console.log(`UPDATESEENMSGS`);
-  }
+  // updateSeenMessages() {
+  //   // látott üzenetek kiszűrése a tömbből
+  //   console.log(this.haventSeenMessagesArr);
+  //   this.haventSeenMessagesArr = this.haventSeenMessagesArr?.map(mess => {
+  //     console.log(mess);
+  //     if (mess.message.senderId === this.selectedFriend.friendId) {
+  //       mess.message.seen = true;
+  //       return undefined;
+  //     }
+  //     if (mess.message.senderId !== this.selectedFriend.friendId) {
+  //       return mess;
+  //     }
+  //   });
+  //   this.haventSeenMessagesArr = this.haventSeenMessagesArr?.filter(
+  //     mess => mess !== undefined
+  //   );
+  //   this.showFriendsMess = this.utilService.filterShowFriendsMessArr(
+  //     this.haventSeenMessagesArr!,
+  //     this.showFriendsMess
+  //   );
+  //   this.runMessagesSubjectValueTransfer();
+  //   console.log(`UPDATESEENMSGS`);
+  // }
 
   runMessagesSubjectValueTransfer() {
     this.base.getAllMessagesSubject.next({

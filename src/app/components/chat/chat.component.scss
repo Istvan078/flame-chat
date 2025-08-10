@@ -1,453 +1,355 @@
-.matCardBg {
-  background-color: rgba(21, 154, 255, 0.1);
+.home-page {
+  background: #f5f5f7;
+  min-height: 100vh;
+  padding-bottom: 96px; // hely a bottom navnak
 }
 
-// mat-expansion-panel-header:hover {
-//   background: rgb(42, 42, 135) !important;
-// }
-.audio-container {
-  audio {
-    width: 55vw;
+.appbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom-left-radius: 24px;
+  border-bottom-right-radius: 24px;
+  .title {
+    font-weight: 800;
+    font-size: 20px;
+    display: inline-grid;
+    grid-auto-flow: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .fire {
+    margin-right: 2px;
+  }
+  .spacer {
+    flex: 1;
   }
 }
-.dot-menu {
-  display: inline-block;
-  transform: rotate(90deg);
-  color: darkblue;
-  font-size: 2em;
-  font-family: 'Times New Roman', Times, serif;
-  letter-spacing: 1px;
-  cursor: pointer;
-}
-.exp-panel-headers:hover {
-  background: rgb(42, 42, 135, 0.7) !important;
+
+/* Kereső */
+.search-section {
+  background: #fff;
+  padding: 12px 16px 8px;
+  .search-field {
+    width: 100%;
+  }
+  .search-result {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+
+    .result-left {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 10px;
+      align-items: center;
+      background: transparent;
+      border: none;
+      text-align: left;
+      padding: 0;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .name {
+      font-weight: 600;
+      color: #111827;
+    }
+    .add-btn {
+      justify-self: end;
+    }
+  }
 }
 
-.newMessage {
-  background-color: rgba(255, 166, 0, 0.7) !important;
+/* Menü csempék */
+.menu-grid {
+  display: grid;
+  grid-template-columns: 1fr; // mobilon 1 oszlop
+  gap: 12px;
+  padding: 12px;
 }
-
-.green {
-  background-color: rgba(21, 179, 21, 0.7) !important;
-}
-
-#picUploadInput {
-  display: none;
-}
-
-.reducedHeight {
-  height: 40vh;
-}
-
-.seenDiv {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-  margin-right: 0px;
-  margin-bottom: 0;
-  margin-left: 1px;
-}
-.seen {
-  color: rgb(6, 60, 6);
-  padding: 2px;
-  width: fit-content;
-}
-
-.fade-in {
-  opacity: 1 !important;
-  transition: opacity 2s ease;
-}
-
-.hidden {
-  opacity: 0;
-}
-
-mat-expansion-panel-header {
-  grid-template-columns: auto auto;
-  background-color: rgba(209, 230, 18, 0.4) !important;
-}
-mat-expansion-panel-header:hover {
-  background-color: rgba(209, 230, 18, 0.7) !important;
-}
-
-.icons {
-  position: relative;
-  top: 5px;
-  margin-right: 9px;
-  margin-left: 9px;
-}
-
-.card {
-  height: fit-content;
-}
-
-.msgsCard {
-  width: 80vw !important;
-}
-
-.cardBg {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none;
-}
-
-.messageInput {
-  width: 80vw;
-}
-
-.user-searched-container {
-  cursor: pointer;
-  width: fit-content;
-}
-.user-searched-container:hover {
-  background: grey;
-}
-
-.left {
-  background-color: rgba(23, 23, 143, 0.5);
-  color: white;
-  padding: 5px;
-  border-radius: 5px;
-}
-
-.right {
-  background-color: rgba(255, 255, 255, 0.952);
-  padding: 5px;
-  border-radius: 5px;
-}
-
-.buttonCont {
-  text-align: center;
-  width: 100%;
-  display: inline-flex;
-  justify-content: flex-end;
-}
-
-.pad {
-  padding: 0;
-}
-
-.timeDivRight {
-  width: 55vw !important;
-  justify-content: center !important;
-}
-
-.emailDateDiv {
-  margin-left: 40px;
+.menu-card {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: #fff;
+  border-radius: 18px;
+  padding: 14px 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  border: none;
   text-align: left;
-  width: fit-content;
-  overflow: auto;
+  cursor: pointer;
+
+  .icon-wrap {
+    display: grid;
+    place-items: center;
+  }
+  .mini-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .text {
+    min-width: 0;
+  }
+  .label {
+    font-size: 16px;
+    font-weight: 800;
+    color: #1f2937;
+  }
+  .sub {
+    font-size: 13px;
+    color: #6b7280;
+  }
+}
+
+/* Tartalmi blokkok */
+.content {
+  padding: 8px 12px 0;
+}
+
+/* Ismerősök rács */
+.friends-grid {
+  display: grid;
+  grid-template-columns: 1fr; // mobil
+  gap: 12px;
+}
+.friend-card {
+  padding: 12px;
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.friend-card .avatar {
+  border-radius: 50%;
+  object-fit: cover;
+}
+.friend-card .fname {
+  font-weight: 700;
+  color: #111827;
+}
+.friend-card .femail {
+  font-size: 13px;
+  color: #6b7280;
+}
+.friend-card .actions {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-auto-flow: column;
+  gap: 8px;
   justify-content: start;
-  mat-card-subtitle {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-}
-.mat-card-title-group {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
-.messageCardDiv {
-  position: absolute;
-  bottom: 0%;
-  left: 50%;
-  z-index: 2;
-  transform: translate(-50%, 40%);
-  // height: 45vh;
-  width: 100vw;
+/* Barátjelölések */
+.friend-requests {
+  padding: 12px;
+}
+.request-toast {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 6px;
+}
+.request-toast .email {
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.grey {
-  color: rgb(32, 31, 31);
-}
-
-.allMessagesContainer {
-  overflow-x: hidden;
-  overflow-y: auto;
-  max-height: 60vh !important;
-}
-
-.mainDiv {
-  height: fit-content;
-}
-
-.mainDivUser {
-  margin-bottom: 10px;
-  margin-left: 45px;
-  max-width: 60vw !important;
-}
-
-.myMessageRight {
-  margin-left: 40px !important;
-  max-width: 60vw !important;
-}
-
-.myMessageLeft {
-  margin-left: 8px !important;
-  max-width: 60vw !important;
-}
-
-.mainDivUsers {
-  margin-bottom: 10px;
-  width: 70vw !important;
-}
-
-.deleteButton {
-  background-color: red !important;
-  color: whitesmoke !important;
-}
-
-.matHeader {
-  width: max-content !important;
-}
-
-.delCont {
-  margin-left: 100px;
-  padding-left: 20px;
-}
-.blue {
-  background-color: rgba(8, 8, 156, 0.6) !important;
-}
-
-.card {
-  position: relative;
-}
-
-.card-footer {
-  position: relative;
-  height: 4vh;
-  mat-icon {
-    font-size: 1.2rem;
-  }
-}
-
-.sendMessageOpenButton {
-  margin-bottom: 0 !important;
+/* Alsó navigáció — az üzenetoldallal egységes */
+.bottom-nav {
   position: fixed;
+  left: 0;
+  right: 0;
   bottom: 0;
-  left: 50%;
-  z-index: 2;
-  transform: translate(-50%, -50%);
-  width: 100vw;
-}
+  display: grid;
+  grid-auto-flow: column;
+  background: #fff;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.06);
+  padding: 10px 8px 14px;
+  z-index: 9;
 
-.fileButton {
-  label {
-    cursor: pointer !important;
-  }
-}
-
-.config-options-container {
-  font-size: 1rem;
-  font-weight: bold;
-  height: fit-content;
-  width: fit-content;
-  background-color: transparent;
-  ol {
-    margin: 0 5px 0 0;
-    overflow: hidden;
-  }
-
-  span {
-    color: rgba(49, 6, 49, 0.8);
-  }
-  mat-icon {
-    color: blue;
+  .nav-item {
+    display: grid;
+    justify-items: center;
+    gap: 4px;
+    padding: 8px 0;
+    border: none;
+    background: transparent;
+    color: #374151;
+    &.active {
+      color: #7e57c2;
+    }
   }
 }
 
-ol {
-  list-style: none;
-}
+/* ===== Ajánlott ismerősök – kompakt vízszintes karuszell ===== */
+.suggestions {
+  margin: 6px 0 12px;
+  background: transparent;
 
-.title-container {
-  width: fit-content;
-  height: fit-content;
-  h2 {
-    margin: 0;
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
-  }
-}
-.notif-container {
-  width: fit-content;
-}
-
-@media screen and (max-width: 400px) {
-  .right {
-    width: fit-content;
-  }
-  .left {
-    width: fit-content;
-    justify-content: start;
-  }
-  .mainDiv {
-    width: 85%;
-  }
-  .messageInput {
-    width: 80vw;
-  }
-  .timeDivRight {
-    justify-content: start !important;
-    margin-left: 37px;
-  }
-  .card-footer {
-    height: 8vh !important;
-  }
-  .config-options-container {
-    ol {
-      overflow: hidden;
-      height: fit-content;
+  .sugg-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px 6px;
+    h3 {
       margin: 0;
-      padding: 0px 0px 0px 5px;
-    }
-    height: fit-content;
-    span {
-      display: none;
+      font-size: 14px;
+      font-weight: 800;
+      color: #111827;
     }
   }
-  .audio-container {
-    audio {
-      width: 55vw;
+
+  .sugg-viewport {
+    position: relative;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth; /* finom görgetés */
+    padding: 4px 6px 8px;
+    scrollbar-width: none;
+  }
+  .sugg-viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* halvány szélek, ha van még görgetnivaló */
+  .sugg-viewport::before,
+  .sugg-viewport::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 18px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .sugg-viewport::before {
+    left: 0;
+    background: linear-gradient(90deg, #fff, transparent);
+    opacity: 0.9;
+  }
+  .sugg-viewport::after {
+    right: 0;
+    background: linear-gradient(270deg, #fff, transparent);
+    opacity: 0.9;
+  }
+  .sugg-viewport.at-start::before {
+    display: none;
+  }
+  .sugg-viewport.at-end::after {
+    display: none;
+  }
+
+  .sugg-track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 140px; /* kártyaszélesség */
+    gap: 8px;
+  }
+
+  .sugg-card {
+    scroll-snap-align: start;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 8px 22px rgba(16, 24, 40, 0.08);
+    padding: 10px;
+    display: grid;
+    grid-template-rows: auto auto auto;
+    align-items: center;
+    text-align: center;
+
+    img.avatar {
+      border-radius: 50%;
+      width: 50px;
+      height: 50px; /* egységes, kerek */
+      object-fit: cover;
+      margin: 2px auto 6px;
+      border: 3px solid #f3f4f6;
     }
+    .name {
+      font-weight: 700;
+      font-size: 13px;
+      color: #111827;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .add {
+      border-radius: 999px;
+      padding: 4px 10px;
+      line-height: 1;
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-right: 4px;
+      }
+    }
+  }
+
+  /* overlay nyilak (desktop/tablet), mobilon elrejtjük lejjebb */
+  .nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(2px);
+  }
+  .nav.prev {
+    left: 6px;
+  }
+  .nav.next {
+    right: 6px;
   }
 }
 
-.my-posts-header {
-  background: rgb(78, 90, 162, 0.7) !important;
+/* Mobil finomhangolás */
+@media (max-width: 768px) {
+  .suggestions .sugg-track {
+    grid-auto-columns: 132px;
+    gap: 6px;
+  }
+  .suggestions .sugg-card {
+    padding: 8px;
+  }
+  .suggestions .sugg-card .name {
+    font-size: 12.5px;
+    margin-bottom: 5px;
+  }
+  .suggestions .sugg-card .add {
+    padding: 4px 8px;
+  }
+  .suggestions .sugg-card img.avatar {
+    width: 46px;
+    height: 46px;
+  }
+  .suggestions .nav {
+    display: none !important;
+  } /* nyilak eltüntetése mobilon */
 }
 
-.exp-panel-headers {
-  background: rgba(141, 148, 190, 0.7) !important;
-}
-
-.album-icon {
-  color: rgb(46, 46, 219);
-}
-.feeds-icon {
-  color: green;
-}
-.messages-icon {
-  color: rgb(177, 80, 19);
-}
-.friends-icon {
-  color: rgb(88, 21, 88);
-}
-.profile-icon {
-  color: rgb(177, 40, 40);
-}
-@media screen and (max-height: 614px) {
-  .right {
-    width: fit-content;
-  }
-  .left {
-    width: fit-content;
-    justify-content: start;
-  }
-  .mainDiv {
-    width: 85%;
-  }
-  .messageInput {
-    width: 80vw;
-  }
-}
-
-@media screen and (min-width: 400px) and (max-width: 800px) {
-  .right {
-    width: 50vw;
-  }
-  .left {
-    width: 50vw;
-  }
-  .audio-container {
-    audio {
-      width: 45vw;
-    }
-  }
-  .mainDiv {
-    width: 85%;
-  }
-  .messageInput {
-    width: 80vw;
-  }
-  .mainDivUsers {
-    margin-left: 8vw;
-  }
-  .timeDivRight {
-    justify-content: start !important;
-    margin-left: 100px;
-  }
-}
-
-@media screen and (min-width: 800px) and (max-width: 1250px) {
-  .right {
-    width: 50vw;
-  }
-  .left {
-    width: 50vw;
-  }
-  .audio-container {
-    audio {
-      width: 45vw;
-    }
-  }
-  .mainDiv {
-    width: 85%;
-  }
-  .messageInput {
-    width: 80vw;
-  }
-  .mainDivUsers {
-    margin-left: 8vw;
-  }
-}
-
-@media screen and (min-width: 1250px) and (max-width: 1900px) {
-  .right {
-    width: 50vw;
-  }
-  .left {
-    width: 50vw;
-  }
-  .audio-container {
-    audio {
-      width: 45vw;
-    }
-  }
-  .mainDiv {
-    width: 85%;
-  }
-  .messageInput {
-    width: 80vw;
-    height: 15vh;
-  }
-  .mainDivUsers {
-    margin-left: 8vw;
-  }
-}
-
-@media screen and (min-width: 1900px) {
-  .right {
-    width: 50vw;
-  }
-  .left {
-    width: 50vw;
-  }
-  .audio-container {
-    audio {
-      width: 45vw;
-    }
-  }
-  .mainDiv {
-    width: 85%;
-  }
-  .messageInput {
-    width: 80vw;
-    height: 12vh;
-  }
-  .mainDivUsers {
-    margin-left: 10vw;
+/* Dark mode esetén is maradjon világos */
+@media (prefers-color-scheme: dark) {
+  .suggestions .sugg-card,
+  .suggestions .nav {
+    background: #fff !important;
+    color: #111 !important;
+    filter: none !important;
   }
 }

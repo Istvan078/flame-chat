@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/home/home.component';
 import { SignupComponent } from './components/signup/signup.component';
 import { LoginComponent } from './components/login/login.component';
 import { UsersComponent } from './components/users/users.component';
@@ -7,11 +6,19 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 import { MyPostsComponent } from './components/chat/my-posts/my-posts.component';
 import { AdminComponent } from './components/admin/admin.component';
 import { isAdminGuard } from './guards/is-admin.guard';
+import { loggedInRedirectGuard } from './guards/logged-in-redirect.guard';
 
 export const routes: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: 'signup', component: SignupComponent },
-  { path: 'login', component: LoginComponent },
+  {
+    path: 'signup',
+    canActivate: [loggedInRedirectGuard],
+    component: SignupComponent,
+  },
+  {
+    path: 'login',
+    canActivate: [loggedInRedirectGuard],
+    component: LoginComponent,
+  },
   { path: 'users', component: UsersComponent },
   {
     path: 'profile/:uid',
@@ -21,6 +28,7 @@ export const routes: Routes = [
   { path: 'admin', component: AdminComponent, canActivate: [isAdminGuard] },
   {
     path: '',
+    canActivate: [loggedInRedirectGuard],
     loadChildren: () =>
       import('./components/chat/chat.module').then(m => m.ChatModule),
   },

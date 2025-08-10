@@ -1,0 +1,119 @@
+<div class="row">
+  @for(mess of archivedFriendsMess; track $index; let i = $index){
+  <div
+    *ngIf="mess.messaging || mess.seen === false"
+    class="col-12 col-md-4 col-lg-3 col-xl-2"
+    (mouseleave)="isMessMenu = false"
+  >
+    <ng-container>
+      <ng-container>
+        <div
+          class="mt-2 text-center text-danger mb-0 pb-0"
+          *ngIf="mess.newMessageNumber"
+        >
+          <h3 class="mb-0 pb-0 fw-bolder">Új üzenet érkezett</h3>
+        </div>
+        <div
+          (mouseover)="isMessMenu = true"
+          (mousedown)="isMessMenu = true"
+          #messageCardCont
+          class="card text-center mb-2 messageCardCont mx-2"
+          [ngClass]="
+            mess.newMessageNumber ? 'newMessageColorOnCard' : 'messageCardBg'
+          "
+        >
+          <!-- <h5 class="card-header">
+                            <h2>{{ mess.displayName }}</h2>
+                          </h5> -->
+          <div class="card-body w-100 mt-0">
+            <div class="d-flex justify-content-start align-items-center">
+              <div class="me-2">
+                <img
+                  [src]="mess.profilePicture"
+                  width="50px"
+                  height="50px"
+                  class="rounded-circle"
+                />
+              </div>
+              <div>
+                <h2 class="text-dark text-start mb-0">
+                  {{ mess.displayName }}
+                </h2>
+                <ng-container *ngFor="let lastMsgWithFr of lastMsgsWithFriends">
+                  <div
+                    class="mb-0 text-start last-msg-container"
+                    [ngClass]="
+                      mess.newMessageNumber ? 'new-mess-text' : 'text-secondary'
+                    "
+                    *ngIf="
+                      lastMsgWithFr?.message.senderId === mess.friendId ||
+                      lastMsgWithFr?.participants[1] === mess.friendId
+                    "
+                  >
+                    {{
+                      lastMsgWithFr?.replyMessage
+                        ? lastMsgWithFr?.replyMessage.message
+                        : lastMsgWithFr?.message.message
+                    }}
+                  </div>
+                </ng-container>
+              </div>
+              <!-- <h3 class="text-end ">X</h3> -->
+              <button
+                [ngStyle]="{ color: !isMessMenu ? 'transparent' : 'black' }"
+                #menuTrigger="matMenuTrigger"
+                [matMenuTriggerFor]="menu"
+                matIconButton
+                class="mess-menu-btn"
+              >
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #menu="matMenu">
+                <button (click)="cancelArchFriend(i, mess)" mat-menu-item>
+                  <mat-icon>archive</mat-icon>
+                  <span>Archivalas visszavonasa</span>
+                </button>
+                <button mat-menu-item disabled>
+                  <mat-icon>remove</mat-icon>
+                  <span>Torles(Hamarosan)</span>
+                </button>
+              </mat-menu>
+            </div>
+            <div
+              *ngIf="mess.online && mess.visibility"
+              class="card-text online-dot-container"
+            >
+              <div class="online-dot"></div>
+              <div class="online-text">Elérhető</div>
+            </div>
+            <div
+              *ngIf="!mess.online"
+              class="card-text last-time-online-container"
+            >
+              <ng-container *ngIf="!mess.newMessageNumber && mess.visibility">
+                <p class="mt-1 text-dark mb-0">
+                  <b>Utoljára elérhető:</b>
+                </p>
+                <p class="mb-0 my-0 text-success">
+                  {{ mess.lastTimeOnline }}
+                </p>
+              </ng-container>
+            </div>
+          </div>
+          <div class="card-footer">
+            <button
+              (click)="getMessageUser(mess)"
+              mat-raised-button
+              class="btn btn-sm ms-2 blue msg-button"
+              type="button"
+            >
+              Üzenetek
+              <mat-icon> chat </mat-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+  }
+</div>

@@ -61,6 +61,7 @@ export class BaseService {
   haventSeenMsgsArr: BehaviorSubject<any> = new BehaviorSubject([]);
   messageTransferSub: BehaviorSubject<boolean> = new BehaviorSubject(false);
   chosenMsgThemeSubject: BehaviorSubject<any> = new BehaviorSubject('');
+  isShowMessagesSubject: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
   userKeySubject: BehaviorSubject<any> = new BehaviorSubject('');
   userKeySubjectSubscription!: Subscription;
@@ -503,6 +504,16 @@ export class BaseService {
 
   deleteMessage(friendKey: string, userKey: string, chatKey: string) {
     return this.refChats.remove(`/${friendKey}/${userKey}/${chatKey}`);
+  }
+
+  deleteAllMsgsWithFriend(userKey: string, friendKey: string) {
+    const userChats = this.realTimeDatabase.list(
+      `chats/${userKey}/${friendKey}`
+    );
+    const friendChats = this.realTimeDatabase.list(
+      `chats/${friendKey}/${userKey}`
+    );
+    return Promise.all([userChats.remove(), friendChats.remove()]);
   }
 
   deleteMessages() {

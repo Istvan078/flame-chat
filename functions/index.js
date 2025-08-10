@@ -8,6 +8,7 @@ import * as forecast from './utils/forecast.js';
 import geocode from './utils/geocode.js';
 import fs from 'fs';
 import webpush from 'web-push';
+import cors from 'cors';
 const serviceAccount = JSON.parse(
   fs.readFileSync(environments.SERVICE_ACCOUNT_ROUTE, 'utf-8')
 );
@@ -21,6 +22,7 @@ const app = express();
 
 app.use(bodyParser.json());
 app.use(fileParser);
+app.use(cors({ origin: true }));
 
 const verifyToken = (req, res, next) => {
   const idToken = req.headers.authorization;
@@ -37,6 +39,28 @@ const verifyToken = (req, res, next) => {
       res.sendStatus(401);
     });
 };
+
+app.post('/copySzimiRec', async (req, res) => {
+  try {
+    const bucket = admin.storage().bucket();
+    const sourcePath = req.body.sourcePath; // pl. szimi-audio-saved/xy.m4a
+    const destinationPath = req.body.destinationPath; // pl. uj-mappa/xy.m4a
+    const file = await bucket
+      .file(sourcePath)
+      .copy(bucket.file(destinationPath));
+    await admin.storage().bucket().file(sourcePath).delete();
+    res.json({
+      message:
+        'Fajl sikeres masolasa ide: ' +
+        destinationPath +
+        ', Torolve: ' +
+        sourcePath,
+      file,
+    });
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+});
 
 app.post('/setCustomClaims', verifyToken, (req, res) => {
   const { uid, claims } = req.body;
@@ -183,12 +207,6 @@ app.route('/message').post((req, res) => {
           },
         },
       },
-      actions: [
-        {
-          action: 'navigate',
-          title: 'Elolvasom',
-        },
-      ],
     },
   };
 

@@ -132,6 +132,7 @@ export class MyPostsComponent {
     this.postSharedWithMe = await this.firestoreService.getMyPosts(
       this.userProfile.key
     );
+    console.log(this.postSharedWithMe);
 
     this.myPostsArr.forEach((myPost, i) => {
       const postSharedWithMe = this.postSharedWithMe.find(

@@ -29,8 +29,10 @@ export class UtilityService {
   friendsUids: string[] = [];
   signedAsFriendUids: string[] = [];
   userProfilesUidsArr: string[] = [];
+  archFriendsUidsArr: string[] = [];
   loadingSubject: Subject<any> = new Subject();
   msgThemes: any[] = [];
+  abortController = new AbortController();
   postsFormData: Form[] = [
     {
       label: 'Név',
@@ -50,6 +52,7 @@ export class UtilityService {
     },
   ];
   isUserOnlineNow: boolean = true;
+  archivedFriends: any[] = [];
 
   // ESEMÉNYFIGYELŐK //
   private isOnlineHandler: () => void;
@@ -98,11 +101,17 @@ export class UtilityService {
         }
         // //////////////////// LEÍRÁS ///////////////////
         // // baratok kiszűrése //
+        const now = Date.now(); // mostani idő milliszekundumban
+        const fiveMinutesAgo = now - 5 * 60 * 1000;
         if (fr.confirmed || fr.areFriends !== false) {
           (fr.displayName = friendProf?.displayName),
             (fr.profilePicture = friendProf?.profilePicture),
-            (fr.email = friendProf?.email),
-            (fr.online = friendProf?.online);
+            (fr.email = friendProf?.email);
+          if (friendProf?.lastTimeOnline)
+            fr.online =
+              friendProf?.lastTimeOnline < fiveMinutesAgo
+                ? false
+                : friendProf?.online;
           fr.lastTimeOnlineUnix = friendProf?.lastTimeOnline
             ? (fr.lastTimeOnlineUnix = friendProf?.lastTimeOnline)
             : 0;
@@ -111,8 +120,7 @@ export class UtilityService {
         } else this.signedAsFriendUids.push(fr.friendId);
         return fr;
       })
-      .filter(fr => fr?.confirmed !== false && fr.areFriends !== false)
-      .sort((a: any, b: any) => b.lastTimeOnlineUnix - a.lastTimeOnlineUnix);
+      .filter(fr => fr?.confirmed !== false && fr.areFriends !== false);
   }
 
   setUserNotFriendsArr() {
@@ -200,27 +208,46 @@ export class UtilityService {
       ...friendNewMessageFrom,
       ...(this.userFriends || ''),
     ];
-    console.log(friendNewMessageFrom);
     // objektum ami segít kiszűrni a duplikációkat a tömbből
     const seenFriendIds: any = {};
     const friendsWithNewMess: any[] = [];
     showFriendsMess = allFriendsAndNMessFromArr.filter((fr, i) => {
-      if (fr?.newMessageNumber) {
+      if (
+        (fr?.archived &&
+          !this.archFriendsUidsArr.includes(fr.friendId) &&
+          !fr?.newMessageNumber) ||
+        (fr?.archivedAftNewMess &&
+          !this.archFriendsUidsArr.includes(fr.friendId))
+      ) {
+        this.archivedFriends.push(fr);
+        this.archFriendsUidsArr.push(fr.friendId);
+      }
+      this.forUserSubject.archivedFriends = this.archivedFriends;
+      if (fr?.newMessageNumber && !fr?.archivedAftNewMess && !fr?.archived) {
         friendsWithNewMess.push(fr);
       }
       // Ha ez az első alkalom, hogy találkozunk ezzel a friendId-val, akkor visszatérünk igazzal, hogy a barát objektumot a szűrt tömbbe tegyük
-      if (!seenFriendIds[fr.friendId]) {
+      if (
+        !seenFriendIds[fr.friendId] &&
+        !this.archFriendsUidsArr.includes(fr.friendId)
+      ) {
         seenFriendIds[fr.friendId] = true;
         return true;
       }
       return false;
     });
     friendsWithNewMess.sort((a, b) => b?.newMessSentTime - a?.newMessSentTime);
-    console.log(showFriendsMess);
-    showFriendsMess = showFriendsMess.filter(fr => !fr.newMessageNumber);
+    const didntSendMsgToMeArr = showFriendsMess
+      .filter(fr => !fr.newMessageNumber && !fr.newMessSentTime)
+      .sort((a, b) => b.lastTimeOnlineUnix - a.lastTimeOnlineUnix);
+    const sentMsgToMeArr = showFriendsMess
+      .filter(mess => mess?.newMessSentTime && !mess?.newMessageNumber)
+      .sort((a, b) => b.newMessSentTime - a.newMessSentTime);
+    showFriendsMess = [...sentMsgToMeArr, ...didntSendMsgToMeArr];
     showFriendsMess.unshift(...friendsWithNewMess);
     console.log('***ISMERŐS ÜZENETFEJEK SZŰRVE(FSM)***');
-    console.log(showFriendsMess);
+    if (this.forUserSubject.archivedFriends?.length)
+      this.subjectValueTransfer(this.forUserSubject, this.userSubject);
     return showFriendsMess;
   }
 
@@ -230,54 +257,85 @@ export class UtilityService {
 
   async handleOnline() {
     if (!this.isUserOnlineNow) {
-      await this.base.updateUserData({ online: true }, this.userProfile?.key);
+      await this.base.updateUserData(
+        { online: true, lastTimeOnline: new Date().getTime() },
+        this.userProfile?.key
+      );
       this.isUserOnlineNow = true;
     }
   }
 
   async handleOffline() {
     if (this.isUserOnlineNow) {
-      await this.base.updateUserData({ online: false }, this.userProfile?.key);
       await this.base.updateUserData(
-        { lastTimeOnline: new Date().getTime() },
+        { online: false, lastTimeOnline: new Date().getTime() },
         this.userProfile?.key
       );
       this.isUserOnlineNow = false;
     }
   }
 
-  async isUserOnline() {
+  // async isUserOnline() {
+  //   // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
+  //   window.addEventListener('click', this.isOnlineHandler);
+  //   window.addEventListener('focus', this.isOnlineHandler);
+  //   // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
+  //   window.addEventListener('blur', this.isOfflineHandler);
+  //   // HA TOBB MINT 5 PERCE VOLT ELERHETO FRISSITEM OFFLINE-RA AZ ALLAPOTAT
+  //   const loop = async () => {
+  //     if (this.isUserOnlineNow) {
+  //       try {
+  //         const now = Date.now();
+  //         const fiveMinutesAgo = now - 5 * 60 * 1000;
+  //         console.log(`****isUserOnline?****`);
+
+  //         if (
+  //           this.userProfile?.lastTimeOnline &&
+  //           this.userProfile.lastTimeOnline < fiveMinutesAgo
+  //         ) {
+  //           await this.base.updateUserData(
+  //             { online: false },
+  //             this.userProfile?.key
+  //           );
+  //           this.isUserOnlineNow = false;
+  //         }
+  //       } catch (error) {
+  //         console.error('isUserOnline error', error);
+  //       }
+  //     }
+  //     setTimeout(loop, 10000);
+  //   };
+  //   loop();
+  // }
+
+  isUserOnline() {
     // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
     window.addEventListener('click', this.isOnlineHandler);
     window.addEventListener('focus', this.isOnlineHandler);
     // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
     window.addEventListener('blur', this.isOfflineHandler);
-    setInterval(async () => {
-      console.log(`LEFUTSZ_E???`);
-
-      if (this.isUserOnlineNow) {
-        const minutes = new Date().getMinutes();
-        const lastTimeOnline = new Date(
-          this.userProfile?.lastTimeOnline!
-        ).getMinutes();
-        if (minutes - lastTimeOnline >= 3) {
-          await this.base.updateUserData(
-            { online: false },
-            this.userProfile?.key
-          );
-          console.log('VOLT ELÉRHETŐ');
-          this.isUserOnlineNow = false;
-        }
-        // await this.base.updateUserData(
-        //   { online: false },
-        //   this.userProfile?.key
-        // );
-        // await this.base.updateUserData(
-        //   { lastTimeOnline: new Date().getTime() },
-        //   this.userProfile?.key
-        // );
+    // HA TOBB MINT 5 PERCE VOLT ELERHETO FRISSITEM OFFLINE-RA AZ ALLAPOTAT
+    const intervalId = setInterval(async () => {
+      if (this.abortController.signal.aborted) {
+        clearInterval(intervalId);
+        console.log('ABORTCONTROLLER SIGNAL ABORTED');
+        return;
       }
-    }, 10 * 1000);
+      const now = Date.now();
+      const fiveMinutesAgo = now - 5 * 60 * 1000;
+      console.log(`****isUserOnline?****`);
+
+      if (
+        this.userProfile?.lastTimeOnline &&
+        this.userProfile?.lastTimeOnline < fiveMinutesAgo
+      ) {
+        await this.base.updateUserData(
+          { online: false },
+          this.userProfile?.key
+        );
+        this.isUserOnlineNow = false;
+      }
+    }, 10000);
   }
 
   //////////////// KÉPÚJRAMÉRETEZŐ FUNKCIÓ ////////////////////

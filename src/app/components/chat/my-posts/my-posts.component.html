@@ -94,7 +94,10 @@
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
         <ng-container *ngFor="let sWithMe of postSharedWithMe"
-          ><div class="mb-4 space-div" *ngIf="myPost.id === sWithMe.fromPostId">
+          ><div
+            class="mb-4 space-div"
+            *ngIf="myPost.id === sWithMe.fromPostId && sWithMe?.sharedWithMeBy"
+          >
             <span class="shared-with-me-by section-visible section-1"
               ><mat-icon class="align-middle">share</mat-icon> Megosztotta:
               {{ sWithMe.sharedWithMeBy }}</span

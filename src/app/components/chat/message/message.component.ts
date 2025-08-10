@@ -6,7 +6,15 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
@@ -76,6 +84,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   @Input() textMessages: any;
   @Input() urlText: any[] = [];
   @Input() messageButtonClicked: boolean = false;
+
   // ANIMÁCIÓVAL KAPCSOLATOS //
   chatAnimationState: string = 'in-2';
 
@@ -88,6 +97,8 @@ export class MessageComponent implements OnInit, OnDestroy {
   reactions: any[] = [];
   lastMsgPos: any;
   msgThemes: any[] = [];
+  chosenMsgTheme: any;
+  updateFrsFrObj: any = {};
 
   // FELHASZNÁLÓ //
   selectedFriendId?: string;
@@ -142,6 +153,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
+    this.base.isShowMessagesSubject.next(true);
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
       obj => {
         if (obj.allChatsArray) this.allChatsArray = obj.allChatsArray;
@@ -196,7 +208,6 @@ export class MessageComponent implements OnInit, OnDestroy {
               .subscribe(async promise => {
                 this.allChatsArray = await promise;
                 this.getVisibleMessagesForSelectedFriend();
-                console.log(this.allChatsArray);
                 sub.unsubscribe();
               });
             this.base.messageTransferSub.next(false);
@@ -240,6 +251,7 @@ export class MessageComponent implements OnInit, OnDestroy {
             this.reactions = this.utilService.setReactionsArr();
             this.msgThemes = this.utilService.getMsgThemes();
             this.setMsgTheme();
+            this.getFriendOnlineState();
             this.userProfilesSub.unsubscribe();
           });
         }
@@ -248,20 +260,31 @@ export class MessageComponent implements OnInit, OnDestroy {
     );
   }
 
+  scrollToLastMsg() {
+    const outletContainer = document.querySelector('.outlet-cont');
+    outletContainer?.scrollTo(0, 0);
+  }
+
   animateMessages() {
     this.chatAnimationState =
       this.chatAnimationState === 'in-2' ? 'normal' : 'normal';
   }
-
   setMsgTheme() {
     const friend = this.userFriends.find(
       fr => this.selectedFriendId === fr.friendId
     );
+    this.chosenMsgTheme = (friend as any).chosenTheme;
     this.base.chosenMsgThemeSubject.next((friend as any).chosenTheme);
   }
 
   async showFriendsProfPics() {
     await this.base.showProfPics(this.selectedFriend.email);
+  }
+
+  getFriendOnlineState() {
+    this.selectedFriend.lastTimeOnline = this.utilService.calcMinutesPassed(
+      this.selectedFriend.lastTimeOnline
+    );
   }
 
   async setReactionForMsg(msg: Chat, reac: any) {
@@ -279,52 +302,61 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   addMessage() {
-    new Promise((res, rej) => {
-      this.setMessage(this.message as any, false);
-      res('Üzenet tulajdonságai beállítva, üzenet objektum lemásolva.');
-    }).then(res => {
-      const checkNewMessNumInt = setInterval(() => {
-        if (this.updateFrsFrObj?.newMessageNumber) {
-          this.sendMessage(this.message as Chat & ReplyMessage);
-          this.base
-            .updateMessage(
-              this.message['key'],
-              this.message,
-              this.userProfile.key,
-              this.selectedFriend.key
-            )
-            .then(() => {
-              if (this.filesArr.length) {
-                const dataForFiles = {
-                  files: this.filesArr,
-                  chatId: this.message.key,
-                  senderId: this.userProfile.uid,
-                  receiverId: this.selectedFriendId,
-                };
-                this.firestore
-                  .addFilesToChat(dataForFiles, this.userProfile.key as string)
-                  .then(() => {
-                    this.firestore.filesSubject.unsubscribe();
-                    this.firestore
-                      .addFilesToChat(
-                        dataForFiles,
-                        this.selectedFriend?.key as string
-                      )
-                      .then(() => {
-                        this.firestore.filesSubject = new Subject();
-                        this.filesArr = [];
-                      });
-                  });
-              }
-              this.updateChatsAndVisMessArr(this.message);
-              this.sendMessNotifications(this.message);
-              this.message = new Chat();
-              console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
-            });
-          clearInterval(checkNewMessNumInt);
-        }
-      }, 200);
-    });
+    if (
+      this.message.message.message ||
+      this.filesArr?.length ||
+      this.message.message.voiceMessage
+    )
+      new Promise((res, rej) => {
+        this.setMessage(this.message as any, false);
+        res('Üzenet tulajdonságai beállítva, üzenet objektum lemásolva.');
+      }).then(res => {
+        const checkNewMessNumInt = setInterval(() => {
+          if (this.updateFrsFrObj?.newMessageNumber) {
+            this.sendMessage(this.message as Chat & ReplyMessage);
+            this.base
+              .updateMessage(
+                this.message['key'],
+                this.message,
+                this.userProfile.key,
+                this.selectedFriend.key
+              )
+              .then(() => {
+                if (this.filesArr.length) {
+                  const dataForFiles = {
+                    files: this.filesArr,
+                    chatId: this.message.key,
+                    senderId: this.userProfile.uid,
+                    receiverId: this.selectedFriendId,
+                  };
+                  this.firestore
+                    .addFilesToChat(
+                      dataForFiles,
+                      this.userProfile.key as string
+                    )
+                    .then(() => {
+                      this.firestore.filesSubject.unsubscribe();
+                      this.firestore
+                        .addFilesToChat(
+                          dataForFiles,
+                          this.selectedFriend?.key as string
+                        )
+                        .then(() => {
+                          this.firestore.filesSubject = new Subject();
+                          this.filesArr = [];
+                        });
+                    });
+                }
+                this.updateChatsAndVisMessArr(this.message);
+                this.sendMessNotifications(this.message);
+                this.scrollToLastMsg();
+                this.message = new Chat();
+                console.log(res, 'Sikeres üzenetfelvitel az adatbázisba.');
+              });
+            clearInterval(checkNewMessNumInt);
+          }
+        }, 200);
+      });
   }
 
   async replyMessage(mess: Chat & ReplyMessage) {
@@ -359,12 +391,12 @@ export class MessageComponent implements OnInit, OnDestroy {
         );
         this.updateChatsAndVisMessArr(reply);
         this.sendMessNotifications(reply);
+        this.scrollToLastMsg();
         replDiagSub.unsubscribe();
       }
       replDiagSub.unsubscribe();
     });
   }
-  updateFrsFrObj: any = {};
   async setMessage(
     message: Chat & ReplyMessage,
     isEmailOn: boolean,
@@ -388,7 +420,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       const lastMsgKeyArr = this.visibleMessages[0].key.split('_');
       newMsgNum = +lastMsgKeyArr[1] + 1;
     } else newMsgNum = 1;
-    console.log(newMsgNum);
     newMsgNum.toString();
     message._setKey = this.userProfile.uid + '_' + newMsgNum;
     message.participants[1] = this.selectedFriendId!;
@@ -416,7 +447,6 @@ export class MessageComponent implements OnInit, OnDestroy {
       if (meForFr?.messaging) this.updateFrsFrObj.messaging = meForFr.messaging;
       this.updateFrsFrObj.newMessSentTime = meForFr.newMessSentTime =
         new Date().getTime();
-      console.log(meForFr);
       uProfsSub.unsubscribe();
     });
 
@@ -743,6 +773,7 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.audioStream.getTracks().forEach(track => {
       track.stop();
     });
+    this.audioStream = undefined as any;
   }
 
   selectedFs($event: any) {
@@ -758,24 +789,23 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.addFilesForMessage(file, arr);
       }
 
-      console.log(file);
       const videoFile: any = this.uploadVideo(this.selectedFiles);
       if (videoFile[0]?.size) {
         this.addFilesForMessage(videoFile[0], arr);
       }
       if (!file?.name?.includes('.mp4')) {
-        const fileBlob = await this.utilService.resizeImage(
-          file,
-          768,
-          480,
-          0.8
-        );
+        let fileBlob: any;
+        if (
+          file?.name?.includes('Screenshot') ||
+          file?.name?.includes('screenshot')
+        )
+          fileBlob = await this.utilService.resizeImage(file, 600, 330, 1);
+        fileBlob = await this.utilService.resizeImage(file, 768, 480, 0.8);
         const fileBlobArr = [fileBlob];
         const newFile = new File(fileBlobArr, file.name, {
           type: fileBlob.type,
         });
         this.addFilesForMessage(newFile, arr);
-        console.log(newFile);
       }
     });
 
@@ -1036,6 +1066,7 @@ export class MessageComponent implements OnInit, OnDestroy {
           }
         }
         this.getVisibleMessagesForSelectedFriend();
+        this.scrollToLastMsg();
       });
   }
 
@@ -1057,13 +1088,14 @@ export class MessageComponent implements OnInit, OnDestroy {
   fileModalOpen(picturesArr: [], i: number) {
     const modalRef = this.ngbModal.open(FilesModalComponent, {
       centered: true,
+      fullscreen: true,
     });
     modalRef.componentInstance.picturesArr = picturesArr;
     modalRef.componentInstance.viewIndex = i;
   }
 
   chooseMsgTheme(theme: any) {
-    console.log(this.userFriends);
+    this.chosenMsgTheme = theme.url;
     const selectedTheme = { chosenTheme: theme.url };
     this.base.chosenMsgThemeSubject.next(theme.url);
     this.base.updateFriend(
@@ -1074,6 +1106,7 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.base.isShowMessagesSubject.next(false);
     if (this.getAllMessagesSubjectSub)
       this.getAllMessagesSubjectSub.unsubscribe();
     if (this.messSubscription) {

@@ -29,6 +29,7 @@ export interface Friends {
   newMessageNumber?: number;
   messaging?: boolean;
   newMessSentTime?: number;
+  archived?: boolean;
 }
 
 export class ForUserSubject {
@@ -37,6 +38,7 @@ export class ForUserSubject {
   userFriends: any[] = [];
   userNotFriends: any[] = [];
   notConfirmedMeUsers: any[] = [];
+  archivedFriends: any[] = [];
   subscription: Subscription = Subscription.EMPTY;
 }
 

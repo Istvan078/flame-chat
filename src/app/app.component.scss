@@ -1,13 +1,24 @@
 .main-img {
-  position: relative;
-  z-index: -1;
-}
-img {
-  z-index: -1;
   position: fixed;
   top: 0;
-  opacity: 0.5;
+  z-index: -1;
+  background-image: linear-gradient(
+    to top,
+    rgba(235, 234, 237, 0.7),
+    rgba(233, 234, 237, 0.7),
+    rgba(206, 197, 197, 0.7)
+  );
+  width: 100%;
+  height: 100%;
 }
-// .outlet-container{
-//     margin-top: 90px;
+// img {
+//   z-index: -1;
+//   position: fixed;
+//   top: 0;
+//   opacity: 0.5;
 // }
+.outlet-cont {
+  width: 100% !important;
+  max-height: 88vh !important;
+  overflow: auto !important;
+}

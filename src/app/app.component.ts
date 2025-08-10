@@ -20,8 +20,10 @@ import { UtilityService } from './services/utility.service';
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Flame Chat';
   routerOutletOff: boolean = false;
+  isShowMessages: boolean = false;
   routerOutletOffSub!: Subscription;
   chosenMsgThemeSub: Subscription = Subscription.EMPTY;
+  isShowMsgsSubscription: Subscription = Subscription.EMPTY;
   chosenMsgTheme: any;
   private matDialog = inject(MatDialog);
   private onDestroyRef = inject(DestroyRef);
@@ -41,6 +43,11 @@ export class AppComponent implements OnInit, OnDestroy {
     this.chosenMsgThemeSub = this.base.chosenMsgThemeSubject.subscribe(
       (chmsgth: any) => {
         this.chosenMsgTheme = chmsgth;
+      }
+    );
+    this.isShowMsgsSubscription = this.base.isShowMessagesSubject.subscribe(
+      (isShowMessages: boolean) => {
+        this.isShowMessages = isShowMessages;
       }
     );
   }
@@ -80,6 +87,7 @@ export class AppComponent implements OnInit, OnDestroy {
   };
 
   ngOnDestroy(): void {
-    this.routerOutletOffSub.unsubscribe();
+    if (this.routerOutletOffSub) this.routerOutletOffSub.unsubscribe();
+    if (this.isShowMsgsSubscription) this.isShowMsgsSubscription.unsubscribe();
   }
 }

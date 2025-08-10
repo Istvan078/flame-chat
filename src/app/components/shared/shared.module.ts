@@ -19,6 +19,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
@@ -61,6 +62,7 @@ import { Environments } from 'src/app/environments';
     MatProgressBarModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatProgressSpinnerModule,
     MatExpansionModule,
     MatDialogModule,
     MatPaginatorModule,
@@ -96,6 +98,7 @@ import { Environments } from 'src/app/environments';
     MatCheckboxModule,
     MatInputModule,
     MatTooltipModule,
+    MatProgressSpinnerModule,
     MatPaginatorModule,
     MatSelectModule,
     MatTableModule,

@@ -13,7 +13,6 @@ import {
 } from '@ng-bootstrap/ng-bootstrap';
 
 import { AppComponent } from './app.component';
-import { HomeComponent } from './components/home/home.component';
 import { NavComponent } from './components/nav/nav.component';
 import { SignupComponent } from './components/signup/signup.component';
 import { ClassPipe } from './pipes/class.pipe';
@@ -31,11 +30,11 @@ import { ServiceWorkerModule } from '@angular/service-worker';
 import { AdminComponent } from './components/admin/admin.component';
 import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
 import { LocationComponent } from './components/users/location/location.component';
+import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomeComponent,
     NavComponent,
     SignupComponent,
     ClassPipe,
@@ -49,6 +48,7 @@ import { LocationComponent } from './components/users/location/location.componen
     FilesModalComponent,
     MatModalComponent,
     AdminComponent,
+    BottomNavComponent,
   ],
   bootstrap: [AppComponent],
   imports: [

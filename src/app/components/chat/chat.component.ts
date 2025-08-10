@@ -1,4 +1,11 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { ForUserSubject, Friends, UserClass } from 'src/app/models/user.model';
@@ -86,9 +93,10 @@ import { FilesModalComponent } from '../modals/files-modal/files-modal.component
     ]),
   ],
 })
-export class ChatComponent implements OnInit, OnDestroy {
+export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(MatAccordion) accordion!: MatAccordion;
   @ViewChild('slideToggle') slideToggle!: MatSlideToggle;
+  @ViewChild('suggViewport') suggViewport!: ElementRef<HTMLDivElement>;
 
   // ANIMÁCIÓVAL KAPCSOLATOS //
   chatAnimationState: string = 'normal';
@@ -106,6 +114,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   showFriendsToChoose: boolean = false;
   friendsOn: boolean = false;
   isUserOnlineNow: boolean = false;
+  canScrollLeft = false;
+  canScrollRight = true;
 
   // KERESÉS //
   userSearched: string = '';
@@ -118,6 +128,19 @@ export class ChatComponent implements OnInit, OnDestroy {
   subscribedForNotifications: boolean = false;
   haventSeenMessagesArr: any[] = [];
   newMessageNumber: number = 0;
+
+  isMyPostsOpen = false;
+  isFeedOpen = false;
+  isFriendsOpen = false;
+
+  openMainMenu(): void {
+    // TODO: ide kötheted be a side-nav/menu nyitását
+  }
+
+  openProfile(): void {
+    // TODO: ide teheted a profil megnyitását (pl. this.toUserProfile())
+    // this.toUserProfile();
+  }
 
   // POSZTOKKAL KAPCSOLATOS //
   postsNotificationNumber: number = 0;
@@ -218,7 +241,7 @@ export class ChatComponent implements OnInit, OnDestroy {
               !this.userProfiles.length) ||
             this.authNull === null
           )
-            if (user.uid) {
+            if (user?.uid) {
               const profsObs = await this.utilService.getUserProfiles();
               this.allUserDetailsSub = profsObs.subscribe(
                 (allUserDetails: any) => {
@@ -260,8 +283,8 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         });
     }).then(res => {
-      if (this.userProfile.displayName)
-        this.isSubscribedForNotSub = this.isSubscribedForNotifications()!;
+      if (this.userProfile?.uid)
+        this.isSubscribedForNotSub = this.isSubscribedForNotifications();
       if (this.isSubscribedForNotSub) this.isSubscribedForNotSub.unsubscribe();
       // baratok listajanak lekerese
       if (!this.userProfile?.uid) return;
@@ -396,6 +419,10 @@ export class ChatComponent implements OnInit, OnDestroy {
           });
         });
     }
+  }
+
+  ngAfterViewInit() {
+    setTimeout(() => this.updateSuggNav());
   }
 
   async showProfPics(friend: any) {
@@ -537,6 +564,49 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.base.updateUserData({ profilePicture: uP.profilePicture }, uP.key);
       }
     });
+  }
+
+  scrollToContentArea() {
+    const contentContainer =
+      document.getElementsByClassName('scroll-to-content');
+    const outletContainer = document.querySelector('.outlet-cont');
+    const interval = setInterval(() => {
+      if (contentContainer) {
+        const contentContainerPosition = contentContainer
+          .item(0)
+          ?.getBoundingClientRect().top;
+        outletContainer?.scrollTo({
+          top: contentContainerPosition,
+          behavior: 'smooth',
+        });
+        clearInterval(interval);
+      }
+    }, 200);
+  }
+
+  trackByUid = (_: number, it: any) => it?.uid || it?.id || it?.email;
+
+  scrollSugg(dir: 'left' | 'right') {
+    const el = this.suggViewport?.nativeElement;
+    if (!el) return;
+    const card = el.querySelector('.sugg-card') as HTMLElement | null;
+    const track = el.querySelector('.sugg-track') as HTMLElement | null;
+    const gap = track
+      ? parseInt(getComputedStyle(track).columnGap || '8', 10)
+      : 8;
+    const step = (card?.offsetWidth || 140) + gap;
+    el.scrollBy({ left: dir === 'right' ? step : -step, behavior: 'smooth' });
+    setTimeout(() => this.updateSuggNav(), 260);
+  }
+
+  updateSuggNav() {
+    const el = this.suggViewport?.nativeElement;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth - 1;
+    this.canScrollLeft = el.scrollLeft > 1;
+    this.canScrollRight = el.scrollLeft < max;
+    el.classList.toggle('at-start', !this.canScrollLeft);
+    el.classList.toggle('at-end', !this.canScrollRight);
   }
 
   isSubscribedForNotifications() {
@@ -850,5 +920,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (this.seenMeSub) this.seenMeSub.unsubscribe();
     if (this.getMyPostsSub) this.getMyPostsSub.unsubscribe();
     if (this.refreshMyPostsSub) this.refreshMyPostsSub.unsubscribe();
+    if (this.isSubscribedForNotSub) this.isSubscribedForNotSub.unsubscribe();
   }
 }
