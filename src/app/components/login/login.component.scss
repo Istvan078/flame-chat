@@ -1,18 +1,10 @@
-.container-0 {
+.main-container {
   display: flex;
   justify-content: center;
-  h2 {
-    margin-top: 50px;
-    width: max-content;
-    padding: 10px;
-    border: 2px solid rgb(128, 128, 128);
-    background-color: rgba(128, 128, 128, 0.5);
-  }
-  h2:hover {
-    color: white;
-    background-color: rgba(71, 70, 70, 0.5);
-    cursor: help;
-  }
+  align-items: center;
+  height: 90vh;
+  padding: 0 20px;
+  background-color: rgb(74, 74, 207, 0.5);
 }
 
 form {

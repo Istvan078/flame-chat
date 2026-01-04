@@ -4,6 +4,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Environments } from 'src/app/environments';
 import { MyPost, Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
+import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { ToastService } from 'src/app/services/toast.service';
@@ -24,10 +25,11 @@ export class ModalComponent implements OnInit {
     { value: 'news', label: 'Hírfolyam' },
     { value: 'friend-profile', label: 'Ismerős profiljában' },
   ];
+  profChange = false;
   @Input() name: string = '';
   @Input() friendName: string = '';
   @Input() userName: string = '';
-  @Input() user!: UserClass;
+  @Input() user: UserClass = new UserClass();
   @Input() userFriends?: Friends[];
   @Input() uid: string = '';
   @Input() userEmail: string = '';
@@ -36,12 +38,14 @@ export class ModalComponent implements OnInit {
   @Input() isSubscribedToNotif: boolean = true;
   @Input() error: any;
   @Input() isWantToUnsub: boolean = false;
+  @Input() userOptionsMenu: any;
 
   constructor(
     private http: HttpClient,
     private firestoreService: FirestoreService,
     private toastService: ToastService,
-    private baseService: BaseService
+    private baseService: BaseService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -59,6 +63,16 @@ export class ModalComponent implements OnInit {
     this.isSelectFriend = false;
     this.selectedFriend = friend;
     this.selectedValue = 'friend';
+  }
+
+  changeProfile() {
+    this.profChange = true;
+  }
+
+  signOut() {
+    this.authService.signOut();
+    this.user = new UserClass();
+    this.back();
   }
 
   backToOptions() {

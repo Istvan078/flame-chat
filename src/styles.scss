@@ -3,65 +3,16 @@
 /* Importing Bootstrap SCSS file. */
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
-html,
+
+html {
+  font-size: 62.5%;
+  box-sizing: border-box;
+}
+
 body {
-  height: 100%;
   background: #eef2f7;
   color: #111;
-}
-body {
-  margin: 0;
   font-family: Roboto, 'Helvetica Neue', sans-serif;
-}
-/* Mindig világos témát használjunk, OS dark mode-tól függetlenül */
-:root {
-  color-scheme: light;
-}
-/* Bármikor dark mode-ban is fixen világos kinézet legyen */
-@media (prefers-color-scheme: dark) {
-  html,
-  body {
-    color-scheme: light !important;
-    background-color: #eef2f7 !important; /* világos háttér */
-    color: #111 !important; /* fekete szöveg */
-  }
-
-  /* Fő felületek, amiket a böngésző gyakran sötétít */
-  .message-page,
-  .chat-appbar,
-  .composer,
-  .text,
-  .mat-mdc-menu-panel,
-  .mat-mdc-dialog-surface,
-  .mat-mdc-card,
-  .mat-mdc-form-field-focus-overlay {
-    background: #fff !important;
-    color: #111 !important;
-    filter: none !important; /* ha erőből szűrőt tenne rá */
-  }
-  /* Képeket/háttérképeket se sötétítse/el ne keverje */
-  img,
-  video,
-  canvas {
-    filter: none !important;
-    mix-blend-mode: normal !important;
-  }
-  .mat-mdc-menu-surface,
-  .mat-mdc-dialog-surface,
-  .mat-mdc-card,
-  .mat-mdc-select-panel,
-  .mat-mdc-form-field-focus-overlay,
-  .mat-mdc-snack-bar-container {
-    background: #fff !important;
-    color: #111 !important;
-    filter: none !important;
-  }
-  input,
-  textarea,
-  select,
-  button {
-    background: #fff !important;
-    color: #111 !important;
-    border-color: #ccc !important;
-  }
+  margin: 0;
+  padding: 0;
 }

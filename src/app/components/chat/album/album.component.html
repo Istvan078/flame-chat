@@ -1,90 +1,99 @@
-<div *ngIf="userProf.uid" class="row align-items-center">
-  <div class="col-xs-12 col-sm-12 col-md-1 col-lg-1 text-center">
-    <button
-      routerLink="/chat"
-      color="primary"
-      mat-raised-button
-      type="button"
-      class="green me-2 my-1"
-    >
-      <mat-icon> keyboard_backspace </mat-icon>
-      Vissza
-    </button>
-  </div>
-  <div class="col-xs-12 col-sm-12 col-md-11 col-lg-11">
-    <p class="text-center mb-0 text-success fw-bold">Képek feltöltése</p>
-    <div class="text-center">
+﻿<section *ngIf="userProf.uid" class="album-shell">
+  <mat-card class="album-card">
+    <mat-toolbar class="album-toolbar">
       <button
-        (click)="!uploadFinished ? addPictures() : ''"
-        class="me-2 mb-1 fileButton"
-        [ngClass]="[uploadFinished ? 'bg-primary' : 'bg-success']"
-        mat-raised-button
+        mat-icon-button
         type="button"
+        routerLink="/chat"
+        aria-label="Vissza a beszélgetéshez"
       >
-        <mat-icon class="align-middle">photos</mat-icon>
-        <label *ngIf="!uploadFinished" for="fileUpload">Képek feltöltése</label>
-        <label *ngIf="uploadFinished" for="picUploadInput"
-          >Képek kiválasztása</label
-        >
+        <mat-icon>keyboard_backspace</mat-icon>
+      </button>
+      <span class="album-toolbar__title">Fotóalbum</span>
+      <span class="album-toolbar__spacer"></span>
+    </mat-toolbar>
+
+    <div class="upload-panel">
+      <div
+        class="upload-dropzone"
+        (click)="onDropzoneClick()"
+        [class.upload-dropzone--completed]="uploadFinished"
+      >
+        <mat-icon class="upload-dropzone__icon">
+          {{ uploadFinished ? 'collections' : 'cloud_upload' }}
+        </mat-icon>
+        <div class="upload-dropzone__copy">
+          <h3>
+            {{ uploadFinished ? 'Új képek kiválasztása' : '' }}
+          </h3>
+          <p>
+            {{
+              uploadFinished
+                ? 'Tölts fel akár több fotót egyszerre.'
+                : 'Kattints a feltöltéshez.'
+            }}
+          </p>
+        </div>
         <input
           *ngIf="uploadFinished"
-          (change)="uploadFinished ? selectedFs($event) : ''"
+          #picUploadInput
           id="picUploadInput"
-          multiple
           type="file"
+          multiple
+          (change)="selectedFs($event)"
         />
-      </button>
-      <div *ngIf="percent && percent < 100" class="progress">
-        <div
-          class="progress-bar progress-bar-striped progress-bar-animated"
-          role="progressbar"
-          [attr.aria-valuenow]="percent"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          [ngStyle]="{ width: percent + '%' }"
-        >
-          {{ percent }}%
-        </div>
+      </div>
+
+      <mat-progress-bar
+        *ngIf="percent && percent < 100"
+        class="upload-progress"
+        mode="determinate"
+        color="accent"
+        [value]="percent"
+      ></mat-progress-bar>
+
+      <div *ngIf="percent === 100" class="upload-status">
+        <mat-icon>check_circle</mat-icon>
+        <span>Feltöltés kész!</span>
       </div>
     </div>
-  </div>
-  <div
-    *ngIf="userPictures.length"
-    class="col-12 d-flex flex-column justify-content-center align-items-center"
-  >
-    <mat-list>
-      <mat-list-item>
-        <div class="align-items-center justify-content-center" matListItemIcon>
-          <mat-icon class="folder text-success">folder_open</mat-icon>
+
+    <div *ngIf="userPictures.length" class="album-grid-container">
+      <div class="album-grid__header">
+        <mat-icon class="album-grid__icon">folder_open</mat-icon>
+        <div class="album-grid__meta">
+          <span class="album-grid__title">Feltöltött képek</span>
+          <small class="album-grid__subtitle">2025</small>
         </div>
-        <div class="fs-3 mt-2 fw-bold" matListItemTitle>Feltöltött képek</div>
-        <div class="fs-4 text-primary" matListItemLine>2024</div>
-      </mat-list-item>
-    </mat-list>
-    <mat-card class="bg-dark" *ngIf="userPictures.length">
-      <div class="d-flex justify-content-center flex-wrap">
-        <div *ngFor="let pic of userPictures; let i = index" class="my-2 mx-2">
-          <a (click)="viewPic(i)">
+      </div>
+
+      <div class="album-grid">
+        <div class="album-tile" *ngFor="let pic of userPictures; let i = index">
+          <button
+            type="button"
+            class="album-tile__preview"
+            (click)="viewPic(i)"
+          >
             <img
               [src]="pic.url"
-              alt=""
-              width="100px"
-              height="100px"
-              class="rounded"
+              [alt]="pic.name || 'Megosztott kép'"
+              loading="lazy"
             />
-          </a>
-          <div class="d-flex justify-content-center">
+          </button>
+          <div class="tile-actions">
             <button
-              (click)="deleteUserPicture(pic)"
-              class="btn btn-danger mt-1"
+              mat-icon-button
+              color="warn"
               type="button"
+              class="text-center"
+              aria-label="Kép törlése"
+              (click)="deleteUserPicture(pic)"
             >
-              Törlés
-              <mat-icon class="align-middle text-warning">delete</mat-icon>
+              <mat-icon>close</mat-icon>
             </button>
           </div>
         </div>
       </div>
-    </mat-card>
-  </div>
-</div>
+    </div>
+  </mat-card>
+</section>

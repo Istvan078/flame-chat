@@ -13,6 +13,7 @@
   </button>
 </div>
 
+<h2>Privat Posztjaim</h2>
 <ul>
   <li *ngFor="let pPost of myPrivatePosts">
     {{ pPost.fromPostId }}
@@ -131,8 +132,18 @@
   <div *ngFor="let sPost of sharedPosts" class="col">
     <mat-card>
       <mat-card-content>
-        {{ sPost.displayName }}
+        <h4>{{ sPost.displayName }}</h4>
+        @if(sPost.pictures?.length) { @for (pic of sPost.pictures; track $index)
+        {
+        <img width="250px" height="250px" [src]="pic.url" alt="Kep" />
+        } }
+        <p>{{ sPost.message }}</p>
       </mat-card-content>
+      <mat-card-actions>
+        <button (click)="deletePost(sPost)" mat-flat-button class="bg-danger">
+          Torles
+        </button>
+      </mat-card-actions>
     </mat-card>
   </div>
 </div>

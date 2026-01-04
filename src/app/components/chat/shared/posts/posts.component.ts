@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { SharedModule } from 'src/app/components/shared/shared.module';
 import { UserClass } from 'src/app/models/user.model';
 import { Form } from 'src/app/models/utils/form.model';
 import { UtilityService } from 'src/app/services/utility.service';
@@ -19,6 +20,8 @@ import { UtilityService } from 'src/app/services/utility.service';
   selector: "'app-posts', 'form[appPosts]'",
   templateUrl: './posts.component.html',
   styleUrl: './posts.component.scss',
+  standalone: true,
+  imports: [SharedModule],
 })
 export class PostsComponent implements OnInit, AfterContentInit {
   @ViewChild('ngcontent') ngcontent: any;

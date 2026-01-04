@@ -1,0 +1,21 @@
+@if(blockedPeople.length) {
+<h2 mat-dialog-title>Letiltott felhasznalok listaja</h2>
+@for(person of blockedPeople; track $index; let i = $index){
+<div class="d-flex align-items-center justify-content-center">
+  <mat-dialog-content class="py-0 pe-0">
+    {{ person.displayName }}
+  </mat-dialog-content>
+  <mat-dialog-actions class="py-0">
+    <button color="primary" mat-flat-button (click)="unblockPerson(person, i)">
+      <mat-icon>block</mat-icon>Tiltas feloldasa
+    </button>
+  </mat-dialog-actions>
+</div>
+
+}
+<mat-dialog-actions class="justify-content-end">
+  <button mat-dialog-close class="bg-success" mat-icon-button>
+    <mat-icon>done</mat-icon>
+  </button>
+</mat-dialog-actions>
+}

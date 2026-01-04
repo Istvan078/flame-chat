@@ -64,16 +64,19 @@
         color="accent"
         mat-flat-button
       >
-        Ismerősei
+        <mat-icon>diversity_3</mat-icon>Ismerősei
+      </button>
+      <button
+        *ngIf="!isBlocked"
+        (click)="blockPerson()"
+        class="me-1 bg-danger"
+        mat-flat-button
+      >
+        <mat-icon>block</mat-icon>Letiltas
       </button>
     </mat-card-actions>
   </mat-card>
 </div>
-
-<!-- <mat-form-field>
-        <mat-label>Filter</mat-label>
-        <input matInput (keyup)="applyFilter($event)" placeholder="Ex. Mia" #input>
-      </mat-form-field> -->
 
 <ng-template [ngIf]="showFriendsOn">
   <div class="mat-elevation-z8 mt-2">
@@ -88,7 +91,7 @@
           class="text-white user-name-cell"
           *matCellDef="let friend"
         >
-          @if(friend?.displayName && friend?.displayName !== 'Dynus'){
+          @if(friend?.displayName){
           {{ friend.displayName }} } @else{Nem megerősített profil}
         </mat-cell>
       </ng-container>
@@ -99,7 +102,6 @@
           Profilkép
         </mat-header-cell>
         <mat-cell *matCellDef="let friend">
-          @if(friend?.displayName !== 'Dynus') {
           <img
             class="rounded-circle"
             width="50px"
@@ -107,7 +109,6 @@
             [src]="friend.profilePicture"
             alt="Profilkép"
           />
-          }
         </mat-cell>
       </ng-container>
       <!-- Birthdate Column -->
@@ -116,18 +117,13 @@
           Kor
         </mat-header-cell>
         <mat-cell class="text-white" *matCellDef="let friend">
-          @if(friend.age && friend?.displayName !== 'Dynus'){
+          @if(friend.age){
           {{ friend.age }} éves } @else{Nincs megadott kor}
         </mat-cell>
       </ng-container>
 
       <mat-header-row *matHeaderRowDef="columnsToDisplay"></mat-header-row>
       <mat-row *matRowDef="let row; columns: columnsToDisplay"></mat-row>
-
-      <!-- Row shown when there is no matching data. -->
-      <!-- <tr class="mat-row" *matNoDataRow>
-                            <td class="mat-cell" colspan="4">No data matching the filter "{{input.value}}"</td>
-                          </tr> -->
     </mat-table>
 
     <mat-paginator
@@ -142,10 +138,10 @@
 
 <button
   routerLink="/chat"
-  class="mt-1"
+  class="mt-2 ms-2"
   mat-raised-button
   color="warn"
   type="button"
 >
-  Vissza
+  <mat-icon>arrow_back</mat-icon>Vissza
 </button>

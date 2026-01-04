@@ -1,0 +1,62 @@
+{
+  "lang": "Language",
+  "en": "English",
+  "hu": "Hungarian",
+  "auth": {
+    "signup": "Sign Up",
+    "login": "Login",
+    "email": "Email",
+    "password": "Password",
+    "otherLoginTypes": "or"
+  },
+  "user": {
+    "lastname": "Lastname",
+    "firstname": "Firstname",
+    "birthDate": "Birth Date",
+    "age": "Age",
+    "gender": {
+      "man": "Man",
+      "woman": "Woman"
+    },
+    "username": "Username",
+    "profilePic": "Profile picture",
+    "basicDetails": "Basic Details",
+    "uploadProfPicOpt": "Upload your profile picture (optional)",
+    "chooseProfPic": "Choose profile picture",
+    "uploadProfPic": "Upload profile picture",
+    "changeProfPic": "Change profile picture",
+    "save": "Save",
+    "ready": "Ready",
+    "modified": "Successful modification, click on the save button to continue.",
+    "created": "All ready for you. Click on the save button and you can start using the app.",
+    "signAsFriend": "Friend Request",
+    "suggestedFriends": "Suggested Friends"
+  },
+  "mainPage": {
+    "messages": "Messages",
+    "feeds": "Posts",
+    "albums": "My Album",
+    "friends": "Friends",
+    "profile": "My profile",
+    "searchUser": "Search user",
+    "myFeeds": "My Posts",
+    "publicPosts": "Public Posts",
+    "yourConvs": "Your Conversations",
+    "yourFriends": "Your Contacts",
+    "profAndSett": "Profilepicture and settings",
+    "searchByName": "Search by name"
+  },
+  "menu": {
+    "online": "Online",
+    "offline": "Offline",
+    "changeVis": "Change Visibility"
+  },
+  "bottom-nav": {
+    "messages": "Messages",
+    "mainPage": "Main"
+  },
+  "directions": {
+    "next": "Next",
+    "back": "Back"
+  }
+}

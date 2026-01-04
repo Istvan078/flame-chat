@@ -4,7 +4,15 @@
   padding-bottom: 96px; // hely a bottom navnak
 }
 
+// .test {
+//   background-image: url('../../../assets/icons/flame-chat-icon-96x96.png');
+//   background-position: left 50% top;
+//   background-repeat: no-repeat;
+// }
+
 .appbar {
+  // background-color: rgba(232, 163, 26, 0.5);
+  background-color: rgba(232, 122, 26, 0.5);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -20,9 +28,14 @@
   }
   .fire {
     margin-right: 2px;
+    color: red;
   }
   .spacer {
     flex: 1;
+  }
+  .account-settings {
+    color: blue;
+    font-size: 1.1em;
   }
 }
 
@@ -201,7 +214,7 @@
   .sugg-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     padding: 0 6px 6px;
     h3 {
       margin: 0;
@@ -218,8 +231,10 @@
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth; /* finom görgetés */
-    padding: 4px 6px 8px;
+    padding: 4px 0 8px;
     scrollbar-width: none;
+    margin-left: 10px;
+    margin-right: 10px;
   }
   .sugg-viewport::-webkit-scrollbar {
     display: none;
@@ -254,10 +269,12 @@
   }
 
   .sugg-track {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 140px; /* kártyaszélesség */
+    display: flex;
+    // grid-auto-flow: column;
+    // grid-auto-columns: 140px; /* kártyaszélesség */
     gap: 8px;
+    // justify-content: center;
+    // padding-left: 60px;
   }
 
   .sugg-card {
@@ -342,6 +359,13 @@
   .suggestions .nav {
     display: none !important;
   } /* nyilak eltüntetése mobilon */
+}
+
+@media (min-width: 768px) {
+  .sugg-track {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
 }
 
 /* Dark mode esetén is maradjon világos */

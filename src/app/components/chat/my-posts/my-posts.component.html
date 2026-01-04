@@ -90,7 +90,7 @@
 </div>
 
 <div *ngFor="let myPost of myPostsArr; let i = index" class="row mt-3">
-  <div class="col text-center">
+  <div class="col text-center px-0">
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
         <ng-container *ngFor="let sWithMe of postSharedWithMe"
@@ -139,12 +139,11 @@
           class="col-12 d-flex justify-content-center mb-2 my-posts-pics-container"
         >
           <img
-            class="rounded lazy-img"
+            class="rounded lazy-img posted-img"
             src="../../../../assets/cute-cat-placeholder.png"
             [attr.data-src]="pic.url"
             [alt]="pic.name"
             width="80%"
-            height="100%"
           />
         </div>
       </mat-card-content>

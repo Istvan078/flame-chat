@@ -13,17 +13,19 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { MatMenuTrigger } from '@angular/material/menu';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { UtilityService } from 'src/app/services/utility.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-messaged-friends',
   templateUrl: './messaged-friends.component.html',
   styleUrl: './messaged-friends.component.scss',
+  standalone: true,
+  imports: [SharedModule],
   animations: [
     trigger('slide-in-keyframed', [
       state(
@@ -85,11 +87,10 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
   showFriendsMess: any[] = [];
   showFriendsMessCopy: any[] = [];
   showAllFriends: boolean = false;
-  isShowArchMsgs: boolean = false;
   userFriends?: Friends[] = [];
   archivedFriends: any[] = [];
-
   selectedFriend: any = {};
+  messagedFriends: any[] = [];
 
   // SZÁMLÁLÓK
   profSubCounter: number = 0;
@@ -127,6 +128,15 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         this.userProfile = AllUserDtls.userProfile;
         this.userFriends = AllUserDtls.userFriends!;
         console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
+        this.utilService.forUserSubject.userProfile = this.userProfile;
+        this.utilService.forUserSubject.userProfiles = this.userProfiles;
+        this.utilService.forUserSubject.userFriends = this.userFriends;
+        this.utilService.forUserSubject.userNotFriends =
+          this.utilService.forUserSubject.userNotFriends;
+        this.utilService.subjectValueTransfer(
+          this.utilService.forUserSubject,
+          this.utilService.userSubject
+        );
         this.getNewMessages();
         this.userFriends.map(fr => {
           if (fr?.messaging) {
@@ -147,8 +157,10 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
             });
           }
         });
-
         await this.areFriendsOnline();
+        this.messagedFriends = this.showFriendsMess.filter(
+          fr => fr.messaging && !fr.archived
+        );
         this.archivedFriends = this.utilService.archivedFriends;
         this.onAnimate();
       }
@@ -167,8 +179,6 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
             );
           }, 1000);
         }
-        // if (obj.haventSeenMessagesArr)
-        //   this.haventSeenMessagesArr = obj.haventSeenMessagesArr;
       }
     );
     this.haventSeenMsgsArrSubjSub = this.base.haventSeenMsgsArr.subscribe(
@@ -183,17 +193,34 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       this.chatAnimationState === 'normal' ? 'in-2' : 'normal';
   }
 
-  archiveFriend(friend: any, userKey: string, i: number) {
+  archiveHelperCounter: number = 0;
+  async archiveFriend(friend: any, userKey: string, i: number) {
     const body: any = friend?.newMessageNumber
       ? { archivedAftNewMess: true }
       : { archived: true };
     friend.archivedAftNewMess = friend?.newMessageNumber ? true : false;
     friend.archived = true;
-    this.base.updateFriend(friend.friendKey, body, userKey);
+    await this.base.updateFriend(friend.friendKey, body, userKey);
+    if (this.archiveHelperCounter === 1) {
+      this.showFriendsMess = this.showFriendsMess.filter(
+        fr => friend.friendKey !== fr.friendKey
+      );
+      this.showFriendsMess = this.showFriendsMess.filter(
+        fr => friend.friendKey !== fr.friendKey
+      );
+    }
+    this.showFriendsMess = this.showFriendsMess.filter(
+      fr => friend.friendKey !== fr.friendKey
+    );
+    this.messagedFriends = this.showFriendsMess.filter(
+      fr => fr.messaging && !fr.archived
+    );
+    this.archiveHelperCounter++;
   }
   openMainMenu? = () => {};
   openNotifications? = () => {};
   openProfile? = () => {};
+
   searchMessage() {
     if (!this.showFriendsMessCopy?.length)
       this.showFriendsMessCopy = this.showFriendsMess;
@@ -224,22 +251,12 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
         archived: false,
       }
     );
-    this.showFriendsMess = this.showFriendsMess.filter(
-      fr => fr.friendKey !== selectedFriendKey
+    const deletedFriend = this.showFriendsMess.find(
+      fr => fr.friendKey === selectedFriendKey
     );
+    deletedFriend.messaging = false;
     this.isRemoveFrFromShowFriendsMess = false;
     console.log('Üzenetek a barattal törölve az adatbázisból.');
-  }
-
-  toArchivedMsgs() {
-    this.isShowArchMsgs = true;
-  }
-
-  backToMsgs() {
-    this.isShowArchMsgs = false;
-  }
-  cancelArcFriend(event: any) {
-    this.showFriendsMess.push(event);
   }
 
   areFriendsOnline() {
@@ -302,7 +319,11 @@ export class MessagedFriendsComponent implements OnInit, OnDestroy {
       this.userProfile.key
     );
     this.showFriendsToChoose = false;
-    mess.messaging = true;
+    const selFriend = this.showFriendsMess.find(
+      fr => fr.friendKey === mess.friendKey
+    );
+    selFriend.messaging = true;
+    this.messagedFriends.push(selFriend);
     setTimeout(() => {
       const messageCardElements = this.element.nativeElement.querySelectorAll(
         '.messageCardCont div h2'

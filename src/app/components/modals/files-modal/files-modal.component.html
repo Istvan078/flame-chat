@@ -1,4 +1,4 @@
-<div class="container">
+<div class="main-container">
   <div class="modal-header">
     <button
       (click)="activeModal.dismiss('Cross-click')"
@@ -32,9 +32,24 @@
       </div>
     </div>
     } @if(uploadTrue){
-    <h4>Sikeres feltöltés, küldéshez kattints a küldés gombra!</h4>
+    <div>
+      <h2>Sikeres feltöltés</h2>
+      @for(file of uploadedFilesArr; track $index) {
+      <div class="mt-1">
+        @if(!file?.fileName.includes('.mp4')) {
+        <img width="200px" height="200px" [src]="file.url" alt="kep" />
+        } @else {
+        <video
+          controls
+          style="width: 100%; height: auto"
+          [src]="file.url"
+        ></video>
+        }
+      </div>
+      }
+    </div>
     } @if(picturesUploaded){
-    <h4>Sikeres feltöltés!</h4>
+    <h2>Sikeres feltöltés!</h2>
     }
   </div>
   <div class="modal-footer">
@@ -43,9 +58,9 @@
       (click)="activeModal.close('Modal bezárva')"
       data-bs-dismiss="modal"
       type="button"
-      class="btn btn-secondary green"
+      class="btn btn-success green"
     >
-      Rendben <mat-icon class="align-middle">done</mat-icon>
+      <mat-icon class="align-middle">done</mat-icon>
     </button>
     }
   </div>

@@ -37,6 +37,11 @@ import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
 import { AngularFireAuthModule } from '@angular/fire/compat/auth';
 import { AngularFireMessagingModule } from '@angular/fire/compat/messaging';
 import { Environments } from 'src/app/environments';
+import { TranslateModule } from '@ngx-translate/core';
+import { register } from 'swiper/element/bundle';
+import { RouterModule } from '@angular/router';
+
+register();
 
 @NgModule({
   declarations: [SortPipe, ShortenPipe, FilterPipe],
@@ -45,6 +50,7 @@ import { Environments } from 'src/app/environments';
     FormsModule,
     ReactiveFormsModule,
     CommonModule,
+    RouterModule,
     MatFormFieldModule,
     MatCardModule,
     MatButtonModule,
@@ -74,13 +80,14 @@ import { Environments } from 'src/app/environments';
     AngularFireModule.initializeApp(Environments.firebaseConfig),
     AngularFireDatabaseModule,
     AngularFireAuthModule,
-    AngularFirestoreModule,
+    AngularFirestoreModule.enablePersistence({ synchronizeTabs: true }),
     AngularFireStorageModule,
     AngularFireMessagingModule,
   ],
   exports: [
     NgbModule,
     FormsModule,
+    RouterModule,
     ReactiveFormsModule,
     FilterPipe,
     ShortenPipe,
@@ -111,6 +118,7 @@ import { Environments } from 'src/app/environments';
     MatSnackBarModule,
     MatMenuModule,
     NgbModalModule,
+    TranslateModule,
   ],
 })
 export class SharedModule {}

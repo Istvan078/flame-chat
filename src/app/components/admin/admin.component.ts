@@ -1,17 +1,21 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-import { MyPost, Post } from 'src/app/models/post.model';
+import { Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { UtilityService } from 'src/app/services/utility.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from 'src/app/services/auth.service';
+import { SharedModule } from '../shared/shared.module';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-admin',
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss',
+  imports: [SharedModule, RouterModule],
+  standalone: true,
 })
 export class AdminComponent implements OnInit {
   utilService = inject(UtilityService);

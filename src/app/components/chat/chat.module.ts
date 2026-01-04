@@ -1,17 +1,10 @@
-import { NgModule } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { ChatComponent } from './chat.component';
 import { SharedModule } from '../shared/shared.module';
 import { RouterModule } from '@angular/router';
-import { UserProfileComponent } from '../user-profile/user-profile.component';
-import { NewsComponent } from './news/news.component';
-import { FriendProfileComponent } from '../user-profile/friend-profile/friend-profile.component';
-import { AlbumComponent } from './album/album.component';
-import { MyPostsComponent } from './my-posts/my-posts.component';
 import { ToastComponent } from '../toast/toast.component';
-import { PostsComponent } from './shared/posts/posts.component';
-import { MessageComponent } from './message/message.component';
-import { MessagedFriendsComponent } from './messaged-friends/messaged-friends.component';
-import { ArchivedMessagesComponent } from './messaged-friends/archived-messages/archived-messages.component';
+import { MainMenuModalComponent } from '../modals/main-menu-modal/main-menu-modal.component';
+import { chatRoutes } from './chat.routes';
 
 // HA NINCS DISPLAYNAME A USERNEK NEM LÉPHET BE A CHAT ÚTVONALRA //
 // Visszanavigálom profillétrehozó felületre
@@ -25,43 +18,9 @@ import { ArchivedMessagesComponent } from './messaged-friends/archived-messages/
 // };
 
 @NgModule({
-  declarations: [
-    ChatComponent,
-    UserProfileComponent,
-    FriendProfileComponent,
-    AlbumComponent,
-    MyPostsComponent,
-    NewsComponent,
-    ToastComponent,
-    PostsComponent,
-    MessageComponent,
-    MessagedFriendsComponent,
-    ArchivedMessagesComponent,
-  ],
-  imports: [
-    SharedModule,
-    RouterModule.forChild([
-      { path: '', component: ChatComponent },
-      {
-        path: 'message',
-        component: MessagedFriendsComponent,
-      },
-      {
-        path: 'message/:friendId',
-        component: MessageComponent,
-      },
-      {
-        path: 'album/:uid',
-        component: AlbumComponent,
-      },
-      {
-        path: ':uid/friend-profile',
-        component: FriendProfileComponent,
-      },
-      { path: 'archived-messages', component: ArchivedMessagesComponent },
-      { path: '**', component: ChatComponent },
-    ]),
-  ],
-  exports: [RouterModule],
+  declarations: [ChatComponent, ToastComponent, MainMenuModalComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [SharedModule, RouterModule.forChild(chatRoutes)],
+  exports: [],
 })
 export class ChatModule {}

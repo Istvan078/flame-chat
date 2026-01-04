@@ -1,0 +1,67 @@
+@if(userProfile.uid) {
+<div>
+  <div class="modal-body main-menu-modal">
+    <div class="d-flex align-items-center m-2">
+      <div class="me-3">
+        <img
+          class="rounded-circle"
+          width="50px"
+          height="50px"
+          [src]="userProfile.profilePicture"
+          alt="Profilkep"
+        />
+      </div>
+      <h2 class="m-0">{{ userProfile.displayName }}</h2>
+      <div class="d-flex justify-content-end w-100">
+        <mat-form-field class="w-50 me-3">
+          <mat-label>{{ 'lang' | translate }}</mat-label>
+          <mat-select
+            [(ngModel)]="lang"
+            name="lang"
+            (valueChange)="changeLang($event)"
+          >
+            <mat-option value="hu">{{ 'hu' | translate }}</mat-option>
+            <mat-option value="en">{{ 'en' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="m-2">
+      <h3 class="m-0 fw-bold">{{ 'menu.changeVis' | translate }}</h3>
+      <mat-slide-toggle
+        (change)="changeVisibility()"
+        [checked]="userProfile.visibility"
+        >{{
+          userProfile.visibility
+            ? ('menu.online' | translate)
+            : ('menu.offline' | translate)
+        }}</mat-slide-toggle
+      >
+    </div>
+    <div (click)="showBlockedPeople()" class="m-2 mt-3">
+      <h3 matIconPrefix class="m-0 fw-bold">
+        <mat-icon class="align-middle fw-bold">block</mat-icon>
+        <span class="align-middle"> Letiltott emberek</span>
+      </h3>
+    </div>
+
+    <div routerLink="/archived-messages" class="m-2 mt-3">
+      <h3 class="m-0 fw-bold">
+        <mat-icon class="align-middle fw-bold">delete</mat-icon> Archivum
+      </h3>
+    </div>
+  </div>
+</div>
+} @if(userProfile.claims.superAdmin) {
+<div class="text-end m-2">
+  <button
+    mat-raised-button
+    routerLink="/admin"
+    class="nav-link me-3"
+    routerLinkActive="active-link"
+  >
+    Admin
+  </button>
+</div>
+}

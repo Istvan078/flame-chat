@@ -1,27 +1,46 @@
 <nav class="bottom-nav mat-elevation-z6">
+  @if(!userLoggedIn) {
+
+  <button
+    mat-icon-button
+    [routerLink]="['/signup']"
+    [class.active]="isRouteActive('/signup')"
+  >
+    <mat-icon>person_add</mat-icon>
+    <span>{{ 'auth.signup' | translate }}</span>
+  </button>
+  <button
+    mat-icon-button
+    [routerLink]="['/login']"
+    [class.active]="isRouteActive('/login')"
+  >
+    <mat-icon>login</mat-icon>
+    <span>{{ 'auth.login' | translate }}</span>
+  </button>
+  } @if(userLoggedIn) {
   <button
     mat-icon-button
     [routerLink]="['/message']"
     [class.active]="isRouteActive('/message')"
   >
     <mat-icon>chat</mat-icon>
-    <span>Üzenetek</span>
+    <span>{{ 'bottom-nav.messages' | translate }}</span>
   </button>
   <button
     mat-icon-button
-    [routerLink]="['/chats']"
-    [class.active]="isRouteActive('/chats')"
+    [routerLink]="['/chat']"
+    [class.active]="isRouteActive('/chat')"
   >
     <mat-icon>group</mat-icon>
-    <span>Fooldal</span>
+    <span>{{ 'bottom-nav.mainPage' | translate }}</span>
   </button>
   <button
     mat-icon-button
-    disabled
-    [routerLink]="['/profile']"
-    [class.active]="isRouteActive('/profile')"
+    [routerLink]="['/main-menu']"
+    [class.active]="isRouteActive('/main-menu')"
   >
     <mat-icon>menu</mat-icon>
     <span>Menu</span>
   </button>
+  }
 </nav>

@@ -1,4 +1,13 @@
+@defer(on interaction(newPost) ) {
+
+<app-posts [@fade-in]="newsAnimationState" (onSubmit)="onSubmit($event)">
+  <button class="shareButton" color="accent" mat-raised-button type="submit">
+    Új bejegyzés megosztása
+  </button>
+</app-posts>
+} @placeholder {
 <div
+  #newPost
   [class]="{
     'text-center': true,
     'mt-1': true
@@ -14,16 +23,7 @@
     Új bejegyzés
   </button>
 </div>
-
-<app-posts
-  *ngIf="isNewPost"
-  [@fade-in]="newsAnimationState"
-  (onSubmit)="onSubmit($event)"
->
-  <button class="shareButton" color="accent" mat-raised-button type="submit">
-    Új bejegyzés megosztása
-  </button>
-</app-posts>
+}
 
 <div *ngIf="isLoading" class="loadingSpinnerContainer">
   <h2>Adatok töltése folyamatban...</h2>
@@ -35,7 +35,7 @@
   *ngFor="let post of sharedPosts | sort : pipeRefresh; let i = index"
   class="row mt-3"
 >
-  <div class="col text-center">
+  <div class="col text-center px-0">
     <mat-card>
       <mat-card-header class="d-flex justify-content-center">
         <ng-container *ngFor="let sharer of postSharers"
@@ -76,19 +76,28 @@
       </mat-card-content>
 
       <mat-card-content>
-        <div
-          *ngFor="let pic of post.pictures"
-          class="col-12 d-flex justify-content-center mb-2 shared-posts-pics-container"
+        <swiper-container
+          slides-per-view="1"
+          speed="500"
+          autoplay-delay="5000"
+          css-mode="true"
+          pagination="true"
+          #swiperEl
         >
-          <img
-            class="rounded lazy-img"
-            src="../../../../assets/cute-cat-placeholder.png"
-            [attr.data-src]="pic.url"
-            [alt]="pic.name"
-            width="80%"
-            height="100%"
-          />
-        </div>
+          <swiper-slide
+            class="shared-posts-pics-container"
+            lazy="true"
+            *ngFor="let pic of post.pictures"
+          >
+            <img
+              class="rounded posted-img"
+              [alt]="pic.name"
+              [src]="pic.url"
+              width="100%"
+              loading="lazy"
+            />
+          </swiper-slide>
+        </swiper-container>
       </mat-card-content>
 
       <mat-card-footer>
@@ -187,17 +196,17 @@
       <mat-form-field *ngIf="post.id === comment.postId">
         <mat-label>Hozzászólás szövege</mat-label>
         <input matInput [(ngModel)]="comment.text" type="text" />
+        <button
+          *ngIf="post.id === comment.postId"
+          (click)="commentPost(post)"
+          class="bg-primary"
+          mat-raised-button
+          type="button"
+        >
+          Hozzászólás küldése
+          <mat-icon matPrefix class="text-warning align-middle">send</mat-icon>
+        </button>
       </mat-form-field>
-      <button
-        *ngIf="post.id === comment.postId"
-        (click)="commentPost(post)"
-        class="bg-primary"
-        mat-raised-button
-        type="button"
-      >
-        Hozzászólás küldése
-        <mat-icon matPrefix class="text-warning align-middle">send</mat-icon>
-      </button>
     </mat-card>
   </div>
 </div>

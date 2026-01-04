@@ -28,7 +28,7 @@
         [ngClass]="[isMenuClicked ? 'columnDisp' : 'flexDisp']"
       >
         <span
-          *ngIf="isSuperAdmin || user.claims?.admin"
+          *ngIf="isSuperAdmin || user.claims.admin"
           (click)="navDisappear()"
           routerLink="/admin"
           class="nav-link me-3"
@@ -40,8 +40,8 @@
         <span
           *ngIf="
             isSuperAdmin ||
-            user.claims?.admin ||
-            user?.email === 'kalmaristvan078@gmail.com'
+            user.claims.admin ||
+            user.email === 'kalmaristvan078@gmail.com'
           "
           (click)="navDisappear()"
           routerLink="/users"
@@ -53,12 +53,10 @@
 
         <span
           (click)="isMenuClicked = false"
-          *ngIf="user.uid && user?.displayName"
+          *ngIf="user.uid && user.displayName"
           class="nav-link me-3"
           routerLinkActive="active-link"
-          [routerLink]="
-            userProfile?.displayName ? '/chat' : '/chat/' + user.uid
-          "
+          [routerLink]="userProfile.displayName ? '/chat' : '/chat/' + user.uid"
           >Chat
         </span>
 

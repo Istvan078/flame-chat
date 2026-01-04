@@ -8,11 +8,14 @@ import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { UtilityService } from 'src/app/services/utility.service';
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-login',
+  standalone: true,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
+  imports: [SharedModule],
 })
 export class LoginComponent {
   email: string = '';
@@ -83,7 +86,9 @@ export class LoginComponent {
           if (user?.emailVerified) {
             if (userProfile[0]?.uid) {
               this.utilService.forUserSubject.userProfile = userProfile[0];
+              this.utilService.forUserSubject.userProfiles = this.userProfiles;
               this.utilService.getFriends().subscribe();
+              document.location.reload();
             }
             if (
               userProfile[0].birthDate === undefined ||
@@ -115,7 +120,9 @@ export class LoginComponent {
             );
             if (userProfile?.uid) {
               this.utilService.forUserSubject.userProfile = userProfile;
+              this.utilService.forUserSubject.userProfiles = this.userProfiles;
               this.utilService.getFriends().subscribe();
+              document.location.reload();
             }
 
             if (!userProfile?.uid) {

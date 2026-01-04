@@ -1,4 +1,11 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subscription, map } from 'rxjs';
@@ -7,11 +14,14 @@ import { FilesModalComponent } from '../../modals/files-modal/files-modal.compon
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Router } from '@angular/router';
 import { UtilityService } from 'src/app/services/utility.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-album',
   templateUrl: './album.component.html',
   styleUrls: ['./album.component.scss'],
+  standalone: true,
+  imports: [SharedModule],
 })
 export class AlbumComponent implements OnInit, OnDestroy {
   @HostListener('window:beforeunload', ['$event']) // Mielőtt újratölti az oldalt eseményfigyelő
@@ -29,6 +39,7 @@ export class AlbumComponent implements OnInit, OnDestroy {
   selectedFiles: any[] = [];
   filesArr: any[] = [];
   percent: number = 0;
+  @ViewChild('picUploadInput') picUploadInput?: ElementRef<HTMLInputElement>;
   constructor(
     private base: BaseService,
     private snackbar: MatSnackBar,
@@ -91,10 +102,18 @@ export class AlbumComponent implements OnInit, OnDestroy {
     this.selectedFiles = Array.from($event.target.files);
   }
 
+  onDropzoneClick() {
+    if (this.uploadFinished) {
+      this.picUploadInput?.nativeElement.click();
+    } else {
+      this.addPictures();
+    }
+  }
+
   addPictures() {
     const maxWidth = 800;
     const maxHeight = 600;
-    const quality = 0.75; // Tömörítési szint (0.0 - 1.0)
+    const quality = 0.8; // Tömörítési szint (0.0 - 1.0)
     this.selectedFiles.forEach(file => {
       this.utilsService
         .resizeImage(file, maxWidth, maxHeight, quality)

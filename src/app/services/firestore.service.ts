@@ -20,12 +20,9 @@ import { MyPost, Post } from '../models/post.model';
   providedIn: 'root',
 })
 export class FirestoreService {
-  private privatePostRef!: AngularFirestoreCollection;
   private filesFromChat!: AngularFirestoreCollection;
   private sharedPostRef = this.fireStore.collection(`users/posts/shared`);
   private myPostsRef = 'users/posts/my-posts';
-  private userKey = '';
-  private myPostsRefImproved = `users/posts/my-posts/${this.userKey}/my-posts`;
   picturesSubject: Subject<any> = new Subject();
   filesSubject: Subject<any> = new Subject();
   filesBehSubject: BehaviorSubject<any> = new BehaviorSubject([]);
@@ -33,7 +30,6 @@ export class FirestoreService {
   private myPostsNotiSubject: Subject<any> = new Subject();
   private getMyPostsSubject: Subject<any> = new Subject();
   userKeySubject: Subject<string> = new Subject();
-  private sharedPostsSubject: BehaviorSubject<any> = new BehaviorSubject([]);
   testSubject: Subject<any> = new Subject();
   sharedPostIdSubject: Subject<any> = new Subject();
 
@@ -48,9 +44,6 @@ export class FirestoreService {
 
   async createPost(post: Post) {
     return this.sharedPostRef.add(post);
-    // console.log(this.privatePostRef.ref.id);
-    // console.log(this.privatePostRef.ref.path);
-    // console.log(this.privatePostRef.ref.parent);
   }
 
   async updatePost(docId: string, post: Partial<Post>) {
@@ -98,20 +91,10 @@ export class FirestoreService {
     }
   }
 
-  // refreshSharedPosts() {
-  //   return this.sharedPostRef.valueChanges('child_added');
-  // }
-
   refreshSharedWithMePosts() {
-    // const date = new Date().getTime();
-    // const newDate = new Date('2024-07-12').getTime();
     return this.fireStore
       .collection(`users/posts/shared`, ref =>
-        ref
-          .orderBy('newestTimeStamp', 'desc')
-          // .startAt(new Date().getTime())
-          // .endAt(newDate)
-          .limit(10)
+        ref.orderBy('newestTimeStamp', 'desc').limit(10)
       )
       .valueChanges(['child_changed']);
   }
@@ -132,8 +115,6 @@ export class FirestoreService {
         ref.where('seen', '==', false).limit(10)
       )
       .valueChanges(['child_changed']);
-
-    // return myPostsRef.ref.where('seen', '==', false).limit(10).valueChanges('child-added');
   }
 
   async createMyPost(post: any, userKey: string) {
@@ -406,5 +387,27 @@ export class FirestoreService {
     const filePath = `fromChats/${user.email}/files/${fileName}`;
     const storageRef = this.fireStorage.ref(filePath);
     return storageRef.getDownloadURL();
+  }
+
+  getAILimit() {
+    return this.fireStore.collection('ai/messaging/usage').valueChanges();
+  }
+  addToAiUsage(usage: any) {
+    return this.fireStore.collection('ai/messaging/usage').add(usage);
+  }
+  async updateAiUsage(usage: any) {
+    const docId: string = await new Promise((res, rej) => {
+      this.fireStore
+        .collection('ai/messaging/usage')
+        .get()
+        .forEach(doc => {
+          if (doc.docs[0]?.id) res(doc.docs[0]?.id);
+          if (doc.empty) this.addToAiUsage(usage);
+        });
+    });
+    return this.fireStore
+      .collection('ai/messaging/usage')
+      .doc(docId)
+      .update(usage);
   }
 }

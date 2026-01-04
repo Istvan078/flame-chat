@@ -9,8 +9,8 @@ import { BaseService } from './services/base.service';
 import { Subscription } from 'rxjs';
 import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
-import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
 import { UtilityService } from './services/utility.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-root',
@@ -19,19 +19,35 @@ import { UtilityService } from './services/utility.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Flame Chat';
+  lang = '';
   routerOutletOff: boolean = false;
   isShowMessages: boolean = false;
   routerOutletOffSub!: Subscription;
   chosenMsgThemeSub: Subscription = Subscription.EMPTY;
   isShowMsgsSubscription: Subscription = Subscription.EMPTY;
   chosenMsgTheme: any;
+  user: any;
   private matDialog = inject(MatDialog);
   private onDestroyRef = inject(DestroyRef);
   private base = inject(BaseService);
   private utilService = inject(UtilityService);
 
-  constructor(private swUpdate: SwUpdate) {}
+  constructor(
+    private swUpdate: SwUpdate,
+    private translateService: TranslateService
+  ) {}
   ngOnInit(): void {
+    const int = setInterval(() => {
+      if (this.utilService.userProfile?.uid) {
+        this.user = this.utilService.userProfile;
+        clearInterval(int);
+      }
+    }, 200);
+    setTimeout(() => {
+      this.translateService.use(localStorage.getItem('lang') || 'hu');
+      this.lang = localStorage.getItem('lang') || 'hu';
+    }, 200);
+
     const interval = setInterval(this.checkForVersionUpdate, 30000);
     this.routerOutletOffSub = this.base.logicalSubject.subscribe(
       logic => (this.routerOutletOff = logic)
@@ -50,6 +66,13 @@ export class AppComponent implements OnInit, OnDestroy {
         this.isShowMessages = isShowMessages;
       }
     );
+  }
+
+  changeLang(lang: any) {
+    const selectedLang = lang;
+    console.log(lang);
+    localStorage.setItem('lang', selectedLang);
+    this.translateService.use(selectedLang);
   }
 
   checkForVersionUpdate = () => {
@@ -73,12 +96,13 @@ export class AppComponent implements OnInit, OnDestroy {
                 (uP: any) =>
                   uP.uid === this.utilService.forUserSubject.userProfile.uid
               );
-              uProf.appVersion = '1.1.5';
+              uProf.appVersion = '1.1.6';
               console.log(``);
               await this.base.updateUserData(uProf, uProf.key);
               profsSub.unsubscribe();
             });
-          setTimeout(() => {
+          setTimeout(async () => {
+            await this.swUpdate.activateUpdate();
             window.location.reload();
           }, 2000);
         }

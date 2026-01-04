@@ -11,9 +11,12 @@
       style="width: 90vw"
       linear
     >
-      <mat-step [stepControl]="f.form.value" label="Alapadatok">
+      <mat-step
+        [stepControl]="f.form.value"
+        [label]="'user.basicDetails' | translate"
+      >
         <mat-form-field class="me-2">
-          <mat-label for="email">Vezetéknév</mat-label>
+          <mat-label for="email">{{ 'user.lastname' | translate }}</mat-label>
           <input
             matInput
             [(ngModel)]="userProf.surname"
@@ -24,7 +27,7 @@
           />
         </mat-form-field>
         <mat-form-field class="me-2">
-          <mat-label for="email">Keresztnév</mat-label>
+          <mat-label for="email">{{ 'user.firstname' | translate }}</mat-label>
           <input
             matInput
             [(ngModel)]="userProf.firstname"
@@ -48,7 +51,9 @@
           />
         </mat-form-field>
         <mat-form-field class="me-2">
-          <mat-label for="displayName">Felhasználónév</mat-label>
+          <mat-label for="displayName">{{
+            'user.username' | translate
+          }}</mat-label>
           <input
             matInput
             [(ngModel)]="userProf.displayName"
@@ -58,7 +63,9 @@
           />
         </mat-form-field>
         <mat-form-field>
-          <mat-label for="birthDate">Születési idő</mat-label>
+          <mat-label for="birthDate">{{
+            'user.birthDate' | translate
+          }}</mat-label>
           <input
             matInput
             [(ngModel)]="userProf['birthDate']"
@@ -89,18 +96,20 @@
             matStepperNext
             type="button"
           >
-            Következő
+            {{ 'directions.next' | translate }}
           </button>
         </div>
       </mat-step>
       <mat-step
         [stepControl]="f.form.value"
-        label="Töltsd fel a profilképed (Opcionális)"
+        [label]="'user.uploadProfPicOpt' | translate"
       >
         <div class="mt-2 mb-2 d-flex flex-column">
           <button class="btn btn-warning fileButton" type="button">
             <mat-icon class="align-middle">attach_file</mat-icon>
-            <label for="profilePicture">Profilkép kiválasztása</label>
+            <label for="profilePicture">{{
+              'user.chooseProfPic' | translate
+            }}</label>
             <input
               id="profilePicture"
               (change)="selectFile($event)"
@@ -113,15 +122,17 @@
           <div class="text-primary mt-1" *ngIf="profilePhoto">
             {{ profilePhoto.name }}
           </div>
+          @if(profilePhoto.name){
           <button
-            [disabled]="!profilePhoto"
+            [disabled]="!profilePhoto || !uploadFinished"
             (click)="addOrChangeProfilePic()"
             type="button"
             class="btn btn-success ms-1 mt-1"
           >
             <mat-icon class="align-middle">upload</mat-icon>
-            Profilkép Feltöltése
+            {{ 'user.uploadProfPic' | translate }}
           </button>
+          }
         </div>
         <div
           *ngIf="profilePhoto && percent && percent < 100"
@@ -194,7 +205,7 @@
               class="pt-2 pb-2 bg-primary"
               type="button"
             >
-              Profilkép megváltoztatása
+              {{ 'user.changeProfPic' | translate }}
             </button>
           </div>
         </div>
@@ -230,20 +241,20 @@
             type="button"
             class="me-1"
           >
-            Vissza
+            {{ 'directions.back' | translate }}
           </button>
           <button mat-flat-button color="primary" matStepperNext type="button">
-            Következő
+            {{ 'directions.next' | translate }}
           </button>
         </div>
       </mat-step>
       <mat-step>
-        <ng-template matStepLabel>Kész</ng-template>
+        <ng-template matStepLabel>{{ 'user.ready' | translate }}</ng-template>
         <h3>
           {{
             !userProf.lastTimeOnline
-              ? 'Már készen is vagyunk. Kattints az adatok mentése gombra és megkezdheted a csevegést.'
-              : 'Sikeres módosítás, kattints az adatok mentése gombra a folytatáshoz.'
+              ? ('user.created' | translate)
+              : ('user.modified' | translate)
           }}
         </h3>
         <div class="d-flex justify-content-between">
@@ -254,7 +265,7 @@
             matStepperPrevious
             type="button"
           >
-            Vissza
+            {{ 'directions.back' | translate }}
           </button>
           <button
             [disabled]="!f.valid"
@@ -262,7 +273,7 @@
             mat-raised-button
             type="submit"
           >
-            Adatok elmentése
+            {{ 'user.save' | translate }}
           </button>
         </div>
       </mat-step>

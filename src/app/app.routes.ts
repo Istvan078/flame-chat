@@ -1,35 +1,52 @@
 import { Routes } from '@angular/router';
-import { SignupComponent } from './components/signup/signup.component';
-import { LoginComponent } from './components/login/login.component';
 import { UsersComponent } from './components/users/users.component';
-import { UserProfileComponent } from './components/user-profile/user-profile.component';
-import { MyPostsComponent } from './components/chat/my-posts/my-posts.component';
-import { AdminComponent } from './components/admin/admin.component';
 import { isAdminGuard } from './guards/is-admin.guard';
 import { loggedInRedirectGuard } from './guards/logged-in-redirect.guard';
+import { MainMenuComponent } from './components/chat/main-menu/main-menu.component';
 
 export const routes: Routes = [
   {
     path: 'signup',
-    canActivate: [loggedInRedirectGuard],
-    component: SignupComponent,
+    canMatch: [loggedInRedirectGuard],
+    loadComponent: () =>
+      import('./components/signup/signup.component').then(
+        mod => mod.SignupComponent
+      ),
   },
   {
     path: 'login',
-    canActivate: [loggedInRedirectGuard],
-    component: LoginComponent,
+    canMatch: [loggedInRedirectGuard],
+    loadComponent: () =>
+      import('./components/login/login.component').then(
+        mod => mod.LoginComponent
+      ),
   },
-  { path: 'users', component: UsersComponent },
+  { path: 'users', component: UsersComponent, canActivate: [isAdminGuard] },
   {
     path: 'profile/:uid',
-    component: UserProfileComponent,
+    canMatch: [loggedInRedirectGuard],
+    loadComponent: () =>
+      import('./components/user-profile/user-profile.component').then(
+        mod => mod.UserProfileComponent
+      ),
   },
-  { path: 'my-posts', component: MyPostsComponent },
-  { path: 'admin', component: AdminComponent, canActivate: [isAdminGuard] },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./components/admin/admin.component').then(
+        mod => mod.AdminComponent
+      ),
+    canActivate: [isAdminGuard],
+  },
+  { path: 'main-menu', component: MainMenuComponent },
   {
     path: '',
-    canActivate: [loggedInRedirectGuard],
+    canMatch: [loggedInRedirectGuard],
     loadChildren: () =>
       import('./components/chat/chat.module').then(m => m.ChatModule),
+  },
+  {
+    path: '**',
+    redirectTo: 'login',
   },
 ];

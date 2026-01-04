@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import express from 'express';
 import bodyParser from 'body-parser';
 import fileParser from 'express-multipart-file-parser';
@@ -186,7 +187,7 @@ app.route('/message').post((req, res) => {
   const msg = req.body.msg;
   const reaction = req.body.reaction;
   const subscriptions = req.body.sub;
-  const openUrl = 'https://project0781.web.app/message/';
+  const openUrl = 'https://flamechat07.web.app/message/';
   const reactedFriendId = msg.reactedFriendId;
 
   const notificationPayload = {
@@ -237,11 +238,11 @@ app.route('/post').post((req, res) => {
         onActionClick: {
           default: {
             operation: 'navigateLastFocusedOrOpen',
-            url: 'https://project0781.web.app/my-posts',
+            url: 'https://flamechat07.web.app/my-posts',
           },
           navigate: {
             operation: 'navigateLastFocusedOrOpen',
-            url: 'https://project0781.web.app/my-posts',
+            url: 'https://flamechat07.web.app/my-posts',
           },
         },
       },
@@ -267,3 +268,27 @@ app.route('/post').post((req, res) => {
 });
 
 export const api = onRequest({ cors: true }, app);
+
+export const resetAiLimit = onSchedule(
+  {
+    schedule: '0 0 * * *', // cron syntax, minden nap 00:00
+    timeZone: 'Europe/Budapest',
+  },
+  async () => {
+    try {
+      const aiLimitId = (
+        await admin.firestore().collection('ai/messaging/usage').get()
+      ).docs[0].id;
+      await admin
+        .firestore()
+        .collection('ai/messaging/usage')
+        .doc(aiLimitId)
+        .update({
+          limit: 0,
+          resetAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+    } catch (err) {
+      console.error('resetAiLimit error', err);
+    }
+  }
+);

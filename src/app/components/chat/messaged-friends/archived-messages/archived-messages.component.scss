@@ -5,6 +5,25 @@
   background: transparent;
   border: none;
 }
+.fallback-text {
+  font-size: 1.8rem;
+  height: 85vh;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  font-weight: bold;
+  .no-mess-picture {
+    width: 100vw;
+    height: 100vh;
+    background-image: url('../../../../../assets/arch-mess-background.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.3;
+    z-index: 5;
+    position: absolute;
+  }
+}
 .newMessageColorOnCard {
   background-image: linear-gradient(
     to right,

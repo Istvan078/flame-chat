@@ -24,8 +24,12 @@ export class MatModalComponent {
   @Input() isReplyForMessage: boolean = false;
   @Input() oldMessage!: Chat & ReplyMessage;
   @Input() replyMessage!: ReplyMessage;
+  @Input() isModifyingMessage: boolean = false;
 
   sendReplyMessage() {
     this.dialogRef.close('message-sent');
+  }
+  modifyMessage() {
+    this.dialogRef.close('message-modified');
   }
 }

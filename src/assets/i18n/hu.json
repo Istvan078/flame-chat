@@ -1,0 +1,62 @@
+{
+  "lang": "Nyelv",
+  "en": "Angol",
+  "hu": "Magyar",
+  "auth": {
+    "signup": "Regisztráció",
+    "login": "Bejelentkezés",
+    "password": "Jelszó",
+    "email": "Email",
+    "otherLoginTypes": "Vagy"
+  },
+  "user": {
+    "lastname": "Vezeteknev",
+    "firstname": "Keresztnev",
+    "birthDate": "Szuletesi ido",
+    "age": "Kor",
+    "gender": {
+      "man": "Ferfi",
+      "woman": "No"
+    },
+    "username": "Felhasznalonev",
+    "profilePic": "Profilkep",
+    "basicDetails": "Alap adatok",
+    "uploadProfPicOpt": "Toltsd fel a profilkeped (opcionalis)",
+    "chooseProfPic": "Valassz profilkepet",
+    "uploadProfPic": "Profilkep feltoltese",
+    "changeProfPic": "Profilkep modositasa",
+    "save": "Mentes",
+    "ready": "Kesz",
+    "modified": "Sikeres modositas, kattints a mentes gombra a folytatashoz",
+    "created": "Minden keszen all. Kattints a mentes gombra es megkezdheted az app hasznalatat.",
+    "signAsFriend": "Jeloles",
+    "suggestedFriends": "Ajanlott ismerosok"
+  },
+  "mainPage": {
+    "messages": "Uzenetek",
+    "feeds": "Kezdolap",
+    "albums": "Fenykepeim",
+    "friends": "Ismerosok",
+    "profile": "Profilom",
+    "searchUser": "Felhasznalo keresese",
+    "myFeeds": "Sajat bejegyzesek",
+    "publicPosts": "Nyilvanos bejegyzesek",
+    "yourConvs": "Beszelgeteseid",
+    "yourFriends": "Kapcsolataid",
+    "profAndSett": "Profilkep es beallitasok",
+    "searchByName": "Kereses nev alapjan"
+  },
+  "menu": {
+    "online": "Elerhető",
+    "offline": "Nem latható",
+    "changeVis": "Láthatóság megváltoztatása"
+  },
+  "bottom-nav": {
+    "messages": "Uzenetek",
+    "mainPage": "Fooldal"
+  },
+  "directions": {
+    "next": "Kovetkezo",
+    "back": "Vissza"
+  }
+}

@@ -1,22 +1,10 @@
-.container-0 {
+.main-container {
   display: flex;
   justify-content: center;
-  h2 {
-    margin-top: 50px;
-    width: max-content;
-    padding: 10px;
-    border: 2px solid rgb(128, 128, 128);
-    background-color: rgba(128, 128, 128, 0.5);
-  }
-  h2:hover {
-    color: white;
-    background-color: rgba(71, 70, 70, 0.5);
-    cursor: help;
-  }
-  button {
-    padding-top: 20px;
-    padding-bottom: 20px;
-  }
+  align-items: center;
+  height: 90vh;
+  background-color: rgba(167, 188, 133, 0.5);
+  padding: 10px;
 }
 
 .container-1 {

@@ -7,11 +7,14 @@ import { UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { ToastService } from 'src/app/services/toast.service';
 import { UtilityService } from 'src/app/services/utility.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-friend-profile',
   templateUrl: './friend-profile.component.html',
   styleUrls: ['./friend-profile.component.scss'],
+  standalone: true,
+  imports: [SharedModule],
 })
 export class FriendProfileComponent implements OnInit, OnDestroy {
   @ViewChild(MatPaginator, { static: false }) paginator!: MatPaginator;
@@ -23,6 +26,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
   viewIndex: number = 0;
 
   showFriendsOn: boolean = false;
+  isBlocked: boolean = false;
 
   allPicsArr: any[] = [];
   profilesOfFriendsArr: UserClass[] = [];
@@ -89,16 +93,11 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
     // Click eseményre barát uid átküldve út paraméterként, feliratkozva rá
     // BehaviorSubject küldi el a chat komponensből a barát profilját
     this.actRoute.params.subscribe((uid: any) => {
-      // const friendProf = this.utilService.userProfiles.find(
-      //   uP => uP.uid === uid.uid
-      // )!;
-      // console.log(this.utilService.userProfile);
-      // this.utilService.getFriends().subscribe(cal => {});
       this.friendProfileSubscription = this.base.friendProfileSubject.subscribe(
         frObj => {
           if (frObj.uid) {
             this.friendProfile = frObj;
-
+            console.log(this.friendProfile);
             // A barát képobjektumának átalakítása iterálhatóvá, utána mapelem
             // 2 tömbben elmentem a képeket a slice metódus alkalmazásához
             // A this.allPicsArr-ben megmaradnak az eredeti képek
@@ -109,6 +108,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
             // Barátok listája összegyűjtése és tömbbe helyezése
             this.userProfilesSubscription =
               this.base.userProfilesSubject.subscribe((uProfs: UserClass[]) => {
+                console.log(uProfs);
                 if (this.friendProfile.friends) {
                   var friendsArr = Object.values(
                     this.friendProfile.friends as any
@@ -129,10 +129,6 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
                   if (friendsArr) return friendsArr.includes(uP.uid);
                 });
 
-                // this.utilService.userFriends.map(uF => {
-                //   if(uF.areFriends === true)
-                // })
-
                 // paginator címke
                 this.pag.itemsPerPageLabel =
                   'Ismerősők megjelenítése egyszerre:';
@@ -140,13 +136,32 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
                 // matTable adatforrásának beállítása
                 this.tableDataSource = new MatTableDataSource<any>(
                   this.profilesOfFriendsArr
-                  // this.utilService.userFriends
                 );
               });
           }
         }
       );
     });
+  }
+
+  blockPerson() {
+    this.isBlocked = true;
+    const userProf = this.utilService.userProfile;
+    if (
+      userProf.blockedPeople?.length &&
+      !userProf.blockedPeople?.includes(this.friendProfile.uid)
+    )
+      userProf.blockedPeople = [
+        ...userProf.blockedPeople,
+        this.friendProfile.uid,
+      ];
+    if (
+      !userProf.blockedPeople?.length &&
+      !userProf.blockedPeople?.includes(this.friendProfile.uid)
+    )
+      userProf.blockedPeople = [this.friendProfile.uid];
+    this.base.updateUserData(userProf, userProf.key);
+    this.router.navigate(['/']);
   }
 
   setAndSlicePictures() {

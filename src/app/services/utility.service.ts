@@ -6,6 +6,8 @@ import { BehaviorSubject, map, Observable, Subject } from 'rxjs';
 import { Form } from '../models/utils/form.model';
 import deepmerge from 'deepmerge';
 import { Chat } from '../models/chat.model';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Environments } from '../environments';
 
 interface AllUserDetails {
   userProfiles: UserClass[];
@@ -20,6 +22,10 @@ interface AllUserDetails {
 export class UtilityService {
   private auth = inject(AuthService);
   private base = inject(BaseService);
+  private genAI = new GoogleGenerativeAI(Environments.geminiApiKey);
+  private model = this.genAI.getGenerativeModel({
+    model: 'gemini-2.0-flash-lite',
+  });
   userProfile: UserClass = new UserClass();
   userProfiles: UserClass[] = [];
   forUserSubject: ForUserSubject = new ForUserSubject();
@@ -32,7 +38,6 @@ export class UtilityService {
   archFriendsUidsArr: string[] = [];
   loadingSubject: Subject<any> = new Subject();
   msgThemes: any[] = [];
-  abortController = new AbortController();
   postsFormData: Form[] = [
     {
       label: 'Név',
@@ -54,13 +59,13 @@ export class UtilityService {
   isUserOnlineNow: boolean = true;
   archivedFriends: any[] = [];
 
-  // ESEMÉNYFIGYELŐK //
-  private isOnlineHandler: () => void;
-  private isOfflineHandler: () => void;
   constructor() {
-    this.isOnlineHandler = this.handleOnline.bind(this);
-    this.isOfflineHandler = this.handleOffline.bind(this);
-    this.isUserOnline();
+    this.getUserProfiles().then(obs => {
+      obs.subscribe(allUsrDtls => {
+        this.userProfile = allUsrDtls.userProfile;
+        this.userProfiles = allUsrDtls.userProfiles;
+      });
+    });
   }
 
   async getUserProfiles(): Promise<Observable<AllUserDetails>> {
@@ -118,6 +123,10 @@ export class UtilityService {
           if (!this.friendsUids.includes(fr.friendId))
             this.friendsUids.push(fr.friendId);
         } else this.signedAsFriendUids.push(fr.friendId);
+        if (fr?.archived && !this.archFriendsUidsArr.includes(fr.friendId)) {
+          this.archFriendsUidsArr.push(fr.friendId);
+          this.archivedFriends.push(fr);
+        }
         return fr;
       })
       .filter(fr => fr?.confirmed !== false && fr.areFriends !== false);
@@ -149,7 +158,7 @@ export class UtilityService {
   }
 
   getFriends() {
-    return this.base.getFriends(this.userProfile.key).pipe(
+    return this.base.getFriends(this.forUserSubject.userProfile.key).pipe(
       map(val => {
         console.log(`****GET FRIENDS LEFUTOTT****`);
         if (val.length) this.userFriends = val;
@@ -211,6 +220,7 @@ export class UtilityService {
     // objektum ami segít kiszűrni a duplikációkat a tömbből
     const seenFriendIds: any = {};
     const friendsWithNewMess: any[] = [];
+    console.log(this.archFriendsUidsArr);
     showFriendsMess = allFriendsAndNMessFromArr.filter((fr, i) => {
       if (
         (fr?.archived &&
@@ -236,6 +246,7 @@ export class UtilityService {
       }
       return false;
     });
+    console.log(showFriendsMess);
     friendsWithNewMess.sort((a, b) => b?.newMessSentTime - a?.newMessSentTime);
     const didntSendMsgToMeArr = showFriendsMess
       .filter(fr => !fr.newMessageNumber && !fr.newMessSentTime)
@@ -248,6 +259,7 @@ export class UtilityService {
     console.log('***ISMERŐS ÜZENETFEJEK SZŰRVE(FSM)***');
     if (this.forUserSubject.archivedFriends?.length)
       this.subjectValueTransfer(this.forUserSubject, this.userSubject);
+    console.log(showFriendsMess);
     return showFriendsMess;
   }
 
@@ -273,69 +285,6 @@ export class UtilityService {
       );
       this.isUserOnlineNow = false;
     }
-  }
-
-  // async isUserOnline() {
-  //   // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
-  //   window.addEventListener('click', this.isOnlineHandler);
-  //   window.addEventListener('focus', this.isOnlineHandler);
-  //   // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
-  //   window.addEventListener('blur', this.isOfflineHandler);
-  //   // HA TOBB MINT 5 PERCE VOLT ELERHETO FRISSITEM OFFLINE-RA AZ ALLAPOTAT
-  //   const loop = async () => {
-  //     if (this.isUserOnlineNow) {
-  //       try {
-  //         const now = Date.now();
-  //         const fiveMinutesAgo = now - 5 * 60 * 1000;
-  //         console.log(`****isUserOnline?****`);
-
-  //         if (
-  //           this.userProfile?.lastTimeOnline &&
-  //           this.userProfile.lastTimeOnline < fiveMinutesAgo
-  //         ) {
-  //           await this.base.updateUserData(
-  //             { online: false },
-  //             this.userProfile?.key
-  //           );
-  //           this.isUserOnlineNow = false;
-  //         }
-  //       } catch (error) {
-  //         console.error('isUserOnline error', error);
-  //       }
-  //     }
-  //     setTimeout(loop, 10000);
-  //   };
-  //   loop();
-  // }
-
-  isUserOnline() {
-    // A FELHASZNÁLÓ ONLINE-E ESEMÉNYFIGYELŐK //
-    window.addEventListener('click', this.isOnlineHandler);
-    window.addEventListener('focus', this.isOnlineHandler);
-    // A FELHASZNÁLÓ OFFLINE-E ESEMÉNYFIGYELŐ //
-    window.addEventListener('blur', this.isOfflineHandler);
-    // HA TOBB MINT 5 PERCE VOLT ELERHETO FRISSITEM OFFLINE-RA AZ ALLAPOTAT
-    const intervalId = setInterval(async () => {
-      if (this.abortController.signal.aborted) {
-        clearInterval(intervalId);
-        console.log('ABORTCONTROLLER SIGNAL ABORTED');
-        return;
-      }
-      const now = Date.now();
-      const fiveMinutesAgo = now - 5 * 60 * 1000;
-      console.log(`****isUserOnline?****`);
-
-      if (
-        this.userProfile?.lastTimeOnline &&
-        this.userProfile?.lastTimeOnline < fiveMinutesAgo
-      ) {
-        await this.base.updateUserData(
-          { online: false },
-          this.userProfile?.key
-        );
-        this.isUserOnlineNow = false;
-      }
-    }, 10000);
   }
 
   //////////////// KÉPÚJRAMÉRETEZŐ FUNKCIÓ ////////////////////
@@ -455,6 +404,27 @@ export class UtilityService {
     if (hours >= 24) return `${days} nappal ezelőtt`;
   }
 
+  getLanguage() {
+    const lang = localStorage.getItem('lang');
+    return lang === 'en' ? 'angol' : 'magyar';
+  }
+
+  // egyszerű „smart reply” minta
+  async suggestReplies(message: string): Promise<string[]> {
+    const prompt = `Adj pontosan 3 rövid, barátságos, de pontos válaszjavaslatot ${this.getLanguage()}ul erre az üzenetre.
+      Csak a válaszokat add vissza, soronként egyet. Ne írj bevezetőt, ne írj magyarázatot, csak a 3 válaszjavaslatot.
+      Üzenet: """${message}"""`;
+
+    const result = await this.model.generateContent(prompt);
+    const text = result.response.text().trim();
+    // egyszerű parse: sorokra vágjuk
+    return text
+      .split('\n')
+      .map(l => l.replace(/^[-*\d\.\s]+/, '').trim())
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+
   setReactionsArr() {
     const reactions = [
       {
@@ -468,6 +438,12 @@ export class UtilityService {
         reactionName: 'tetszik 👍',
         bgColor: 'rgba(63, 76, 176, 1)',
         color: 'rgba(63, 76, 176, 1)',
+      },
+      {
+        reactionIcon: '😯',
+        reactionName: 'huha 😯',
+        bgColor: 'rgba(240, 211, 117, 1)',
+        color: 'rgba(235, 239, 32, 1)',
       },
       {
         reactionIcon: '😢',

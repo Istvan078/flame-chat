@@ -1,45 +1,50 @@
-<div class="home-page">
+<div class="home-page test">
   <!-- App bar / Header -->
-  <mat-toolbar color="primary" class="appbar">
-    <button mat-icon-button (click)="openMainMenu?.()" aria-label="Menü">
+  <mat-toolbar class="appbar">
+    <!-- <button mat-icon-button (click)="openMainMenu?.()" aria-label="Menü">
       <mat-icon>menu</mat-icon>
-    </button>
+    </button> -->
 
     <span class="title">
       <mat-icon class="fire">local_fire_department</mat-icon>
       Flame Chat
     </span>
-
     <span class="spacer"></span>
 
-    <button
-      mat-icon-button
+    <mat-slide-toggle
+      #slideToggle
       (click)="
         updateUserNotifications({ checked: !subscribedForNotifications })
       "
-      aria-label="Értesítések"
-    >
+      [checked]="subscribedForNotifications"
+    ></mat-slide-toggle>
+    <button mat-icon-button aria-label="Értesítések">
       <mat-icon>{{
-        subscribedForNotifications
-          ? 'notifications_active'
-          : 'notifications_none'
+        slideToggle.checked ? 'notifications_active' : 'notifications_none'
       }}</mat-icon>
     </button>
 
-    <button mat-icon-button (click)="openProfile?.()" aria-label="Profil">
-      <mat-icon>account_circle</mat-icon>
+    <button mat-icon-button (click)="openProfileOptions()" aria-label="Profil">
+      <!-- <mat-icon class="account-settings">account_circle</mat-icon> -->
+      <img
+        [src]="userProfile.profilePicture"
+        alt="Profilkép"
+        class="rounded-circle"
+        width="50px"
+        height="50px"
+      />
     </button>
   </mat-toolbar>
 
   <!-- Kereső szekció -->
   <section class="search-section">
     <mat-form-field appearance="outline" class="search-field">
-      <mat-label>Felhasználó keresése</mat-label>
+      <mat-label>{{ 'mainPage.searchUser' | translate }}</mat-label>
       <input
         matInput
         [(ngModel)]="userSearched"
         (keyup)="searchUser()"
-        placeholder="Keresés név alapján"
+        placeholder="{{ 'mainPage.searchByName' | translate }}"
       />
       <button
         *ngIf="userSearched"
@@ -67,7 +72,7 @@
           (click)="signAsAFriend(notFriend)"
         >
           <mat-icon>person_add</mat-icon>
-          Ismerősnek jelölés
+          {{ 'user.signAsFriend' | translate }}
         </button>
       </ng-container>
     </div>
@@ -75,10 +80,10 @@
 
   <section
     class="suggestions suggestions--compact"
-    *ngIf="userNotFriends?.length"
+    *ngIf="userNotFriends.length"
   >
     <div class="sugg-head">
-      <h3>Ajánlott ismerősök</h3>
+      <h3>{{ 'user.suggestedFriends' | translate }}</h3>
     </div>
 
     <div class="sugg-viewport" #suggViewport (scroll)="updateSuggNav()">
@@ -103,26 +108,35 @@
       </button>
 
       <div class="sugg-track">
-        <div
-          class="sugg-card"
-          *ngFor="let nf of userNotFriends; trackBy: trackByUid"
-        >
-          <img
-            class="avatar"
-            [src]="nf.profilePicture"
-            alt="{{ nf.displayName }} profilképe"
-            loading="lazy"
-          />
-          <div class="name" [title]="nf.displayName">{{ nf.displayName }}</div>
-          <button
-            class="add"
-            mat-stroked-button
-            color="primary"
-            (click)="signAsAFriend(nf)"
+        <ng-container *ngFor="let nf of userNotFriends; trackBy: trackByUid">
+          <div
+            class="sugg-card"
+            *ngIf="
+              !userProfile.blockedPeople?.includes(nf.friendId) &&
+              !nf?.blockedFromApp
+            "
           >
-            <mat-icon>person_add</mat-icon><span>Jelölés</span>
-          </button>
-        </div>
+            <img
+              class="avatar"
+              [src]="nf.profilePicture"
+              alt="{{ nf.displayName }} profilképe"
+              loading="lazy"
+              (click)="toPersonProfile(nf)"
+            />
+            <div class="name" [title]="nf.displayName">
+              {{ nf.displayName }}
+            </div>
+            <button
+              class="add"
+              mat-stroked-button
+              color="primary"
+              (click)="signAsAFriend(nf)"
+            >
+              <mat-icon>person_add</mat-icon
+              ><span>{{ 'user.signAsFriend' | translate }}</span>
+            </button>
+          </div>
+        </ng-container>
       </div>
     </div>
   </section>
@@ -132,6 +146,7 @@
     <!-- Saját posztok -->
     <button
       class="menu-card"
+      routerLink="/my-posts"
       (click)="
         getMyPosts();
         isMyPostsOpen = true;
@@ -149,8 +164,8 @@
         />
       </div>
       <div class="text">
-        <div class="label">{{ userProfile?.displayName || 'Profilom' }}</div>
-        <div class="sub">Saját bejegyzések</div>
+        <div class="label">{{ userProfile.displayName || 'Profilom' }}</div>
+        <div class="sub">{{ 'mainPage.myFeeds' | translate }}</div>
       </div>
       <mat-icon
         [matBadgeDisabled]="!myPostsNotificationNumber"
@@ -163,6 +178,7 @@
     <!-- Kezdőlap / Feed -->
     <button
       class="menu-card"
+      routerLink="/feeds"
       (click)="
         getSharedPosts();
         isFeedOpen = true;
@@ -176,8 +192,8 @@
         <mat-icon>feed</mat-icon>
       </div>
       <div class="text">
-        <div class="label">Kezdőlap</div>
-        <div class="sub">Ismerősök posztjai</div>
+        <div class="label">{{ 'mainPage.feeds' | translate }}</div>
+        <div class="sub">{{ 'mainPage.publicPosts' | translate }}</div>
       </div>
       <mat-icon
         [matBadgeDisabled]="!postsNotificationNumber"
@@ -193,8 +209,8 @@
         <mat-icon>chat</mat-icon>
       </div>
       <div class="text">
-        <div class="label">Üzenetek</div>
-        <div class="sub">Beszélgetéseid</div>
+        <div class="label">{{ 'mainPage.messages' | translate }}</div>
+        <div class="sub">{{ 'mainPage.yourConvs' | translate }}</div>
       </div>
       <mat-icon
         [matBadgeDisabled]="!newMessageNumber"
@@ -219,8 +235,8 @@
         <mat-icon>photos</mat-icon>
       </div>
       <div class="text">
-        <div class="label">Fényképeim</div>
-        <div class="sub">Albumok és képek</div>
+        <div class="label">{{ 'mainPage.albums' | translate }}</div>
+        <!-- <div class="sub">Albumok és képek</div> -->
       </div>
       <mat-icon>chevron_right</mat-icon>
     </button>
@@ -240,8 +256,8 @@
         <mat-icon>groups</mat-icon>
       </div>
       <div class="text">
-        <div class="label">Ismerősök</div>
-        <div class="sub">Kapcsolataid</div>
+        <div class="label">{{ 'mainPage.friends' | translate }}</div>
+        <div class="sub">{{ 'mainPage.yourFriends' | translate }}</div>
       </div>
       <mat-icon
         [matBadgeDisabled]="!userFriends?.length"
@@ -266,8 +282,8 @@
         <mat-icon>person</mat-icon>
       </div>
       <div class="text">
-        <div class="label">Profilom</div>
-        <div class="sub">Beállítások és adatok</div>
+        <div class="label">{{ 'mainPage.profile' | translate }}</div>
+        <div class="sub">{{ 'mainPage.profAndSett' | translate }}</div>
       </div>
       <mat-icon>chevron_right</mat-icon>
     </button>
@@ -285,6 +301,7 @@
   <section class="content scroll-to-content" *ngIf="isFriendsOpen">
     <div class="friends-grid">
       @for(friend of userFriends; let i = $index; track friend.displayName){
+      @defer(on viewport){
       <mat-card class="friend-card">
         <img
           [src]="friend.profilePicture"
@@ -315,7 +332,9 @@
           </button>
         </div>
       </mat-card>
-      }
+      } @placeholder{
+      <p>Ismerosok listaja toltodik...</p>
+      } }
     </div>
   </section>
 

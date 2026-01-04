@@ -87,6 +87,10 @@
   height: 100%;
 }
 
+.posted-img {
+  max-height: 70vh;
+}
+
 @keyframes loadingSpinner {
   100% {
     transform: rotate(360deg);

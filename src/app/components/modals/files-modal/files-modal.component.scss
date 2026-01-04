@@ -1,11 +1,13 @@
 .modal-body {
-  min-height: 80vh;
+  // min-height: 80vh;
   justify-content: center;
   display: flex;
   img {
     max-width: 100%;
+    min-width: 100%;
     max-height: 100vh;
   }
+  height: 100vh;
 }
 
 .tape .left:hover,

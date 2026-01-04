@@ -15,20 +15,24 @@ import { BaseService } from 'src/app/services/base.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { UtilityService } from 'src/app/services/utility.service';
 import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
+import { TranslateService } from '@ngx-translate/core';
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-user-profile',
+  standalone: true,
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.scss'],
+  imports: [SharedModule],
 })
 export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('f') form!: NgForm;
   @ViewChild('profilePic')
   chosenProfPicFromUploads!: ElementRef<HTMLImageElement>;
   users: UserClass[] = [];
-  genders: string[] = ['Férfi', 'Nő'];
+  genders: string[] = [];
   profilePhotoUrl!: string;
-  profilePhoto!: File;
+  profilePhoto: File = new File([], '');
   userProfile: UserClass[] = [];
   profilePicSub!: Subscription;
   picturesSubscription!: Subscription;
@@ -49,7 +53,9 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   showPics: boolean = false;
 
   picturesCarousel: any = document.getElementById('picturesCarousel');
-  uploadFinished: boolean = false;
+  uploadFinished: boolean = true;
+
+  genderLanSub: Subscription = Subscription.EMPTY;
 
   /////////////////////// TESZT ALATT VAN ////////////
   isLoading: boolean = false;
@@ -66,10 +72,14 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     private base: BaseService,
     private route: Router,
     private utilityService: UtilityService,
-    private modalRef: NgbModal
+    private modalRef: NgbModal,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
+    this.genderLanSub = this.translate.stream('user.gender').subscribe(g => {
+      this.genders = [g.man, g.woman];
+    });
     this.profilePicSub = this.base.profilePicUrlSubject.subscribe(
       (url: string) => {
         this.profilePhotoUrl = url;
@@ -88,7 +98,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
                 userProfile => userProfile['uid'] === param['uid']
               );
               this.userProf = Object.assign(this.userProf, ...userProfil);
-              console.log(this.profilePicsArr);
               if (!this.userProf.profilePicture)
                 this.userProf.profilePicture =
                   'https://img.freepik.com/free-vector/user-blue-gradient_78370-4692.jpg?t=st=1718095085~exp=1718098685~hmac=dabbb0cd71b6a040cd9dd79f125a765c55fa19402edc1701c52abf887aadfb05&w=1060';
@@ -115,30 +124,20 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   ngAfterViewInit() {
     setTimeout(() => {
       this.chosenProfPic = document.querySelector('.mainContainer')! as any;
-      // this.chosenProfPic.addEventListener('mouseenter', e => {
-      //   console.log(e.target);
-      //   this.chosenProfPic.src =
-      //     this.chosenProfPicFromUploads.nativeElement.src;
-      // });
       (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
-      console.log(this.chosenProfPic);
     }, 1000);
-    // this.updateChosenImageSub = new Observable(observer => {
     this.chosenProfilePicInterval = setInterval(() => {
       if (
         this.chosenProfPic?.nativeElement.src !==
         this.chosenProfPicFromUploads?.nativeElement.src
       ) {
         (this.chosenProfPic as any) = this.chosenProfPicFromUploads;
-        // this.updateChosenImageSub.unsubscribe();
-        // clearInterval(this.chosenProfilePicInterval);
       }
 
-      console.log('fut az interval');
+      console.log('fut a chosenProfilePicInterval');
       if (this.index < this.filteredProfilePicsArr.length - 1)
         this.isRightArrow = true;
     }, 1000);
-    // }).subscribe();
   }
 
   selectFile(event: any) {
@@ -165,7 +164,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
       });
     })
       .then(async res => {
-        console.log(this.userProf.profilePicture);
         await this.base.updateUserData(this.userProf, this.userProf.key);
         if (this.userProf.displayName) {
           this.utilityService.forUserSubject.userProfile = this.userProf;
@@ -201,7 +199,7 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
                 centered: true,
               });
               fileModal.componentInstance.picturesUploaded = true;
-              console.log('****SIKERS FELTÖLTÉS****');
+              console.log('****SIKERES FELTÖLTÉS****');
             }
           });
       })
@@ -268,9 +266,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   filterProfilePics() {
-    // if (window.innerWidth > 500)
-    //   this.profilePicsArr = this.filteredProfilePicsArr.slice(0, 3);
-    // else
     setTimeout(() => {
       const profPhotoIndex = this.filteredProfilePicsArr.findIndex(
         url => url === this.userProf.profilePicture
@@ -284,12 +279,6 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
       this.fadeIn();
       console.log(this.profilePicsArr);
     }, 100);
-
-    //this.profilePicsArr = deepmerge(this.profilePicsArr, []);
-    // this.filteredProfilePicsArr = deepmerge(
-    //   this.filteredProfilePicsArr,
-    //   []
-    // );
   }
 
   fadeIn() {
@@ -312,32 +301,30 @@ export class UserProfileComponent implements AfterViewInit, OnInit, OnDestroy {
     const interval = setInterval(() => {
       if (index === products.length) {
         products[0].classList.add('full-opacity');
-        // products[1].classList.add('full-opacity');
-
-        // if(!products[0].classList.contains('fade-in'))
-        //   products[0].classList.add('fade-in')
-        // if(!products[1].classList.contains('fade-in'))
-        //   products[1].classList.add('fade-in')
         products[index - 1].classList.add('fade-in');
         index++;
       } else {
         if (!products[0]?.classList.contains('fade-in'))
           products[0].classList.add('fade-in');
-        // if (!products[1]?.classList.contains('fade-in'))
-        //   products[1].classList.add('fade-in');
         products[0].classList.remove('full-opacity');
-        // products[1].classList.remove('full-opacity');
         clearInterval(interval);
       }
     }, 500);
   }
 
-  updateProfilePic() {
+  async updateProfilePic() {
     const picUrl = this.chosenProfPicFromUploads?.nativeElement.src;
-    this.base.updateUserData({ profilePicture: picUrl }, this.userProf.key);
+    this.userProf.profilePicture = picUrl;
+    this.profilePhotoUrl = picUrl;
+    await this.base.updateUserData(
+      { profilePicture: picUrl },
+      this.userProf.key
+    );
+    console.log('sikeres update');
   }
 
   ngOnDestroy(): void {
+    if (this.genderLanSub) this.genderLanSub.unsubscribe();
     this.profilePicSub.unsubscribe();
     this.picturesSubscription.unsubscribe();
     clearInterval(this.chosenProfilePicInterval);

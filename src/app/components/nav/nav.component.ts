@@ -105,18 +105,15 @@ export class NavComponent implements OnInit, OnDestroy {
         this.fireStoreService
           .deleteUserNotiSubscription(this.userProfile['key'], JSONed.endpoint!)
           .then(async (res: any) => {
-            this.utilService.abortController.abort();
             await this.authService.signOut();
           })
           .catch(async err => {
             console.log(err);
-            this.utilService.abortController.abort();
             await this.authService.signOut();
           });
     }
 
     if (!myPushSubscription) {
-      this.utilService.abortController.abort();
       await this.authService.signOut();
     }
   }

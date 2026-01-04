@@ -1,13 +1,13 @@
 <div class="messages-page">
   <!-- Header / App bar -->
   <mat-toolbar color="primary" class="appbar" role="heading" aria-level="1">
-    <button
+    <!-- <button
       mat-icon-button
       (click)="openMainMenu?.()"
       aria-label="Menü megnyitása"
     >
       <mat-icon>menu</mat-icon>
-    </button>
+    </button> -->
 
     <span class="title">Üzenetek</span>
 
@@ -26,12 +26,13 @@
       >
     </button>
 
-    <button mat-icon-button (click)="openProfile?.()" aria-label="Profil">
+    <!-- <button mat-icon-button (click)="openProfile?.()" aria-label="Profil">
       <mat-icon>account_circle</mat-icon>
-    </button>
+    </button> -->
   </mat-toolbar>
 
   <!-- Top actions (Új üzenet / Archív) -->
+  @if(messagedFriends.length) {
   <div class="text-center mb-0 mt-2 mess-search-cont">
     <mat-form-field appearance="outline" class="friend-search-field">
       <mat-label>Keresés</mat-label>
@@ -52,6 +53,22 @@
       </button>
     </mat-form-field>
   </div>
+  } @else {
+  <div
+    class="d-flex justify-content-center align-items-center no-mess-fallback-cont"
+  >
+    <h2
+      class="mt-2 ps-2 fw-bolder text-secondary text-left no-mess-fallback-text"
+    >
+      Kattints az uj uzenet-re es kezdd el begepelni a nevet a keresobe hogy
+      kivalaszthasd beszelgetopartnered
+    </h2>
+    <div class="no-mess-fallback">
+      <img src="../../../../assets/no-mess-placeholder.jpg" alt="" />
+    </div>
+  </div>
+
+  }
   <div class="top-actions">
     <button
       mat-button
@@ -139,19 +156,8 @@
     </div>
   </section>
 
-  <!-- Archived toggle mirror (only if there are archived) -->
-  <section
-    *ngIf="archivedFriends?.length && isShowArchMsgs"
-    class="archived-controls"
-  >
-    <button mat-stroked-button color="primary" (click)="backToMsgs()">
-      <mat-icon>message</mat-icon>
-      Üzenetek
-    </button>
-  </section>
-
   <!-- Conversation list -->
-  <section class="chat-list" *ngIf="!isShowArchMsgs">
+  <section class="chat-list">
     <ng-container *ngFor="let friend of showFriendsMess; let i = index">
       <ng-container *ngIf="friend.messaging || friend.seen === false">
         <mat-card class="conversation-card" (click)="getMessageUser(friend)">
@@ -233,35 +239,8 @@
       </ng-container>
     </ng-container>
 
-    <div *ngIf="showFriendsMess?.length === 0" class="no-friends-msg">
+    <div *ngIf="showFriendsMess.length === 0" class="no-friends-msg">
       Válassz ki egy ismerőst új üzenet írásához!
     </div>
   </section>
-
-  <!-- Archived list -->
-  <app-archived-messages
-    *ngIf="isShowArchMsgs"
-    [archivedFriendsMess]="archivedFriends"
-    [lastMsgsWithFriends]="lastMsgsWithFriends"
-    [userProfile]="userProfile"
-    (toFriendsMessage)="getMessageUser($event)"
-    (cancelArchiFriend)="cancelArcFriend($event)"
-  >
-  </app-archived-messages>
-
-  <!-- Bottom navigation -->
-  <nav class="bottom-nav">
-    <button class="nav-item active" (click)="backToMsgs()">
-      <mat-icon>chat_bubble_outline</mat-icon>
-      <span>Üzenetek</span>
-    </button>
-    <button class="nav-item" (click)="backToMainPage()">
-      <mat-icon>home</mat-icon>
-      <span>Főoldal</span>
-    </button>
-    <button class="nav-item" (click)="openMainMenu?.()">
-      <mat-icon>menu</mat-icon>
-      <span>Menü</span>
-    </button>
-  </nav>
 </div>

@@ -65,6 +65,8 @@ export class UserClass {
   public key: string = '';
   public uid: string = '';
   public pushNotificationsOn?: boolean;
+  public blockedPeople?: string[];
+  public blockedFromApp?: boolean;
   constructor(
     public surname: string = '',
     public firstname: string = '',

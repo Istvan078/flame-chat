@@ -11,11 +11,14 @@ import { ActivatedRoute } from '@angular/router';
 import { UtilityService } from 'src/app/services/utility.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatModalComponent } from '../../modals/mat-modal/mat-modal.component';
+import { SharedModule } from '../../shared/shared.module';
 
 @Component({
   selector: 'app-my-posts',
   templateUrl: './my-posts.component.html',
   styleUrls: ['./my-posts.component.scss'],
+  standalone: true,
+  imports: [SharedModule],
 })
 export class MyPostsComponent {
   submitButtonValue: any;

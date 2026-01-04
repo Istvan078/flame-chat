@@ -6,18 +6,20 @@ import { AuthService } from 'src/app/services/auth.service';
 import { BaseService } from 'src/app/services/base.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { UserClass } from 'src/app/models/user.model';
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-signup',
+  standalone: true,
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.scss'],
+  imports: [SharedModule],
 })
 export class SignupComponent {
   @ViewChild('f') signupForm!: NgForm;
   email: string = '';
   password: string = '';
   isLoggedIn: any;
-  genders: string[] = ['Férfi', 'Nő'];
   userProfiles: any;
   genderr: any;
   user: any;

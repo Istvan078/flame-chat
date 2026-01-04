@@ -3,35 +3,25 @@ import { Injectable } from '@angular/core';
 import {
   AngularFireDatabase,
   AngularFireList,
-  SnapshotAction,
 } from '@angular/fire/compat/database';
 import {
   BehaviorSubject,
   Observable,
   Subject,
-  Subscription,
   catchError,
   finalize,
   map,
   of,
   throwError,
 } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { Chat } from '../models/chat.model';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { Friends, UserClass } from '../models/user.model';
 import firebase from 'firebase/compat/app';
 import emailjs from '@emailjs/browser';
 import { Environments } from '../environments';
-import { CdkObserveContent } from '@angular/cdk/observers';
 import { FilesModalComponent } from '../components/modals/files-modal/files-modal.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-
-interface Friend {
-  key: string;
-  friendId: string;
-  seenMe: boolean;
-}
 
 @Injectable({
   providedIn: 'root',
@@ -42,7 +32,6 @@ export class BaseService {
   refChats!: AngularFireList<Chat>;
   refUsers: AngularFireList<UserClass>;
   refUser!: AngularFireList<UserClass>;
-  // refFriends!: AngularFireList<UserClass>;
   apiUrl = 'https://us-central1-project0781.cloudfunctions.net/api/';
   userProfileSubject: BehaviorSubject<any> = new BehaviorSubject({});
   userProfilesSubject: BehaviorSubject<UserClass[]> = new BehaviorSubject<
@@ -63,15 +52,11 @@ export class BaseService {
   chosenMsgThemeSubject: BehaviorSubject<any> = new BehaviorSubject('');
   isShowMessagesSubject: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
-  userKeySubject: BehaviorSubject<any> = new BehaviorSubject('');
-  userKeySubjectSubscription!: Subscription;
-
   userKey: any;
 
   constructor(
     private realTimeDatabase: AngularFireDatabase,
     private fireStorage: AngularFireStorage,
-    private http: HttpClient,
     private modalRef: NgbModal
   ) {
     this.refChats = realTimeDatabase.list(`/chats`);
@@ -93,26 +78,6 @@ export class BaseService {
   removeUserProfile(userKey: string) {
     this.refUsers.remove(userKey);
   }
-
-  // getFriendOnlineStat(userKey: string) {
-  //   return new Observable(obs => {
-  //     const ref = this.realTimeDatabase.list(`users/${userKey}`);
-  //     const onlineState = { online: false };
-  //     ref.query.on('child_changed', val => {
-  //       if (typeof val.val() === 'boolean') {
-  //         onlineState.online = val.val();
-  //         console.log('***GETUSERPROFILE***');
-  //         const sub = this.selectedFriendSubject.subscribe(val => {
-  //           if (this.selectedFriendSubject.value === null) {
-  //             ref.query.off('child_changed');
-  //             sub.unsubscribe();
-  //           }
-  //         });
-  //         obs.next(onlineState);
-  //       }
-  //     });
-  //   });
-  // }
 
   addFriends(friend: any, friendKey: string, userKey: string) {
     return this.realTimeDatabase
@@ -343,10 +308,10 @@ export class BaseService {
   getUpdatedMessages(userKey: string, friendKey: string) {
     const ref = this.realTimeDatabase.list(
       `chats/${userKey}/${friendKey}`,
-      ref2 => ref2.orderByChild('message/timeStamp').limitToLast(7)
+      ref2 => ref2.orderByChild('message/timeStamp').limitToLast(8)
     );
     return ref
-      .snapshotChanges(['child_changed'])
+      .snapshotChanges(['child_changed', 'child_added'])
       .pipe(
         map(ch =>
           ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
@@ -434,14 +399,15 @@ export class BaseService {
           item
             .getDownloadURL()
             .then(url => urls.push(url))
-            .then(resolve => res(urls))
+            .then(resolve => {
+              res(urls);
+            })
         );
       });
     });
   }
   async showProfPics(userEmail: string) {
     const profPicsArr = await this.getProfilePictures(userEmail);
-    console.log(profPicsArr);
     const modal = this.modalRef.open(FilesModalComponent, {
       centered: true,
       animation: true,
@@ -502,8 +468,8 @@ export class BaseService {
     return userChats.update(key, body);
   }
 
-  deleteMessage(friendKey: string, userKey: string, chatKey: string) {
-    return this.refChats.remove(`/${friendKey}/${userKey}/${chatKey}`);
+  deleteMyMessage(friendKey: string, userKey: string, chatKey: string) {
+    return this.refChats.remove(`/${userKey}/${friendKey}/${chatKey}`);
   }
 
   deleteAllMsgsWithFriend(userKey: string, friendKey: string) {
@@ -533,6 +499,66 @@ export class BaseService {
       )
     );
   }
+
+  /**
+   * Realtime feliratkozás a beszélgetésre.
+   * Címzett oldalon itt emeljük 'delivered'-re (✔✔), amikor ténylegesen megérkezett a készülékre.
+   */
+  listenConversation(userKey: string) {
+    const newMessNumberRef = this.realTimeDatabase.database.ref(
+      `users/${userKey}/friends/`
+    );
+    this.listenMessDelHelper(newMessNumberRef, userKey, 'child_added');
+    this.listenMessDelHelper(newMessNumberRef, userKey, 'child_changed');
+  }
+
+  listenMessDelHelper(
+    newMessNumberRef: firebase.database.Reference,
+    userKey: string,
+    onAction: firebase.database.EventType
+  ) {
+    newMessNumberRef.orderByChild('newMessSentTime').on(onAction, snap => {
+      const friend = snap.val();
+      if (!friend?.newMessageNumber) return;
+      if (friend.newMessageNumber > 0) {
+        this.realTimeDatabase
+          .object(`chats/${friend.friendKey}/${userKey}/`)
+          .query.orderByChild('message/status')
+          .equalTo('sent')
+          .get()
+          .then(val => {
+            const obj = val.val();
+            if (!obj) return;
+            let nMessArr = Object.values(obj);
+            let toUpdDelStatusArr: any[] = [];
+            nMessArr.map((mess: any, i) => {
+              if (mess.message.status === 'sent') {
+                mess.message.status = 'delivered';
+                mess.message.deliveredAt = new Date().getTime();
+                toUpdDelStatusArr.push(mess);
+                return mess;
+              }
+            });
+            return toUpdDelStatusArr;
+          })
+          .then(nMessArr => {
+            if (nMessArr?.length)
+              nMessArr.map((mess: any) => {
+                this.updateMessage(mess.key, mess, friend.friendKey, userKey);
+                console.log('Message delivered!', mess);
+              });
+          });
+      }
+    });
+  }
+
+  isUserOnline(userKey: string, online: boolean) {
+    return this.realTimeDatabase.database
+      .ref(`users/${userKey}`)
+      .onDisconnect()
+      .update({ online: online, lastTimeOnline: new Date().getTime() });
+  }
+
   async sendEmail(templateId: string, templateParams: {}) {
     const res = await emailjs.send(
       Environments.EMAILJS_SERVICE_ID,

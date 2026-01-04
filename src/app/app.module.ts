@@ -14,10 +14,8 @@ import {
 
 import { AppComponent } from './app.component';
 import { NavComponent } from './components/nav/nav.component';
-import { SignupComponent } from './components/signup/signup.component';
 import { ClassPipe } from './pipes/class.pipe';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { LoginComponent } from './components/login/login.component';
 import { UsersComponent } from './components/users/users.component';
 import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
 
@@ -27,18 +25,18 @@ import { NotificationsComponent } from './components/nav/notifications/notificat
 import { VisitedMeComponent } from './components/nav/notifications/visited-me/visited-me.component';
 import { FilesModalComponent } from './components/modals/files-modal/files-modal.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { AdminComponent } from './components/admin/admin.component';
 import { MatModalComponent } from './components/modals/mat-modal/mat-modal.component';
 import { LocationComponent } from './components/users/location/location.component';
 import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { MainMenuComponent } from './components/chat/main-menu/main-menu.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavComponent,
-    SignupComponent,
     ClassPipe,
-    LoginComponent,
     UsersComponent,
     LocationComponent,
     LoadingSpinnerComponent,
@@ -47,12 +45,19 @@ import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component
     VisitedMeComponent,
     FilesModalComponent,
     MatModalComponent,
-    AdminComponent,
     BottomNavComponent,
+    MainMenuComponent,
   ],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent], // melyik komponenssel inditsa az appot
   imports: [
     BrowserModule,
+    TranslateModule.forRoot({
+      fallbackLang: 'hu',
+      loader: provideTranslateHttpLoader({
+        prefix: 'assets/i18n/',
+        suffix: '.json',
+      }),
+    }),
     AppRoutingModule,
     BrowserAnimationsModule,
     SharedModule,

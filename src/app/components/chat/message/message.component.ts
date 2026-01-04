@@ -6,16 +6,8 @@ import {
   transition,
   trigger,
 } from '@angular/animations';
-import {
-  AfterViewInit,
-  Component,
-  ElementRef,
-  Input,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { catchError, map, Observable, of, Subject, Subscription } from 'rxjs';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { UtilityService } from 'src/app/services/utility.service';
@@ -23,7 +15,7 @@ import { FilesModalComponent } from '../../modals/files-modal/files-modal.compon
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Chat, ReplyMessage } from 'src/app/models/chat.model';
-import * as deepMerge from 'deepmerge';
+import deepmerge, * as deepMerge from 'deepmerge';
 import { FirestoreService } from 'src/app/services/firestore.service';
 import { Notification } from 'src/app/models/notification.model';
 import { HttpClient } from '@angular/common/http';
@@ -31,11 +23,17 @@ import { Environments } from 'src/app/environments';
 import { AuthService } from 'src/app/services/auth.service';
 import { MatModalComponent } from '../../modals/mat-modal/mat-modal.component';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { SnackbarComponent } from '../../snackbar/snackbar.component';
+import { SharedModule } from '../../shared/shared.module';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-message',
   templateUrl: './message.component.html',
   styleUrl: './message.component.scss',
+  standalone: true,
+  imports: [SharedModule],
   animations: [
     trigger('fade-in', [
       state(
@@ -118,6 +116,13 @@ export class MessageComponent implements OnInit, OnDestroy {
   // ROUTING //
   isOnMessageRoute: boolean = false;
 
+  // AI //
+  hideAiBtn: boolean = false;
+  aiLimit: number = 0;
+  suggestions: string[] = [];
+  loading = false;
+  error = '';
+
   // PUSH ÉRTESÍTÉS //
   friendPushSub: any;
 
@@ -149,10 +154,17 @@ export class MessageComponent implements OnInit, OnDestroy {
     private matDialog: MatDialog,
     private route: ActivatedRoute,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private snackbar: MatSnackBar,
+    private domSanitizer: DomSanitizer
   ) {}
 
   async ngOnInit() {
+    this.firestore.getAILimit().subscribe((lim: any[]) => {
+      this.aiLimit = lim?.length ? lim[0]?.limit : 0;
+      if (lim?.length && lim[0]?.limit >= 200) this.hideAiBtn = true;
+      console.log('AI Hívások szama:', lim[0]?.limit);
+    });
     this.base.isShowMessagesSubject.next(true);
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
       obj => {
@@ -258,6 +270,53 @@ export class MessageComponent implements OnInit, OnDestroy {
         // this.messTransfSubscr.unsubscribe();
       }
     );
+  }
+
+  async getAiReplies() {
+    this.error = '';
+    this.loading = true;
+    const lastMsgFromFr = this.visibleMessages
+      .filter(msg => msg.message.senderId === this.selectedFriend.uid)
+      .sort((a: any, b: any) => {
+        if (a.message.timeStamp < b.message.timeStamp) return 1;
+        else return -1;
+      })[0];
+    try {
+      this.suggestions = await this.utilService.suggestReplies(
+        lastMsgFromFr.replyMessage?.message
+          ? lastMsgFromFr.replyMessage.message
+          : lastMsgFromFr.message.message
+      );
+      this.firestore.updateAiUsage({
+        limit: this.aiLimit === 0 ? 1 : this.aiLimit + 1,
+        userId: this.userProfile.uid,
+        userKey: this.userProfile.key,
+        user: this.userProfile.displayName,
+        timestamp: new Date().getTime(),
+      });
+      if (this.aiLimit + 1 >= 200) {
+        this.hideAiBtn = true;
+        const snackBar = this.snackbar.openFromComponent(SnackbarComponent, {
+          data: { message: 'Elérted az AI hívások napi limitjét.' },
+          horizontalPosition: 'center',
+          verticalPosition: 'top',
+          duration: 5000,
+        });
+        snackBar.instance.aiLimitReached = true;
+      }
+    } catch (e: any) {
+      this.error = e?.message ?? 'Hiba történt az AI híváskor.';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  insertReply(text: string) {
+    // TODO: illeszd be a chat inputodba / küldd el
+    this.message.message.message = text;
+    this.addMessage();
+    this.suggestions = [];
+    console.log('Kiválasztott:', text);
   }
 
   scrollToLastMsg() {
@@ -428,6 +487,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       this.selectedFriend = allUsrDtls.userProfiles.find(
         uP => uP.uid === this.selectedFriendId
       );
+      this.getFriendOnlineState();
       const arr = Object.values(this.selectedFriend.friends);
       const meForFr: any = arr.find(
         (fr: any) => this.userProfile.uid === fr.friendId
@@ -502,6 +562,7 @@ export class MessageComponent implements OnInit, OnDestroy {
 
   async sendMessage(message: Chat & ReplyMessage) {
     const actualTime = new Date().getTime();
+    message.message.status = 'sent';
     message.message.timeStamp = actualTime as any;
     message.message.senderId_receiverId = `${this.userProfile.uid}_${this.selectedFriendId}_${actualTime}`;
     message.participants[0] = this.userProfile.uid + '-' + actualTime;
@@ -524,15 +585,49 @@ export class MessageComponent implements OnInit, OnDestroy {
     });
   }
 
+  editMessage(msg: Chat & ReplyMessage) {
+    const modDialog = this.matDialog.open(MatModalComponent);
+    modDialog.componentInstance.isModifyingMessage = true;
+    (modDialog.componentInstance.oldMessage as any) = deepmerge(msg, {});
+    const moddedMsg = modDialog.componentInstance.oldMessage;
+    const replDiagSub = modDialog.afterClosed().subscribe(async dat => {
+      if (dat === 'message-modified')
+        await this.base.updateMessage(
+          moddedMsg.key,
+          moddedMsg,
+          this.userProfile.key,
+          this.selectedFriend.key
+        );
+      const index = this.visibleMessages.findIndex(
+        mess => mess.key === msg.key
+      );
+      this.visibleMessages[index] = moddedMsg;
+      replDiagSub.unsubscribe();
+    });
+  }
+  async cancelMyMessage(msg: Chat & ReplyMessage) {
+    msg.message.message = 'Ez az üzenet törölve lett';
+    if (msg.replyMessage?.message) msg.replyMessage.message = '';
+    msg.message.cancelled = true;
+    await this.base.updateMessage(
+      msg.key,
+      msg,
+      this.userProfile.key,
+      this.selectedFriend.key
+    );
+  }
+
   updateSeenMessages(mess: Chat[] | ReplyMessage[], isFriendMessage: boolean) {
     if (!isFriendMessage && this.getUpdatedMessagesCounter === 2)
       mess.map(mess => {
         if (
           mess.message.senderId === this.userProfile.uid &&
           mess.participants[1] === this.selectedFriendId &&
-          !mess.message.seen
+          !mess.message.seen &&
+          mess.message.status === 'delivered'
         ) {
-          mess.message.seen = true;
+          // mess.message.seen = true;
+          mess.message.status = 'delivered';
           this.base.updateMessage(
             mess.key,
             mess,
@@ -753,27 +848,85 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.audioStream = await navigator.mediaDevices.getUserMedia({
       audio: true,
     });
-    this.mediaRecorder = new MediaRecorder(this.audioStream);
+    // 1) MIME választás: iOS-nek mp4, egyébként webm/opus ha elérhető
+    let preferredMime = '';
+    if (this.isIOS() && MediaRecorder.isTypeSupported('audio/mp4')) {
+      preferredMime = 'audio/mp4';
+    } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+      preferredMime = 'audio/webm;codecs=opus';
+    }
+
+    this.mediaRecorder = preferredMime
+      ? new MediaRecorder(this.audioStream, { mimeType: preferredMime })
+      : new MediaRecorder(this.audioStream);
+
+    this.audioChunks = [];
+
+    this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+      if (event.data && event.data.size > 0) {
+        this.audioChunks.push(event.data);
+      }
+    };
+
+    this.mediaRecorder.onstop = (event: Event) => {
+      if (!this.audioChunks.length) return;
+      // Valódi típus a blobból
+      const actualType =
+        this.audioChunks[0].type ||
+        this.mediaRecorder.mimeType ||
+        (this.isIOS() ? 'audio/mp4' : 'audio/webm');
+
+      const ext = actualType.includes('mp4') ? 'm4a' : 'webm';
+      const nameForFile = this.generateNameForFile(ext);
+      const blob = new Blob(this.audioChunks, { type: actualType });
+      const recordedAudioFile = new File([blob], nameForFile, {
+        type: actualType,
+      });
+      this.audioChunks = [];
+      this.selectedFiles = [recordedAudioFile];
+      this.uploadFiles();
+      // Stream leállítás
+      if (this.audioStream) {
+        this.audioStream.getTracks().forEach(track => track.stop());
+        this.audioStream = undefined as any;
+      }
+    };
+
     this.mediaRecorder.start();
     this.message.message.voiceMessage = 'recording-started';
   }
 
   async stopRecordingVoiceMessage() {
-    this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-      this.audioChunks.push(event.data);
-      const nameForFile = this.generateNameForFile('m4a');
-      const recordedAudioFile = new File(this.audioChunks, nameForFile, {
-        type: 'audio/x-m4a',
-      });
-      this.audioChunks = [];
-      this.selectedFiles.push(recordedAudioFile);
-      this.uploadFiles();
-    };
-    this.mediaRecorder.stop();
-    this.audioStream.getTracks().forEach(track => {
-      track.stop();
-    });
-    this.audioStream = undefined as any;
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      this.mediaRecorder.stop();
+    }
+  }
+  devFunction(msg: any) {
+    console.log('DEV FUNCTION CALLED', msg.voiceMessage);
+  }
+
+  autoGrow(event: Event) {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.rows = 2;
+    if (!textarea.value) textarea.rows = 1;
+    // textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  sanitize(url: string) {
+    return this.domSanitizer.bypassSecurityTrustUrl(url);
+  }
+
+  isIOS(): boolean {
+    return (
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' &&
+        (navigator as any).maxTouchPoints > 1)
+    );
+  }
+  checkFileAccessible(url: string) {
+    return this.http
+      .head(url, { observe: 'response' })
+      .pipe(catchError(err => of(err)));
   }
 
   selectedFs($event: any) {
@@ -785,7 +938,12 @@ export class MessageComponent implements OnInit, OnDestroy {
     let arr: any = [];
     this.disabled = true;
     this.selectedFiles.map(async (file: any) => {
-      if (file?.name?.includes('.m4a')) {
+      console.log(file);
+      if (
+        file?.name?.includes('.m4a') ||
+        file?.name?.includes('.webm') ||
+        file?.name?.includes('.wav')
+      ) {
         this.addFilesForMessage(file, arr);
       }
 
@@ -793,12 +951,14 @@ export class MessageComponent implements OnInit, OnDestroy {
       if (videoFile[0]?.size) {
         this.addFilesForMessage(videoFile[0], arr);
       }
-      if (!file?.name?.includes('.mp4')) {
+      if (
+        !file?.name?.includes('.mp4') &&
+        !file?.name?.includes('.m4a') &&
+        !file?.name?.includes('.webm') &&
+        !file?.name?.includes('.wav')
+      ) {
         let fileBlob: any;
-        if (
-          file?.name?.includes('Screenshot') ||
-          file?.name?.includes('screenshot')
-        )
+        if (file?.name?.toLowerCase()?.includes('screenshot'))
           fileBlob = await this.utilService.resizeImage(file, 600, 330, 1);
         fileBlob = await this.utilService.resizeImage(file, 768, 480, 0.8);
         const fileBlobArr = [fileBlob];
@@ -812,12 +972,11 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.firestore.filesSubject.subscribe((file: any) => {
       this.filesArr.push(file);
       this.disabled = false;
+      const format = file.fileName.split('.').pop();
       if (
         file.fileName.includes(this.selectedFriend.displayName) &&
         !file.fileName.includes('.mp4') &&
-        !file.fileName.includes('.jpg') &&
-        !file.fileName.includes('.jpeg') &&
-        !file.fileName.includes('.png')
+        !this.isPicture(format)
       ) {
         this.message.message.voiceMessage = file.url;
         this.message.message.message = '';
@@ -830,14 +989,20 @@ export class MessageComponent implements OnInit, OnDestroy {
       .addFilesFromMessages(this.userProfile, file)
       ?.then((val: any) => {
         arr.push(val.metadata.name);
-        if (arr.length === this.selectedFiles.length) {
-          this.selectedFiles = [];
+        if (
+          arr.length === this.selectedFiles.length &&
+          (this.isPicture(file.name?.split('.').pop()) ||
+            file.name?.includes('.mp4'))
+        ) {
           const fileModal = this.ngbModal.open(FilesModalComponent, {
             centered: true,
+            animation: true,
           });
           fileModal.componentInstance.uploadTrue = true;
           this.uploadFinished = true;
+          fileModal.componentInstance.uploadedFilesArr = this.filesArr;
         }
+        this.selectedFiles = [];
       })
       .catch(err => {
         arr.push('Meglévő fájl');
@@ -847,11 +1012,20 @@ export class MessageComponent implements OnInit, OnDestroy {
           this.selectedFiles = [];
           const fileModal = this.ngbModal.open(FilesModalComponent, {
             centered: true,
+            animation: true,
           });
           fileModal.componentInstance.uploadTrue = true;
           this.uploadFinished = true;
+          fileModal.componentInstance.uploadedFilesArr = this.filesArr;
         }
       });
+  }
+
+  isPicture(format: string) {
+    const picTypesArr = ['jpeg', 'jpg', 'png', 'gif', 'bmp', 'webp'];
+    format = format?.toLowerCase();
+    if (picTypesArr?.includes(format)) return true;
+    return false;
   }
 
   uploadVideo(videoFiles: any[]) {
@@ -883,25 +1057,36 @@ export class MessageComponent implements OnInit, OnDestroy {
           ch.participants[1] === this.selectedFriendId)
     );
 
-    this.allChatsArray.map(mess => {
+    this.allChatsArray.map(async mess => {
       if (
-        !mess.message?.seen &&
-        mess.message.senderId === this.selectedFriendId
+        (!mess.message?.seen &&
+          mess.message.senderId === this.selectedFriendId) ||
+        (!mess.message.readAt &&
+          mess.message.senderId === this.selectedFriendId)
       ) {
         mess.message.seen = true;
-        this.base
-          .updateMessage(
-            mess.key,
-            mess,
-            this.selectedFriend.key,
-            this.userProfile.key
-          )
-          .then(() => {});
+        mess.message.readAt = new Date().getTime();
+        mess.message.status = 'read';
+        await this.base.updateMessage(
+          mess.key,
+          mess,
+          this.selectedFriend.key,
+          this.userProfile.key
+        );
       }
       mess.message.viewTimeStamp = this.utilService.calcMinutesPassed(
         mess.message.timeStamp
       );
       mess.message.timeStamp = new Date(mess.message.timeStamp).getTime();
+      if (mess.message?.voiceMessage)
+        this.checkFileAccessible(mess.message.voiceMessage).subscribe(
+          isAccessible => {
+            isAccessible.status === 404
+              ? ((mess.message.message = 'A fajl nem elérhető'),
+                (mess.message.voiceMessage = ''))
+              : (mess.message.voiceMessage = mess.message.voiceMessage);
+          }
+        );
       return mess;
     });
 
@@ -973,17 +1158,37 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.getLastIntersectingMsg();
       }
     }
+    console.log(this.visibleMessages);
 
     // this.visibleMessages.reverse();
     return this.visibleMessages;
   }
 
   getUpdatedMessages() {
+    let delKeyArr: any[] = [];
+    let readKeyArr: any[] = [];
     return this.base
       .getUpdatedMessages(this.userProfile.key, this.selectedFriend.key)
       .subscribe(async mess => {
-        console.log(`***FRISSÍTETT ÜZENETEK LEKÉRVE***`);
-        this.updateSeenMessages(this.allChatsArray, false);
+        console.log(`***FRISSÍTETT ÜZENETEK LEKÉRVE***`, mess);
+        mess.map((updatedMess: any) => {
+          if (updatedMess.message?.status === 'delivered')
+            delKeyArr.push(updatedMess.key);
+          if (updatedMess.message?.status === 'read')
+            readKeyArr.push(updatedMess.key);
+        });
+        this.visibleMessages.map(mess => {
+          if (
+            readKeyArr.includes(mess.key) &&
+            (mess.message.status === 'delivered' ||
+              mess.message.status === 'sent')
+          )
+            mess.message.status = 'read';
+          if (delKeyArr.includes(mess.key) && mess.message.status !== 'read') {
+            mess.message.status = 'delivered';
+          }
+        });
+        // this.updateSeenMessages(this.allChatsArray, false);
       });
   }
 
@@ -1054,6 +1259,8 @@ export class MessageComponent implements OnInit, OnDestroy {
                 mess.participants[1] === this.userProfile.uid
               ) {
                 mess.message.seen = true;
+                mess.message.readAt = new Date().getTime();
+                mess.message.status = 'read';
                 this.base.updateMessage(
                   mess.key,
                   mess,
@@ -1103,6 +1310,10 @@ export class MessageComponent implements OnInit, OnDestroy {
       selectedTheme as any,
       this.userProfile.key
     );
+  }
+
+  onPlayAudio(audioElement: HTMLAudioElement) {
+    audioElement.play();
   }
 
   ngOnDestroy(): void {

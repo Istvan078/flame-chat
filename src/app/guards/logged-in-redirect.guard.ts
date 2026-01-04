@@ -1,29 +1,50 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, RedirectCommand, Router } from '@angular/router';
+import { CanMatchFn, Router } from '@angular/router';
+import { filter, map, switchMap, take } from 'rxjs';
 import { AuthService } from '../services/auth.service';
-import { filter, map, switchMap } from 'rxjs';
 
-export const loggedInRedirectGuard: CanActivateFn = (route, state) => {
+export const loggedInRedirectGuard: CanMatchFn = (route, segments) => {
   const router = inject(Router);
   const auth = inject(AuthService);
+
   return auth.isUserReadySubj.pipe(
-    filter(ready => ready),
-    switchMap(() => auth.getUserLoggedInSubject()),
-    map(usr => {
-      let path: any;
-      if (route.url[0]?.path) {
-        [{ path }] = route.url;
-      }
-      if (path === undefined && usr?.uid) return true;
-      if (usr?.uid) return new RedirectCommand(router.parseUrl(''));
-      if (!path && !usr?.uid)
-        return new RedirectCommand(router.parseUrl('/login'));
-      if (usr?.uid && auth.isUserReadySubj.value === true) {
-        auth.isUserReadySubj.next(false);
-        // Ha már be van jelentkezve, irányítsuk át
-        return new RedirectCommand(router.parseUrl(''));
-      }
-      return true; // engedjük a belépést
-    })
+    filter(Boolean),
+    switchMap(() =>
+      auth.getUserLoggedInSubject().pipe(
+        take(1),
+        map(user => {
+          const routePath = route.path ?? '';
+          const requestedUrl = segments.map(s => s.path).join('/');
+          const isRootMatch = routePath === '' && !requestedUrl;
+          const isLoggedIn = Boolean(user?.uid);
+          const isAuthRoute = routePath === 'login' || routePath === 'signup';
+          const requiresAuthentication =
+            routePath === '' || routePath.startsWith('profile');
+          const returnUrl = requestedUrl
+            ? `/${requestedUrl}`
+            : isRootMatch
+            ? '/chat'
+            : routePath
+            ? `/${routePath}`
+            : '/';
+
+          if (isRootMatch && isLoggedIn) {
+            return router.createUrlTree(['/chat']);
+          }
+
+          if (isAuthRoute && isLoggedIn) {
+            return router.createUrlTree(['/chat']);
+          }
+
+          if (!isLoggedIn && requiresAuthentication) {
+            return router.createUrlTree(['/login'], {
+              queryParams: { returnUrl },
+            });
+          }
+
+          return true;
+        })
+      )
+    )
   );
 };

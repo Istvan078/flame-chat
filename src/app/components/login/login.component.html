@@ -1,61 +1,57 @@
-<div *ngIf="!emailOrGoogle" class="container-0">
-  <h2
-    matTooltipPosition="left"
-    matTooltip="Kérjük írja be az e-mail címét és használjon egy erős jelszót a sikeres regisztráláshoz."
+<div class="main-container">
+  <form
+    #loginForm="ngForm"
+    *ngIf="!emailOrGoogle"
+    (ngSubmit)="loginWithEmAndPa()"
   >
-    Bejelentkezés Email címmel
-  </h2>
-</div>
-<form
-  #loginForm="ngForm"
-  *ngIf="!emailOrGoogle"
-  (ngSubmit)="loginWithEmAndPa()"
->
-  <mat-form-field>
-    <mat-label for="email">Email</mat-label>
-    <input matInput [(ngModel)]="email" type="email" name="email" />
-  </mat-form-field>
-  <mat-form-field>
-    <mat-label for="password">Jelszó</mat-label>
-    <input
-      #passRef
-      matInput
-      [(ngModel)]="password"
-      type="password"
-      name="password"
-    />
-    <mat-icon
-      (click)="
-        passRef.type === 'password'
-          ? (passRef.type = 'text')
-          : (passRef.type = 'password')
-      "
-      matIconSuffix
-      >{{
-        passRef.type === 'password' ? 'visibility_off' : 'visibility'
-      }}</mat-icon
-    >
-  </mat-form-field>
+    <mat-form-field>
+      <mat-label for="email">{{ 'auth.email' | translate }}</mat-label>
+      <input matInput [(ngModel)]="email" type="email" name="email" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label for="password">{{ 'auth.password' | translate }}</mat-label>
+      <input
+        #passRef
+        matInput
+        [(ngModel)]="password"
+        type="password"
+        name="password"
+      />
+      <mat-icon
+        (click)="
+          passRef.type === 'password'
+            ? (passRef.type = 'text')
+            : (passRef.type = 'password')
+        "
+        matIconSuffix
+        >{{
+          passRef.type === 'password' ? 'visibility_off' : 'visibility'
+        }}</mat-icon
+      >
+    </mat-form-field>
 
-  <button color="accent" mat-raised-button type="submit">Bejelentkezés</button>
-
-  <h4 class="text-center mt-3 fs-5">
-    {{ 'Regisztráció egyszerűen -->' }}
-    <a
-      (click)="loginWithGoogle()"
-      type="button"
-      class="btn btn-warning ms-2 me-2"
-      ><i class="bi bi-google h4"></i
-    ></a>
-    <button
-      (click)="isPhone = !isPhone"
-      class="btn btn-secondary"
-      type="button"
-    >
-      <span class="bi bi-telephone h4"></span>
+    <button color="accent" mat-raised-button type="submit">
+      {{ 'auth.login' | translate }}
     </button>
-  </h4>
-</form>
+
+    <h4 class="text-center mt-4 fs-5">
+      {{ 'auth.otherLoginTypes' | translate }}
+      <a
+        (click)="loginWithGoogle()"
+        type="button"
+        class="btn btn-warning ms-2 me-2"
+        ><i class="bi bi-google h4"></i
+      ></a>
+      <button
+        (click)="isPhone = !isPhone"
+        class="btn btn-secondary"
+        type="button"
+      >
+        <span class="bi bi-telephone h4"></span>
+      </button>
+    </h4>
+  </form>
+</div>
 
 <ng-container *ngIf="!reCapthcaOff">
   <div id="reCaptchaContainer"></div>

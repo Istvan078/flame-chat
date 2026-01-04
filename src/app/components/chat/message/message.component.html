@@ -1,53 +1,114 @@
-<div class="message-page" [style.--bg-url]="'url(' + chosenMsgTheme + ')'">
-  <!-- háttér a választott témából -->
-  <!-- AppBar -->
-  <mat-toolbar class="chat-appbar" color="primary">
-    <button mat-icon-button (click)="backToUsers()" aria-label="Vissza">
-      <mat-icon>arrow_back</mat-icon>
+<div class="chat">
+  <!-- BG THEME FOR MESSAGE -->
+  <div class="chat__bg-theme">
+    <img class="chat__bg-image" [src]="chosenMsgTheme" alt="Chat-theme" />
+  </div>
+
+  <!-- CHATBAR AT TOP FIXED -->
+  <nav class="chat__nav">
+    <button
+      type="button"
+      (click)="backToUsers()"
+      class="chat__nav-button chat__nav-button--back"
+      aria-label="Vissza"
+    >
+      <span class="chat__nav-button-span">&larr;</span>
     </button>
 
-    <div class="title">
-      <img class="avatar" [src]="selectedFriend?.profilePicture" alt="" />
-      <div class="meta">
-        <div class="name">{{ selectedFriend?.displayName }}</div>
-        <div class="status" *ngIf="selectedFriend?.visibility">
+    <div class="chat__nav-friend">
+      <img
+        class="chat__nav-avatar"
+        [src]="selectedFriend?.profilePicture"
+        alt=""
+      />
+      <div class="chat__nav-meta">
+        <div class="chat__nav-meta-name">{{ selectedFriend?.displayName }}</div>
+        <div class="chat__nav-meta-status" *ngIf="selectedFriend?.visibility">
           {{
             selectedFriend?.online
               ? 'online'
-              : 'Utoljára: ' + selectedFriend?.lastTimeOnline
+              : 'Elerheto: ' + selectedFriend?.lastTimeOnline
           }}
         </div>
       </div>
+
+      <button
+        class="chat__nav-menu-button"
+        mat-icon-button
+        [matMenuTriggerFor]="menu"
+        aria-label="Menü"
+      >
+        <mat-icon class="chat__nav-menu-icon">more_vert</mat-icon>
+      </button>
     </div>
+  </nav>
 
-    <span class="spacer"></span>
-
-    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Menü">
-      <mat-icon>more_vert</mat-icon>
-    </button>
-  </mat-toolbar>
-
-  <!-- Felső menü: Téma választó -->
-  <mat-menu #menu="matMenu">
-    <button [matMenuTriggerFor]="themesMenu" mat-menu-item>
+  <!-- MAIN MENU -->
+  <mat-menu class="chat__main-menu" #menu="matMenu">
+    <button
+      class="chat__main-menu-button"
+      [matMenuTriggerFor]="themesMenu"
+      mat-menu-item
+    >
       <mat-icon>contrast</mat-icon>
       <span>Téma</span>
     </button>
   </mat-menu>
 
-  <mat-menu #themesMenu="matMenu">
+  <mat-menu class="chat__menu-themes" #themesMenu="matMenu">
     <button
+      class="chat__menu-themes-button"
       (click)="chooseMsgTheme(theme)"
       mat-menu-item
       *ngFor="let theme of msgThemes"
     >
-      <img width="64" height="36" [src]="theme.url" [alt]="theme.name" />
-      <span>{{ theme.name }}</span>
+      <img
+        class="chat__menu-themes-img"
+        width="64"
+        height="36"
+        [src]="theme.url"
+        [alt]="theme.name"
+      />
+      <span class="chat__menu-themes-name">{{ theme.name }}</span>
     </button>
   </mat-menu>
+  <!-- MAIN MENU END -->
 
-  <!-- Kereső sor kerekített, outline stílussal -->
-  <!-- <div class="searchbar">
+  <!-- AI MESSAGE REPLY RECOMMENDATIONS -->
+  <div *ngIf="!hideAiBtn" class="chat__ai-suggestions">
+    <div class="chat__ai-suggestions-button-container">
+      <button
+        class="chat__ai-suggestions-button"
+        style="font-style: italic"
+        [disabled]="loading"
+        (click)="!suggestions.length ? getAiReplies() : (suggestions = [])"
+      >
+        <mat-icon class="material-symbols-outlined align-middle"
+          >robot_2</mat-icon
+        >
+        {{ loading ? 'Gondolkodom…' : '→' }}
+      </button>
+    </div>
+
+    <div class="chat__ai-suggestions-list" *ngIf="suggestions.length">
+      <button
+        class="chat__ai-suggestions-list-item"
+        *ngFor="let s of suggestions"
+        (click)="insertReply(s)"
+      >
+        {{ s }}
+      </button>
+    </div>
+
+    <div class="chat__ai-suggestions-error" *ngIf="error">{{ error }}</div>
+  </div>
+  <!-- AI MESSAGE REPLY RECOMMENDATIONS END -->
+
+  <!-- END OF CHAT BLOCK -->
+</div>
+
+<!-- Kereső sor kerekített, outline stílussal -->
+<!-- <div class="searchbar">
     <mat-form-field appearance="outline" class="search-field">
       <mat-label>Üzenet keresése</mat-label>
       <input
@@ -67,72 +128,145 @@
     </mat-form-field>
   </div> -->
 
-  <!-- Üzenetlista -->
-  <div #scrollContainer class="chat-body">
-    <ng-container *ngIf="userProfile?.uid && selectedFriendId">
-      <div
-        *ngFor="let msg of visibleMessages | filter : searchWord; let i = index"
-        class="bubble"
-        [class.right]="msg.message.senderId === userProfile.uid"
-        [attr.data-index]="i"
-        [id]="'msg-' + i"
+<!-- AI Üzenet javaslatok OLD VERSION -->
+<!-- <div *ngIf="!hideAiBtn" class="p-3 rounded-lg">
+  <div class="d-flex justify-content-center">
+    <button
+      class="px-3 py-2 rounded bg-primary text-white fw-bold border-0 text-center"
+      style="font-style: italic"
+      [disabled]="loading"
+      (click)="!suggestions.length ? getAiReplies() : (suggestions = [])"
+    >
+      <mat-icon
+        class="material-symbols-outlined align-middle"
+        style="color: rgb(15, 203, 72)"
+        >robot_2</mat-icon
       >
-        <!-- Bal oldali (barát) avatar -->
-        <div class="avatar-container">
-          <img
-            *ngIf="msg.message.senderId === selectedFriendId"
-            class="avatar mb-5"
-            [src]="selectedFriend.profilePicture"
-            alt="friend-profile-picture"
-            (click)="showFriendsProfPics()"
-          />
+      {{ loading ? 'Gondolkodom…' : '→' }}
+    </button>
+  </div>
+
+  <div class="mt-2 flex gap-2 flex-wrap" *ngIf="suggestions.length">
+    <button
+      class="px-2 py-1 m-1 border rounded"
+      *ngFor="let s of suggestions"
+      (click)="insertReply(s)"
+    >
+      {{ s }}
+    </button>
+  </div>
+
+  <div class="text-sm text-red-600 mt-2" *ngIf="error">{{ error }}</div>
+</div> -->
+
+<!-- Üzenetlista -->
+<div #scrollContainer class="chat-body">
+  <ng-container *ngIf="userProfile.uid && selectedFriendId">
+    <div
+      *ngFor="let msg of visibleMessages | filter : searchWord; let i = index"
+      class="bubble"
+      [class.right]="msg.message.senderId === userProfile.uid"
+      [attr.data-index]="i"
+      [id]="'msg-' + i"
+    >
+      <!-- Bal oldali (barát) avatar -->
+      <div class="avatar-container">
+        <img
+          *ngIf="msg.message.senderId === selectedFriendId"
+          class="avatar mb-5"
+          [src]="selectedFriend.profilePicture"
+          alt="friend-profile-picture"
+          (click)="showFriendsProfPics()"
+        />
+      </div>
+
+      <div class="msg scroll-to-new-mess">
+        <!-- időbélyeg a buborék felett -->
+        <div
+          class="time"
+          [class.align-right]="msg.message.senderId === userProfile.uid"
+        >
+          {{ msg.message.viewTimeStamp }}
         </div>
 
-        <div class="msg scroll-to-new-mess">
-          <!-- időbélyeg a buborék felett -->
-          <div
-            class="time"
-            [class.align-right]="msg.message.senderId === userProfile.uid"
-          >
-            {{ msg.message.viewTimeStamp }}
-          </div>
-
-          <!-- képek / videók -->
-          <ng-container *ngFor="let file of sentFilesArr">
-            <ng-container *ngIf="file.chatId === msg.key">
-              <div class="attachments">
-                <ng-container *ngFor="let pic of file.files; let pIdx = index">
-                  <img
-                    *ngIf="
-                      !pic.fileName.includes('.mp4') &&
-                      !pic.fileName.includes('m4a')
-                    "
-                    class="photo"
-                    [src]="pic.url"
-                    [alt]="pic.fileName"
-                    (click)="fileModalOpen(file.files, pIdx)"
-                  />
-                  <video
-                    *ngIf="pic.fileName.includes('.mp4')"
-                    class="video"
-                    [src]="pic.url"
-                    controls
-                  ></video>
-                </ng-container>
-              </div>
-            </ng-container>
+        <!-- képek / videók -->
+        <ng-container *ngFor="let file of sentFilesArr">
+          <ng-container *ngIf="file.chatId === msg.key">
+            <div class="attachments">
+              <ng-container *ngFor="let pic of file.files; let pIdx = index">
+                <img
+                  *ngIf="
+                    !pic.fileName.includes('.mp4') &&
+                    !pic.fileName.includes('m4a') &&
+                    !pic.fileName.includes('webm') &&
+                    !pic.fileName.includes('wav')
+                  "
+                  class="photo"
+                  [src]="pic.url"
+                  [alt]="pic.fileName"
+                  (click)="fileModalOpen(file.files, pIdx)"
+                />
+                <video
+                  *ngIf="pic.fileName.includes('.mp4')"
+                  class="video"
+                  [src]="pic.url"
+                  controls
+                ></video>
+              </ng-container>
+            </div>
           </ng-container>
+        </ng-container>
 
-          <!-- szöveg + válaszolt üzenet -->
-          <ng-container *ngIf="msg.message.message || msg.message.voiceMessage">
-            <div
-              class="text"
-              [class.emphasis]="msg.replyMessage?.message"
+        <!-- szöveg + válaszolt üzenet -->
+        <div matButton [matMenuTriggerFor]="msgOptionsMenu">
+          <mat-menu
+            #msgOptionsMenu="matMenu"
+            class="msg-options-menu my-1"
+            [backdropClass]="'msg-options-backdrop'"
+          >
+            <button
+              *ngIf="msg.message.senderId !== userProfile.uid"
+              mat-menu-item
+              class="menu-reply-msg"
               (click)="
                 msg.message.senderId === selectedFriendId
                   ? replyMessage(msg)
                   : null
               "
+            >
+              <mat-icon>reply</mat-icon>
+              Valasz
+            </button>
+            <button
+              *ngIf="
+                msg.message.senderId === userProfile.uid &&
+                !msg.message.cancelled
+              "
+              class="menu-mod-msg"
+              mat-menu-item
+              (click)="editMessage(msg)"
+            >
+              <mat-icon>edit</mat-icon>
+              Modositas
+            </button>
+            <button
+              *ngIf="
+                msg.message.senderId === userProfile.uid &&
+                !msg.message.cancelled
+              "
+              class="menu-del-msg"
+              mat-menu-item
+              (click)="cancelMyMessage(msg)"
+            >
+              <mat-icon>delete</mat-icon>
+              Torles
+            </button>
+          </mat-menu>
+          <ng-container *ngIf="msg.message.message || msg.message.voiceMessage">
+            <div
+              class="text"
+              [class.emphasis]="msg.replyMessage?.message"
+              (click)="devFunction(msg.message)"
             >
               <b>{{
                 msg.replyMessage?.message
@@ -162,111 +296,154 @@
                 </div>
               </ng-container>
 
-              <div class="audio" *ngIf="msg.message.voiceMessage">
-                <audio [src]="msg.message.voiceMessage" controls></audio>
+              <div *ngIf="msg.message.voiceMessage">
+                <div *ngIf="msg.message.voiceMessage" class="audio">
+                  <mat-icon
+                    class="audio__play-button"
+                    (click)="onPlayAudio(audioElement)"
+                    >play_arrow</mat-icon
+                  >
+                </div>
+                <audio #audioElement preload="auto">
+                  <source
+                    [src]="sanitize(msg.message.voiceMessage)"
+                    [attr.type]="
+                      msg.message.voiceMessage?.includes('.m4a')
+                        ? 'audio/mp4'
+                        : 'audio/webm'
+                    "
+                  />
+                  A böngésződ nem támogatja az audio lejátszót.
+                </audio>
               </div>
             </div>
           </ng-container>
+        </div>
 
-          <!-- reakciók -->
-          <div class="reactions">
-            <button
-              *ngIf="msg.message.senderId !== userProfile.uid"
-              mat-icon-button
-              [matMenuTriggerFor]="reactMenu"
-            >
-              <mat-icon>add_reaction</mat-icon>
-            </button>
-            <mat-menu #reactMenu="matMenu">
-              <button
-                *ngFor="let reaction of reactions"
-                mat-menu-item
-                (click)="setReactionForMsg(msg, reaction)"
-              >
-                <span>{{ reaction.reactionName }}</span>
-              </button>
-            </mat-menu>
-            <mat-icon *ngIf="msg.message?.reaction" class="reaction-icon">{{
-              msg.message.reaction.reactionIcon
-            }}</mat-icon>
-          </div>
-
-          <!-- látta jelzés saját üzenetnél -->
-          <div
-            class="seen"
-            *ngIf="msg.message.senderId === userProfile.uid && msg.message.seen"
+        <!-- reakciók -->
+        <div class="reactions">
+          <button
+            *ngIf="msg.message.senderId !== userProfile.uid"
+            mat-icon-button
+            [matMenuTriggerFor]="reactMenu"
           >
-            látta <img [src]="selectedFriend.profilePicture" alt="" />
-          </div>
+            <mat-icon>add_reaction</mat-icon>
+          </button>
+          <mat-menu #reactMenu="matMenu">
+            <button
+              *ngFor="let reaction of reactions"
+              mat-menu-item
+              (click)="setReactionForMsg(msg, reaction)"
+            >
+              <span>{{ reaction.reactionName }}</span>
+            </button>
+          </mat-menu>
+          <mat-icon *ngIf="msg.message?.reaction" class="reaction-icon">{{
+            msg.message.reaction.reactionIcon
+          }}</mat-icon>
+        </div>
+
+        <!-- látta jelzés saját üzenetnél -->
+        <div
+          class="seen"
+          *ngIf="
+            msg.message.senderId === userProfile.uid &&
+            msg.message.status === 'sent'
+          "
+        >
+          elküldve <mat-icon style="font-size: 1.8em">done</mat-icon>
+        </div>
+        <div
+          class="seen"
+          *ngIf="
+            msg.message.senderId === userProfile.uid &&
+            msg.message.status === 'delivered'
+          "
+        >
+          kezbesitve <mat-icon style="font-size: 1.8em">done_all</mat-icon>
+        </div>
+        <div
+          class="seen"
+          *ngIf="
+            msg.message.senderId === userProfile.uid &&
+            msg.message.status === 'read'
+          "
+        >
+          látta <img [src]="selectedFriend.profilePicture" alt="" />
         </div>
       </div>
-    </ng-container>
-  </div>
+    </div>
+  </ng-container>
+</div>
 
-  <!-- Komponáló sáv -->
-  <div class="composer" [class.expanded]="messageButtonClicked">
-    <button
-      mat-icon-button
-      class="attach"
-      (click)="!uploadFinished ? uploadFiles() : null"
-      [disabled]="
-        disabled || message.message.voiceMessage === 'recording-started'
-      "
+<!-- Komponáló sáv -->
+<div class="composer" [class.expanded]="messageButtonClicked">
+  <button
+    mat-icon-button
+    class="attach"
+    (click)="!uploadFinished ? uploadFiles() : null"
+    [disabled]="
+      disabled || message.message.voiceMessage === 'recording-started'
+    "
+  >
+    <label *ngIf="filesArr.length" for="fileUpload"
+      ><mat-icon>check</mat-icon></label
     >
-      <label *ngIf="filesArr?.length" for="fileUpload"
-        ><mat-icon>check</mat-icon></label
-      >
-      <label *ngIf="!uploadFinished" for="fileUpload"
-        ><mat-icon>upload</mat-icon></label
-      >
-      <label *ngIf="uploadFinished && !filesArr?.length" for="picUploadInput"
-        ><mat-icon>attach_file</mat-icon></label
-      >
-      <input
-        *ngIf="uploadFinished"
-        (change)="uploadFinished ? selectedFs($event) : ''"
-        id="picUploadInput"
-        multiple
-        type="file"
-      />
-    </button>
-
-    <textarea
-      class="input"
-      rows="1"
-      [(ngModel)]="message.message.message"
-      (keydown.enter)="$event.preventDefault(); addMessage()"
-      [disabled]="message.message.voiceMessage !== undefined"
-      [placeholder]="
-        message.message.voiceMessage && !audioStream
-          ? 'Felvetel Rogzitve'
-          : 'Üzenet írása...'
-      "
-    ></textarea>
-
-    <button
-      mat-icon-button
-      class="mic"
-      [disabled]="selectedFiles.length > 0 || filesArr.length > 0"
-      (click)="
-        message.message.voiceMessage !== 'recording-started'
-          ? recordVoiceMessage()
-          : stopRecordingVoiceMessage()
-      "
+    <label *ngIf="!uploadFinished" for="fileUpload"
+      ><mat-icon>upload</mat-icon></label
     >
-      <mat-icon>{{
-        message.message.voiceMessage !== 'recording-started' ? 'mic' : 'mic_off'
-      }}</mat-icon>
-    </button>
-
-    <button
-      mat-fab
-      class="send"
-      color="primary"
-      (click)="addMessage()"
-      [disabled]="uploadFinished === false || audioStream"
+    <label *ngIf="uploadFinished && !filesArr.length" for="picUploadInput"
+      ><mat-icon>attach_file</mat-icon></label
     >
-      <mat-icon>send</mat-icon>
-    </button>
-  </div>
+    <input
+      *ngIf="uploadFinished"
+      (change)="uploadFinished ? selectedFs($event) : ''"
+      id="picUploadInput"
+      multiple
+      type="file"
+    />
+  </button>
+
+  <textarea
+    class="input"
+    rows="1"
+    (input)="autoGrow($event)"
+    [(ngModel)]="message.message.message"
+    (keydown.enter)="$event.preventDefault(); addMessage()"
+    [disabled]="message.message.voiceMessage !== undefined"
+    [placeholder]="
+      message.message.voiceMessage?.includes('flamechat') && !audioStream
+        ? 'Felvetel Rogzitve - ' + message.message.voiceMessage
+        : 'Üzenet írása...'
+    "
+  ></textarea>
+
+  <button
+    mat-icon-button
+    class="mic"
+    [disabled]="selectedFiles.length > 0 || filesArr.length > 0"
+    (click)="
+      message.message.voiceMessage !== 'recording-started'
+        ? recordVoiceMessage()
+        : stopRecordingVoiceMessage()
+    "
+  >
+    <mat-icon>{{
+      message.message.voiceMessage !== 'recording-started' ? 'mic' : 'mic_off'
+    }}</mat-icon>
+  </button>
+
+  <button
+    mat-fab
+    class="send"
+    color="primary"
+    (click)="addMessage()"
+    [disabled]="
+      uploadFinished === false ||
+      audioStream ||
+      message.message.voiceMessage === 'recording-started'
+    "
+  >
+    <mat-icon>send</mat-icon>
+  </button>
 </div>

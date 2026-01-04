@@ -1,3 +1,126 @@
+@use '../../../../styles/styles' as *;
+
+// NEW VERSION //////////////////////////
+.chat {
+  & {
+    position: relative;
+    width: 100%;
+  }
+  &__bg-theme {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    opacity: 0.7;
+    height: 100%;
+    width: 100%;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  &__nav {
+    display: flex;
+    justify-content: flex-start;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: white;
+    z-index: 10;
+    height: 7.2rem;
+    &-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      font-weight: 900;
+      &--back {
+        color: white;
+        background: linear-gradient(
+          to right,
+          $color-dark-blue 0%,
+          $color-light-blue 100%
+        );
+      }
+      &-span {
+        display: inline-block;
+        font-size: 5rem;
+        transform: translateY(-0.5rem);
+      }
+    }
+    &-friend {
+      background: linear-gradient(
+        120deg,
+        $color-light-blue 0%,
+        $color-dark-blue 110%
+      );
+      display: flex;
+      align-items: center;
+      padding-left: 1.5rem;
+      width: 100%;
+    }
+    &-meta {
+    }
+    &-avatar {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 1.5rem;
+    }
+    &-menu-button {
+      flex: 1 1 auto;
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  &__ai-suggestions {
+    display: flex;
+    margin-top: 8rem;
+    margin-left: 0.5rem;
+    justify-content: flex-start;
+
+    &-button-container {
+      button {
+        border-radius: 3px;
+        padding: 0.5rem;
+        border: none;
+        background-image: linear-gradient(
+          to right,
+          $color-dark-blue,
+          $color-light-blue
+        );
+        color: white;
+        mat-icon {
+          color: $color-robot;
+        }
+      }
+    }
+
+    &-list {
+      display: flex;
+      gap: 1rem;
+      margin-left: 1rem;
+      font-size: 1.2rem;
+      flex-wrap: wrap;
+      &-item {
+        border: none;
+        border-radius: 3px;
+        background-image: linear-gradient(
+          to right,
+          $color-primary,
+          $color-secondary
+        );
+        color: white;
+      }
+    }
+  }
+}
+
+// OLD VERSION //////////////////////////
 .message-page {
   --bg-url: none;
   --composer-h: 72px;
@@ -76,7 +199,10 @@
 
 /* Üzenetlista */
 .chat-body {
+  margin-top: 5.5rem;
   padding: 8px 12px calc(var(--composer-h) + 12px + env(safe-area-inset-bottom));
+  // box-sizing: border-box;
+  // padding-left: 8px;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++.\
 }
 
 .day-divider {
@@ -127,6 +253,7 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
   font-size: 15px;
   color: #111827;
+  width: fit-content;
 }
 .bubble.right .text {
   background: #ede7f6;
@@ -172,7 +299,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 .reaction-icon {
   font-size: 18px;
@@ -201,14 +328,19 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  display: flex;
+  // display: grid;
+  // grid-template-columns: auto 1fr auto auto;
   gap: 8px;
   align-items: center;
   padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); /* iOS notch */
   background: #fff;
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.06);
   height: var(--composer-h);
+  justify-content: center;
+}
+.input {
+  width: 90%;
 }
 .composer .input {
   resize: none;
@@ -218,11 +350,62 @@
   padding: 12px 14px;
   outline: none;
   font-size: 15px;
+  height: auto;
 }
 .composer .send {
   width: 44px;
   height: 44px;
 }
 #picUploadInput {
+  display: none;
+}
+::ng-deep .menu-mod-msg {
+  background: rgb(214, 169, 34) !important;
+}
+::ng-deep .menu-reply-msg {
+  background: rgba(7, 122, 14, 1) !important;
+}
+
+::ng-deep .menu-del-msg {
+  background: rgb(225, 73, 73) !important;
+}
+::ng-deep .msg-options-menu .mat-mdc-menu-content {
+  padding: 0 !important;
+  gap: 6px !important;
+  display: flex;
+}
+
+::ng-deep .msg-options-menu .mat-mdc-menu-item {
+  flex: 1;
+  justify-content: center;
+  border-radius: 6px;
+  margin: 0;
+}
+
+::ng-deep .msg-options-menu {
+  background-color: transparent !important;
+}
+
+.audio {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  background-image: linear-gradient(
+    to right,
+    rgba(13, 86, 42, 1),
+    rgba(13, 86, 42, 0.2)
+  );
+  position: absolute;
+  padding: 0.5rem;
+  top: 1.4rem;
+  left: 0;
+  width: 20rem;
+  &__play-button {
+    cursor: pointer;
+    color: rgba(7, 11, 122, 0.8);
+    font-size: 2rem;
+  }
+}
+
+audio {
   display: none;
 }

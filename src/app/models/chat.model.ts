@@ -12,6 +12,10 @@ export class Chat {
     email: string;
     seen: boolean;
     reaction?: {};
+    cancelled?: boolean;
+    status?: 'sent' | 'delivered' | 'read';
+    deliveredAt?: number;
+    readAt?: number;
   };
 
   [indexS: string | number]: string | number | object;

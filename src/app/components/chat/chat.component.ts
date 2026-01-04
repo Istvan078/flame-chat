@@ -26,7 +26,6 @@ import {
   trigger,
 } from '@angular/animations';
 import { UtilityService } from 'src/app/services/utility.service';
-import { FilesModalComponent } from '../modals/files-modal/files-modal.component';
 
 @Component({
   selector: 'app-chat',
@@ -137,11 +136,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     // TODO: ide kötheted be a side-nav/menu nyitását
   }
 
-  openProfile(): void {
-    // TODO: ide teheted a profil megnyitását (pl. this.toUserProfile())
-    // this.toUserProfile();
-  }
-
   // POSZTOKKAL KAPCSOLATOS //
   postsNotificationNumber: number = 0;
   myPostsNotificationNumber: number = 0;
@@ -211,6 +205,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
         this.userProfile = user.userProfile;
       }
       if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
+      console.log(this.userNotFriends);
       if (user.userFriends) {
         this.userFriends = user.userFriends;
         this.getNumberOfNewMessages();
@@ -718,14 +713,19 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  toPersonProfile(person: any) {
+    person.uid = person.friendId;
+    this.base.friendProfileSubject.next(person);
+    this.base.userProfilesSubject.next(this.userProfiles);
+    this.router.navigate([`/${person.friendId}/friend-profile`]);
+  }
+
   toFriendProfile(friendId: string) {
     const userProfile = this.userProfile;
     const promise = new Promise((res, rej) => {
       const friendProfile = this.userProfiles.find(uP => {
         return uP.uid === friendId;
       });
-      // send friendprofilekey with subj
-      this.base.userKeySubject.next(friendProfile?.key);
       if (friendProfile?.friends) {
         const friendsArrIterable = [...Object.entries(friendProfile!.friends)];
         const friendsArr: any = friendsArrIterable.flat();
@@ -891,6 +891,14 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  openProfileOptions() {
+    const profileOptionsModal = this.ngbModal.open(ModalComponent, {
+      fullscreen: true,
+      animation: true,
+    });
+    profileOptionsModal.componentInstance.user = this.userProfile;
+    profileOptionsModal.componentInstance.userOptionsMenu = true;
+  }
   ngOnDestroy(): void {
     if (this.userLoggedInSubscription) {
       this.userLoggedInSubscription.unsubscribe();

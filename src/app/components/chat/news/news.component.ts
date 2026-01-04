@@ -1,6 +1,7 @@
 import {
   AfterViewInit,
   Component,
+  CUSTOM_ELEMENTS_SCHEMA,
   Input,
   OnDestroy,
   OnInit,
@@ -25,11 +26,16 @@ import {
 } from '@angular/animations';
 import { MatModalComponent } from '../../modals/mat-modal/mat-modal.component';
 import { MatDialog } from '@angular/material/dialog';
+import { SharedModule } from '../../shared/shared.module';
+import { PostsComponent } from '../shared/posts/posts.component';
 
 @Component({
   selector: 'app-news',
   templateUrl: './news.component.html',
   styleUrls: ['./news.component.scss'],
+  standalone: true,
+  imports: [SharedModule, PostsComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   animations: [
     trigger('fade-in', [
       state(
@@ -199,16 +205,16 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pipeRefresh = true;
   }
 
-  loadImage(entries: any, observer: any) {
-    const [entry] = entries;
-    // src-t átállítom a data-src-ra ha eléri a képet a scrollpozíció
-    if (!entry.isIntersecting) return;
-    entry.target.src = entry.target.dataset.src;
-    entry.target.addEventListener('load', (e: any) => {
-      e.target.classList.remove('lazy-img');
-    });
-    observer.unobserve(entry.target);
-  }
+  // loadImage(entries: any, observer: any) {
+  //   const [entry] = entries;
+  //   // src-t átállítom a data-src-ra ha eléri a képet a scrollpozíció
+  //   if (!entry.isIntersecting) return;
+  //   entry.target.src = entry.target.dataset.src;
+  //   entry.target.addEventListener('load', (e: any) => {
+  //     e.target.classList.remove('lazy-img');
+  //   });
+  //   observer.unobserve(entry.target);
+  // }
 
   loadIFrames(entries: any, observer: IntersectionObserver) {
     const [entry] = entries;
@@ -218,41 +224,41 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
     observer.unobserve(entry.target);
   }
 
-  renderImages() {
-    const sub = new Observable(observer => {
-      const interval = setInterval(() => {
-        const imgTargets = document.querySelectorAll(
-          '.shared-posts-pics-container img[data-src]'
-        );
-        if (imgTargets.length) {
-          observer.next(imgTargets);
-          observer.complete();
-          clearInterval(interval);
-        }
-      }, 5);
-    }).subscribe((imgTargets: any) => {
-      const imgObserver = new IntersectionObserver(this.loadImage, {
-        root: null,
-        threshold: [0],
-        rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
-      });
+  // renderImages() {
+  //   const sub = new Observable(observer => {
+  //     const interval = setInterval(() => {
+  //       const imgTargets = document.querySelectorAll(
+  //         '.shared-posts-pics-container img[data-src]'
+  //       );
+  //       if (imgTargets.length) {
+  //         observer.next(imgTargets);
+  //         observer.complete();
+  //         clearInterval(interval);
+  //       }
+  //     }, 5);
+  //   }).subscribe((imgTargets: any) => {
+  //     const imgObserver = new IntersectionObserver(this.loadImage, {
+  //       root: null,
+  //       threshold: [0],
+  //       rootMargin: '200px', // 100px-el a threshold elérése előtt tölti be a képet
+  //     });
 
-      imgTargets.forEach((img: any) => {
-        if (imgTargets[0]) {
-          imgTargets[0].src = imgTargets[0].dataset.src;
-          imgTargets[0].classList.remove('lazy-img');
-        }
-        if (imgTargets[1]) {
-          imgTargets[1].src = imgTargets[1].dataset.src;
-          imgTargets[1].classList.remove('lazy-img');
-        }
-        imgObserver.observe(img);
-        // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
-        // meghatározott root elemet
-      });
-      sub.unsubscribe();
-    });
-  }
+  //     imgTargets.forEach((img: any) => {
+  //       if (imgTargets[0]) {
+  //         imgTargets[0].src = imgTargets[0].dataset.src;
+  //         imgTargets[0].classList.remove('lazy-img');
+  //       }
+  //       if (imgTargets[1]) {
+  //         imgTargets[1].src = imgTargets[1].dataset.src;
+  //         imgTargets[1].classList.remove('lazy-img');
+  //       }
+  //       imgObserver.observe(img);
+  //       // annyiszor fut le a callback ahányszor az img elem interszektálja az options-ben
+  //       // meghatározott root elemet
+  //     });
+  //     sub.unsubscribe();
+  //   });
+  // }
 
   renderIFrames() {
     // data-src-t csinálni
@@ -328,7 +334,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getPostsData() {
     let proba: any[] = [];
-    this.renderImages();
+    // this.renderImages();
     this.renderIFrames();
     this.sharedPosts.map(shPost => {
       if (shPost.sharedPublicly?.length)

@@ -14,6 +14,7 @@ export class FilesModalComponent {
   @Input() viewIndex: number = 0;
   @Input() picturesArr: any[] = [];
   @Input() profPicsArr: string = '';
+  @Input() uploadedFilesArr: any[] = [];
   fadeIn: boolean = false;
 
   left() {
