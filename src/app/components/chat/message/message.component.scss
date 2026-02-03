@@ -1,6 +1,11 @@
 @use '../../../../styles/styles' as *;
 
 // NEW VERSION //////////////////////////
+
+audio {
+  display: none;
+}
+
 .chat {
   & {
     position: relative;
@@ -29,37 +34,32 @@
     width: 100%;
     color: white;
     z-index: 10;
-    height: 7.2rem;
+    height: 6.2rem;
+    background: linear-gradient(
+      120deg,
+      $color-light-blue 0%,
+      $color-dark-blue 110%
+    );
     &-button {
       display: flex;
       align-items: center;
       justify-content: center;
       border: none;
       font-weight: 900;
+      padding: 0.5rem;
       &--back {
+        background: transparent;
+        font-size: 3rem;
         color: white;
-        background: linear-gradient(
-          to right,
-          $color-dark-blue 0%,
-          $color-light-blue 100%
-        );
-      }
-      &-span {
-        display: inline-block;
-        font-size: 5rem;
-        transform: translateY(-0.5rem);
+        z-index: 5;
       }
     }
     &-friend {
-      background: linear-gradient(
-        120deg,
-        $color-light-blue 0%,
-        $color-dark-blue 110%
-      );
       display: flex;
       align-items: center;
       padding-left: 1.5rem;
       width: 100%;
+      z-index: 6;
     }
     &-meta {
     }
@@ -108,6 +108,7 @@
       flex-wrap: wrap;
       &-item {
         border: none;
+        padding: 0 0.7rem;
         border-radius: 3px;
         background-image: linear-gradient(
           to right,
@@ -117,6 +118,142 @@
         color: white;
       }
     }
+  }
+
+  // Chat messages MAIN PART
+  &__messages {
+    margin-top: 2rem;
+    margin-left: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+
+    &-friend {
+      grid-template-columns: 1fr 5fr;
+      column-gap: 1rem;
+      grid-column: 1/2;
+      justify-content: center;
+      align-items: center;
+    }
+
+    &-user {
+      grid-template-columns: auto;
+      column-gap: 1rem;
+      row-gap: 0.5rem;
+      grid-column: 2/3;
+      justify-content: flex-end;
+      padding-right: 0.5rem;
+
+      .chat__message-box--user {
+        position: relative;
+        background: $color-light-blue;
+        padding: 1rem;
+        border-radius: 1rem;
+        color: white;
+        font-size: 1.6rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .reaction-icon {
+          position: absolute;
+          display: inline-block;
+          left: -1rem;
+          bottom: 1.1rem;
+          font-size: 2rem;
+          width: 0;
+          height: 0;
+        }
+      }
+      .chat__messages-seen {
+        justify-content: end;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.2rem;
+        color: $color-dark-blue;
+      }
+    }
+
+    &-friend-message-container {
+      row-gap: 0.5rem;
+      grid-template-columns: auto;
+      justify-content: flex-start;
+    }
+
+    &-time-written {
+      font-size: 1.2rem;
+      color: $color-dark;
+    }
+    &-box--friend {
+      position: relative;
+      background: $color-light;
+      padding: 1rem;
+      border-radius: 1rem;
+      color: $color-dark;
+      font-size: 1.6rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      .reaction-icon {
+        position: absolute;
+        display: inline-block;
+        right: -0.8rem;
+        bottom: -0.6rem;
+        font-size: 2rem;
+      }
+    }
+    &-reaction {
+      font-size: 1.4rem;
+      color: $color-dark;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      .mat-icon {
+        cursor: pointer;
+        height: 5rem;
+        width: 5rem;
+      }
+    }
+  }
+
+  &__picture-box {
+    // grid
+  }
+  &__avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__audio {
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    background-image: linear-gradient(
+      to right,
+      rgba($color-light-green, 1),
+      rgba($color-dark-green, 0.2)
+    );
+    padding: 0.5rem;
+    &__play-button {
+      cursor: pointer;
+      color: rgba($color-dark-blue, 0.8);
+      font-size: 2rem;
+    }
+
+    &--current-time {
+      padding: 0 1rem;
+      font-size: 1.4rem;
+      color: $color-dark;
+    }
+    &--range {
+      flex: 1 1 1;
+      accent-color: $color-dark-blue;
+      cursor: pointer;
+    }
+    &--duration {
+      padding: 0 1rem;
+      font-size: 1.4rem;
+      color: $color-dark;
+    }
+  }
+  &__voice-message--included {
+    grid-template-columns: 7fr;
   }
 }
 
@@ -384,28 +521,4 @@
 
 ::ng-deep .msg-options-menu {
   background-color: transparent !important;
-}
-
-.audio {
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-  background-image: linear-gradient(
-    to right,
-    rgba(13, 86, 42, 1),
-    rgba(13, 86, 42, 0.2)
-  );
-  position: absolute;
-  padding: 0.5rem;
-  top: 1.4rem;
-  left: 0;
-  width: 20rem;
-  &__play-button {
-    cursor: pointer;
-    color: rgba(7, 11, 122, 0.8);
-    font-size: 2rem;
-  }
-}
-
-audio {
-  display: none;
 }

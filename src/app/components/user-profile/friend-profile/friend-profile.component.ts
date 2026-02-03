@@ -71,7 +71,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  left() {
+  toLeft() {
     // balra lépegetés képeknél
     if (this.actIndex > 0) this.actIndex--;
     this.friendProfile.pictures = this.allPicsArr.slice(
@@ -80,7 +80,7 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
     );
   }
 
-  right() {
+  toRight() {
     // jobbra lépegetés képeknél
     if (this.actIndex + 4 <= this.allPicsArr.length) this.actIndex++;
     this.friendProfile.pictures = this.allPicsArr.slice(
@@ -97,23 +97,20 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
         frObj => {
           if (frObj.uid) {
             this.friendProfile = frObj;
-            console.log(this.friendProfile);
             // A barát képobjektumának átalakítása iterálhatóvá, utána mapelem
             // 2 tömbben elmentem a képeket a slice metódus alkalmazásához
             // A this.allPicsArr-ben megmaradnak az eredeti képek
-            if (this.friendProfile.pictures) {
+            if (this.friendProfile?.pictures) {
               this.setAndSlicePictures();
             }
 
             // Barátok listája összegyűjtése és tömbbe helyezése
             this.userProfilesSubscription =
               this.base.userProfilesSubject.subscribe((uProfs: UserClass[]) => {
-                console.log(uProfs);
                 if (this.friendProfile.friends) {
                   var friendsArr = Object.values(
                     this.friendProfile.friends as any
                   ).map((friend: any) => {
-                    console.log(friend);
                     if (
                       friend?.areFriends === true ||
                       friend?.confirmed === true
@@ -170,8 +167,8 @@ export class FriendProfileComponent implements OnInit, OnDestroy {
       const picUrlsArr = picturesArr.map((pic: any) => pic?.url);
       this.friendProfile.pictures = picUrlsArr;
       this.allPicsArr = picUrlsArr;
-    } else this.allPicsArr = this.friendProfile.pictures;
-    this.friendProfile.pictures = this.friendProfile.pictures.slice(0, 3);
+    } else
+      this.friendProfile.pictures = this.friendProfile.pictures.slice(0, 3);
   }
 
   toChosenUserProfile(userUid: string) {

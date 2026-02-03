@@ -208,10 +208,11 @@ export class FirestoreService {
   }
 
   getFilesFromChat(userKey: string): Observable<DocumentData> {
-    this.filesFromChat = this.fireStore.collection(
-      `users/private/chats/${userKey}/files`
-    );
-    return this.filesFromChat.snapshotChanges(['added']);
+    return ((this.filesFromChat as any) = this.fireStore
+      .collection(`users/private/chats/${userKey}/files`, ref =>
+        ref.orderBy('createdAt', 'desc').limit(15)
+      )
+      .snapshotChanges(['added']));
   }
 
   addPublicPictures(file: any, userKey: string) {

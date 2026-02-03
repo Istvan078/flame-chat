@@ -1,10 +1,7 @@
-<div class="home-page test">
-  <!-- App bar / Header -->
+<!-- HOME PAGE BLOCK (MAIN CONTAINER) -->
+<div class="home-page">
+  <!-- Home page bar / Header -->
   <mat-toolbar class="appbar">
-    <!-- <button mat-icon-button (click)="openMainMenu?.()" aria-label="Menü">
-      <mat-icon>menu</mat-icon>
-    </button> -->
-
     <span class="title">
       <mat-icon class="fire">local_fire_department</mat-icon>
       Flame Chat
@@ -36,110 +33,119 @@
     </button>
   </mat-toolbar>
 
-  <!-- Kereső szekció -->
+  <!-- SEARCH SECTION -->
   <section class="search-section">
-    <mat-form-field appearance="outline" class="search-field">
-      <mat-label>{{ 'mainPage.searchUser' | translate }}</mat-label>
-      <input
-        matInput
-        [(ngModel)]="userSearched"
-        (keyup)="searchUser()"
-        placeholder="{{ 'mainPage.searchByName' | translate }}"
-      />
-      <button
-        *ngIf="userSearched"
-        matSuffix
-        mat-icon-button
-        aria-label="Törlés"
-        (click)="userSearched = ''; searchUser()"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
+    <button
+      (click)="searchField.hidden = !searchField.hidden"
+      class="btn search-section__search-btn"
+    >
+      <mat-icon class="u-align-middle">search</mat-icon>
+      {{ searchField.hidden ? 'Search By Name' : '' }}
+    </button>
+    <input
+      hidden="true"
+      class="search-section__search-field"
+      placeholder="{{ 'mainPage.searchByName' | translate }}"
+      #searchField
+      type="text"
+      [(ngModel)]="userSearched"
+      (keyup)="searchUser()"
+    />
+  </section>
 
-    <!-- találatok -->
-    <div *ngFor="let user of userSearchedProfiles" class="search-result">
-      <button class="result-left" (click)="toFriendProfile(user.uid)">
+  <!-- SEARCH RESULTS BLOCK -->
+  <section class="search-results u-flex">
+    @for(user of userSearchedProfiles; track $index; let i = $index){
+    <div
+      *ngIf="user.uid !== 'NR8BsiJ2DtUy32bGgVnEijzBZ9F2'"
+      class="search-results__box u-grid"
+    >
+      <!-- BACK ARROW -->
+      <!-- @if(i===0) {
+      <mat-icon>arrow_back_ios</mat-icon>
+      } -->
+      <button class="btn search-results__btn" (click)="toFriendProfile(user)">
         <img [src]="user.profilePicture" alt="profilkép" class="avatar" />
         <div class="name">{{ user.displayName }}</div>
       </button>
-      <ng-container *ngFor="let notFriend of userNotFriends">
-        <button
-          *ngIf="notFriend.friendId === user.uid"
-          mat-raised-button
-          color="accent"
-          class="add-btn"
-          (click)="signAsAFriend(notFriend)"
-        >
-          <mat-icon>person_add</mat-icon>
-          {{ 'user.signAsFriend' | translate }}
-        </button>
-      </ng-container>
-    </div>
-  </section>
+      @for (notFriend of userNotFriends; track $index;) {
 
-  <section
-    class="suggestions suggestions--compact"
-    *ngIf="userNotFriends.length"
-  >
-    <div class="sugg-head">
-      <h3>{{ 'user.suggestedFriends' | translate }}</h3>
-    </div>
-
-    <div class="sugg-viewport" #suggViewport (scroll)="updateSuggNav()">
-      <!-- bal/jobb nyilak overlay a soron -->
       <button
-        class="nav prev"
-        mat-mini-fab
-        (click)="scrollSugg('left')"
-        [disabled]="!canScrollLeft"
-        aria-label="Balra"
+        *ngIf="notFriend.friendId === user.uid"
+        class="btn btn-add-friend"
+        (click)="signAsAFriend(notFriend)"
       >
-        <mat-icon>chevron_left</mat-icon>
+        <mat-icon class="u-align-middle">person_add</mat-icon>
+        {{ 'user.signAsFriend' | translate }}
       </button>
-      <button
-        class="nav next"
-        mat-mini-fab
-        (click)="scrollSugg('right')"
-        [disabled]="!canScrollRight"
-        aria-label="Jobbra"
-      >
-        <mat-icon>chevron_right</mat-icon>
-      </button>
+      }
+      <!-- FORWARD ARROW -->
+      <!-- @if(i===3) {
+      <mat-icon>arrow_forward_ios</mat-icon>
 
-      <div class="sugg-track">
-        <ng-container *ngFor="let nf of userNotFriends; trackBy: trackByUid">
-          <div
-            class="sugg-card"
-            *ngIf="
-              !userProfile.blockedPeople?.includes(nf.friendId) &&
-              !nf?.blockedFromApp
-            "
-          >
-            <img
-              class="avatar"
-              [src]="nf.profilePicture"
-              alt="{{ nf.displayName }} profilképe"
-              loading="lazy"
-              (click)="toPersonProfile(nf)"
-            />
-            <div class="name" [title]="nf.displayName">
-              {{ nf.displayName }}
-            </div>
-            <button
-              class="add"
-              mat-stroked-button
-              color="primary"
-              (click)="signAsAFriend(nf)"
-            >
-              <mat-icon>person_add</mat-icon
-              ><span>{{ 'user.signAsFriend' | translate }}</span>
-            </button>
-          </div>
-        </ng-container>
-      </div>
+      } -->
     </div>
+    } @empty { @for(user of userNotFriends; track $index; let i = $index){
+    <div
+      *ngIf="user.friendId !== 'NR8BsiJ2DtUy32bGgVnEijzBZ9F2'"
+      class="search-results__box u-grid"
+    >
+      <!-- BACK ARROW -->
+      <!-- @if(i===0) {
+      <mat-icon>arrow_back_ios</mat-icon>
+      } -->
+
+      <button class="btn search-results__btn" (click)="toFriendProfile(user)">
+        <img [src]="user.profilePicture" alt="profilkép" class="avatar" />
+        <div class="name">{{ user.displayName }}</div>
+      </button>
+      @for (notFriend of userNotFriends; track $index;) {
+
+      <button
+        *ngIf="notFriend.friendId === user.friendId"
+        class="btn btn-add-friend"
+        (click)="signAsAFriend(notFriend)"
+      >
+        <mat-icon class="u-align-middle">person_add</mat-icon>
+        {{ 'user.signAsFriend' | translate }}
+      </button>
+      }
+      <!-- FORWARD ARROW -->
+      <!-- @if(i===3) {
+      <mat-icon>arrow_forward_ios</mat-icon>
+
+      } -->
+    </div>
+    } }
   </section>
+  <!-- SEARCH RESULTS AND SUGGESTED FRIENDS BLOCK END -->
+
+  <!-- FRIEND CONFIRMATION SECTION -->
+  @if(notConfirmedMeUsers.length){
+  <section class="signed-me-section u-flex">
+    @for(user of notConfirmedMeUsers; track $index){
+    <div class="signed-me-section__box u-grid">
+      <h4 class="friend-name">{{ user.displayName }}</h4>
+      <p class="friend-signed-text">Ismerősnek jelölt</p>
+      <img
+        [src]="user.profilePicture"
+        alt="Profilkép"
+        class="avatar"
+        (click)="toFriendProfile(user.uid)"
+      />
+      <button (click)="confirmedFriend(user)" class="btn btn-confirm-friend">
+        Megerosites</button
+      ><button
+        (click)="notConfirmFriend(user)"
+        class="btn btn-not-confirm-friend"
+      >
+        Nem ismerem
+      </button>
+    </div>
+    }
+  </section>
+  }
+  <!-- FRIEND CONFIRMATION SECTION END-->
 
   <!-- Menücsempék / gyors műveletek -->
   <section class="menu-grid">
@@ -300,8 +306,8 @@
 
   <section class="content scroll-to-content" *ngIf="isFriendsOpen">
     <div class="friends-grid">
-      @for(friend of userFriends; let i = $index; track friend.displayName){
-      @defer(on viewport){
+      @for(friend of userFriends; let i = $index; track $index){ @defer(on
+      viewport){
       <mat-card class="friend-card">
         <img
           [src]="friend.profilePicture"
@@ -317,7 +323,7 @@
           <button
             mat-stroked-button
             color="primary"
-            (click)="toFriendProfile(friend.friendId)"
+            (click)="toFriendProfile(friend)"
           >
             <mat-icon>person</mat-icon>
             Profil
@@ -341,20 +347,4 @@
   <section class="content" *ngIf="isUserProfileOn && userProfile.uid">
     <app-user-profile></app-user-profile>
   </section>
-
-  <!-- Alsó navigáció (a chatlistével egységes) -->
-  <nav class="bottom-nav">
-    <button class="nav-item" routerLink="/message">
-      <mat-icon>chat_bubble_outline</mat-icon>
-      <span>Üzenetek</span>
-    </button>
-    <button class="nav-item active">
-      <mat-icon>home</mat-icon>
-      <span>Főoldal</span>
-    </button>
-    <button class="nav-item" (click)="openMainMenu()">
-      <mat-icon>menu</mat-icon>
-      <span>Menü</span>
-    </button>
-  </nav>
 </div>

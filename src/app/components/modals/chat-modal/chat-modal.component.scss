@@ -1,0 +1,46 @@
+@use '../../../../styles/styles' as *;
+
+.chat__modal {
+  display: grid;
+  background: white;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1001;
+  position: fixed;
+  top: 0;
+  left: 0;
+  grid-template-rows: auto 1fr auto;
+  &-header {
+    color: rgb(59, 52, 52);
+    border-bottom: 2px solid $color-light-gray;
+    padding: 1rem;
+
+    h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin: 0;
+    }
+    box-shadow: 0 2px 4px rgba($color-dark, 0.1);
+  }
+  &-body {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 1rem);
+    grid-template-rows: repeat(auto-fit, 1rem);
+    align-content: center;
+    grid-gap: 5rem;
+
+    & > * {
+      cursor: pointer;
+      font-size: 4rem;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      width: 0;
+      &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba($color-dark, 0.2);
+      }
+    }
+  }
+}

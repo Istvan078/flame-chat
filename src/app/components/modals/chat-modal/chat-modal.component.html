@@ -1,0 +1,13 @@
+<div class="chat__modal">
+  <div class="chat__modal-header">
+    <h2>🙂 Choose Reaction 🙂</h2>
+  </div>
+  <div class="chat__modal-body">
+    @for(react of reactionsArr; track $index ) {
+    <span (click)="setReactionForMsg(react)">{{ react.reactionIcon }}</span>
+    }
+  </div>
+  <div class="chat__modal-footer">
+    <!-- <button (click)="closeModal()">Close</button> -->
+  </div>
+</div>

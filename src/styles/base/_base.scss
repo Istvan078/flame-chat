@@ -1,0 +1,40 @@
+/* * - az oldal minden elemere vonatkozik */
+
+*,
+/* fontos, hogy az after es before pseudo elemekre is vonatkozzon */
+*::after,
+*::before {
+  margin: 0;
+  padding: 0;
+  /* megvaltoztatja a box modelt ugy, hogy a border es a padding nem lesz hozzaadva a teljes szelesseghez,magassaghoz */
+  box-sizing: inherit;
+}
+
+html {
+  // this defines what 1 rem is
+  font-size: 62.5%;
+  /* igy 1rem = 10px lesz mert a bongeszo alapertelmezetten 16px font size-t hasznal (10/16=0.625)
+MAGUNKNAK KONNYITJUK MEG A MERETEZEST HA AZ ALAP 10PX MERT KONNYEBBEN SZAMOLHATUNK REM-BEN MINDEN ELEMEN ES A MEDIA QUERIES-BEN IS CSAK A ROOT FONT SIZE-T KELL MEGVALTOZTATNI ES MINDEN REM-es ELEM AUTOMATIKUSAN KOVETI a valtozast !!!!!!
+A user is fog tudni zoomolni igy rendesen mert relativ mereteket hasznalunk
+  */
+
+  // fontos a sorrend mert a media query-k felulirjak az elozo beallitast, ezert a nagyobb meretet tegyuk a legelejere, mert ha conflicting akkor az utolsot veszi figyelembe a browser
+  @include respond(big-desktop) {
+    // 1 rem = 12px, 12/16 = 0.75 = 75%
+    font-size: 75%;
+  }
+  @include respond(tab-land) {
+    //width < 1200?
+    // 1 rem = 9px, 9/16 = 0.5625 = 56.25%
+    font-size: 56.25%;
+  }
+  @include respond(tab-port) {
+    // width < 900?
+    // 1 rem = 8px, 8/16 = 0.5 = 50%
+    font-size: 50%;
+  }
+}
+
+body {
+  box-sizing: border-box;
+}

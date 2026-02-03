@@ -1,41 +1,27 @@
-<nav class="bottom-nav mat-elevation-z6">
+<nav class="main__bottom-nav">
   @if(!userLoggedIn) {
 
-  <button
-    mat-icon-button
-    [routerLink]="['/signup']"
-    [class.active]="isRouteActive('/signup')"
-  >
+  <button [routerLink]="['/signup']" [class.active]="isRouteActive('/signup')">
     <mat-icon>person_add</mat-icon>
     <span>{{ 'auth.signup' | translate }}</span>
   </button>
-  <button
-    mat-icon-button
-    [routerLink]="['/login']"
-    [class.active]="isRouteActive('/login')"
-  >
+  <button [routerLink]="['/login']" [class.active]="isRouteActive('/login')">
     <mat-icon>login</mat-icon>
     <span>{{ 'auth.login' | translate }}</span>
   </button>
   } @if(userLoggedIn) {
   <button
-    mat-icon-button
     [routerLink]="['/message']"
     [class.active]="isRouteActive('/message')"
   >
     <mat-icon>chat</mat-icon>
     <span>{{ 'bottom-nav.messages' | translate }}</span>
   </button>
-  <button
-    mat-icon-button
-    [routerLink]="['/chat']"
-    [class.active]="isRouteActive('/chat')"
-  >
+  <button [routerLink]="['/chat']" [class.active]="isRouteActive('/chat')">
     <mat-icon>group</mat-icon>
     <span>{{ 'bottom-nav.mainPage' | translate }}</span>
   </button>
   <button
-    mat-icon-button
     [routerLink]="['/main-menu']"
     [class.active]="isRouteActive('/main-menu')"
   >

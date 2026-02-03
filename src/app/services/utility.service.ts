@@ -8,6 +8,7 @@ import deepmerge from 'deepmerge';
 import { Chat } from '../models/chat.model';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Environments } from '../environments';
+import { TranslateService } from '@ngx-translate/core';
 
 interface AllUserDetails {
   userProfiles: UserClass[];
@@ -22,6 +23,7 @@ interface AllUserDetails {
 export class UtilityService {
   private auth = inject(AuthService);
   private base = inject(BaseService);
+  private translate = inject(TranslateService);
   private genAI = new GoogleGenerativeAI(Environments.geminiApiKey);
   private model = this.genAI.getGenerativeModel({
     model: 'gemini-2.0-flash-lite',
@@ -374,6 +376,7 @@ export class UtilityService {
   }
 
   calcMinutesPassed(sentMessDate: any) {
+    const lang = localStorage.getItem('lang');
     const newDate = new Date().getTime();
     sentMessDate = new Date(sentMessDate).getTime();
     // A különbség milliszekundumokban
@@ -397,11 +400,15 @@ export class UtilityService {
     }
 
     if (passedMinsSMessSent < 60)
-      return `${passedMinsSMessSent} perccel ezelőtt`;
+      return `${passedMinsSMessSent} ${this.translate.instant(
+        'user.online.minutesAgo'
+      )}`;
 
-    if (hours < 24) return `${hours} órával ezelőtt`;
+    if (hours < 24)
+      return `${hours} ${this.translate.instant('user.online.hoursAgo')}`;
 
-    if (hours >= 24) return `${days} nappal ezelőtt`;
+    if (hours >= 24)
+      return `${days} ${this.translate.instant('user.online.daysAgo')}`;
   }
 
   getLanguage() {
@@ -411,22 +418,42 @@ export class UtilityService {
 
   // egyszerű „smart reply” minta
   async suggestReplies(message: string): Promise<string[]> {
-    const prompt = `Adj pontosan 3 rövid, barátságos, de pontos válaszjavaslatot ${this.getLanguage()}ul erre az üzenetre.
-      Csak a válaszokat add vissza, soronként egyet. Ne írj bevezetőt, ne írj magyarázatot, csak a 3 válaszjavaslatot.
-      Üzenet: """${message}"""`;
-
-    const result = await this.model.generateContent(prompt);
-    const text = result.response.text().trim();
-    // egyszerű parse: sorokra vágjuk
-    return text
-      .split('\n')
-      .map(l => l.replace(/^[-*\d\.\s]+/, '').trim())
-      .filter(Boolean)
-      .slice(0, 3);
+    if (message) {
+      const prompt = `Adj pontosan 5 frappáns, barátságos, vagy szerelmes, de pontos válaszjavaslatot erre az üzenetre: ${message}. Eloszor figyeld meg hogy az uzenet milyen nyelven van, es annak megfeleloen valaszolj ugyanazon a nyelven.
+      Ha az uzenet tartalmaz emojit vagy hangulatjelet, akkor a valasz javaslatok is tartalmazzanak emojit vagy hangulatjelet az uzenethez igazitva. Ha az uzenet szerelmes hangvételű, akkor az 5 válaszjavaslatbol 2 legyen perverz, szexualis, vagy flortolos hangvételű.
+      Csak a válaszokat add vissza, soronként egyet. Ne írj bevezetőt, ne írj magyarázatot, csak az 5 válaszjavaslatot, semmi mást.
+      `;
+      const result = await this.model.generateContent(prompt);
+      const text = result.response.text().trim();
+      // egyszerű parse: sorokra vágjuk
+      return text
+        .split('\n')
+        .map(l => l.replace(/^[-*\d\.\s]+/, '').trim())
+        .filter(Boolean)
+        .slice(0, 5);
+    } else return ['Sajnos nem tudok mediatartalmat ertelmezni.'];
   }
 
   setReactionsArr() {
     const reactions = [
+      {
+        reactionIcon: '🙂',
+        reactionName: 'mosoly 🙂',
+        bgColor: 'rgba(221, 197, 42, 1)',
+        color: 'rgba(212, 170, 64, 1)',
+      },
+      {
+        reactionIcon: '😄',
+        reactionName: 'vidám 😄',
+        bgColor: 'rgba(221, 197, 42, 1)',
+        color: 'rgba(212, 170, 64, 1)',
+      },
+      {
+        reactionIcon: '😁',
+        reactionName: 'széles vigyor 😁',
+        bgColor: 'rgba(221, 197, 42, 1)',
+        color: 'rgba(212, 170, 64, 1)',
+      },
       {
         reactionIcon: '😂',
         reactionName: 'vicces 😂',
@@ -434,22 +461,35 @@ export class UtilityService {
         color: 'rgba(183, 84, 188, 1)',
       },
       {
+        reactionIcon: '😊',
+        reactionName: 'elpirult 😊',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+
+      {
         reactionIcon: '👍',
         reactionName: 'tetszik 👍',
         bgColor: 'rgba(63, 76, 176, 1)',
         color: 'rgba(63, 76, 176, 1)',
       },
       {
-        reactionIcon: '😯',
-        reactionName: 'huha 😯',
-        bgColor: 'rgba(240, 211, 117, 1)',
-        color: 'rgba(235, 239, 32, 1)',
+        reactionIcon: '😘',
+        reactionName: 'puszit küld 😘',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
       },
       {
-        reactionIcon: '😢',
-        reactionName: 'szomorú 😢',
-        bgColor: 'rgba(234, 240, 117, 1)',
-        color: 'rgb(169, 120, 21)',
+        reactionIcon: '🥰',
+        reactionName: 'szívecskés mosoly 🥰',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+      {
+        reactionIcon: '😍',
+        reactionName: 'szívszem 😍',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
       },
       {
         reactionIcon: '❤️',
@@ -458,14 +498,69 @@ export class UtilityService {
         color: 'rgba(230, 10, 10, 1)',
       },
       {
-        reactionIcon: '😡',
-        reactionName: 'dühítő 😡',
+        reactionIcon: '💞',
+        reactionName: 'keringő szívek 💞',
         bgColor: 'rgba(230, 10, 10, 1)',
         color: 'rgba(230, 10, 10, 1)',
       },
       {
-        reactionIcon: '😊',
-        reactionName: 'elpirult 😊',
+        reactionIcon: '🤗',
+        reactionName: 'ölelés 🤗',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+      {
+        reactionIcon: '🙏',
+        reactionName: 'hála 🙏',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+      {
+        reactionIcon: '😈',
+        reactionName: 'pajkos ördög 😈',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+      {
+        reactionIcon: '🔥',
+        reactionName: 'tűz 🔥',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+      {
+        reactionIcon: '😯',
+        reactionName: 'huha 😯',
+        bgColor: 'rgba(240, 211, 117, 1)',
+        color: 'rgba(235, 239, 32, 1)',
+      },
+      {
+        reactionIcon: '😞',
+        reactionName: 'szomorú 😞',
+        bgColor: 'rgba(240, 211, 117, 1)',
+        color: 'rgba(235, 239, 32, 1)',
+      },
+      {
+        reactionIcon: '😢',
+        reactionName: 'nagyon szomorú 😢',
+        bgColor: 'rgba(234, 240, 117, 1)',
+        color: 'rgb(169, 120, 21)',
+      },
+      {
+        reactionIcon: '😭',
+        reactionName: 'zokog 😭',
+        bgColor: 'rgba(234, 240, 117, 1)',
+        color: 'rgb(169, 120, 21)',
+      },
+      {
+        reactionIcon: '💔',
+        reactionName: 'összetört szív 💔',
+        bgColor: 'rgba(230, 10, 10, 1)',
+        color: 'rgba(230, 10, 10, 1)',
+      },
+
+      {
+        reactionIcon: '😡',
+        reactionName: 'dühítő 😡',
         bgColor: 'rgba(230, 10, 10, 1)',
         color: 'rgba(230, 10, 10, 1)',
       },

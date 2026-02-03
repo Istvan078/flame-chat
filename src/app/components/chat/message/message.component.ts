@@ -27,13 +27,14 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { SnackbarComponent } from '../../snackbar/snackbar.component';
 import { SharedModule } from '../../shared/shared.module';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ChatModalComponent } from '../../modals/chat-modal/chat-modal.component';
 
 @Component({
   selector: 'app-message',
   templateUrl: './message.component.html',
   styleUrl: './message.component.scss',
   standalone: true,
-  imports: [SharedModule],
+  imports: [SharedModule, ChatModalComponent],
   animations: [
     trigger('fade-in', [
       state(
@@ -97,6 +98,8 @@ export class MessageComponent implements OnInit, OnDestroy {
   msgThemes: any[] = [];
   chosenMsgTheme: any;
   updateFrsFrObj: any = {};
+  addReactionOn: boolean = false;
+  selectedMsg: any;
 
   // FELHASZNÁLÓ //
   selectedFriendId?: string;
@@ -163,7 +166,6 @@ export class MessageComponent implements OnInit, OnDestroy {
     this.firestore.getAILimit().subscribe((lim: any[]) => {
       this.aiLimit = lim?.length ? lim[0]?.limit : 0;
       if (lim?.length && lim[0]?.limit >= 200) this.hideAiBtn = true;
-      console.log('AI Hívások szama:', lim[0]?.limit);
     });
     this.base.isShowMessagesSubject.next(true);
     this.getAllMessagesSubjectSub = this.base.getAllMessagesSubject.subscribe(
@@ -231,7 +233,6 @@ export class MessageComponent implements OnInit, OnDestroy {
 
             // }
             this.messSubscription = this.getNewMessages();
-
             this.animateMessages();
             this.updMessSub = this.getUpdatedMessages();
             this.updateSeenMessages(this.allChatsArray, true);
@@ -244,21 +245,27 @@ export class MessageComponent implements OnInit, OnDestroy {
             this.updatingMessSentTimeSub =
               this.updatingMessSentTime().subscribe();
             if (this.firestore.filesBehSubject.value.length === 0) {
-              this.firestore
-                .getFilesFromChat(this.userProfile.key as string)
-                .subscribe((data: any) => {
-                  data.forEach((doc: any) => {
-                    if (!docIdsArr.includes(doc.payload.doc.id)) {
-                      docIdsArr.push(doc.payload.doc.id);
-                      this.sentFilesArr.push({
-                        docId: doc.payload.doc.id,
-                        ...doc.payload.doc.data(),
-                      });
-                    }
+              ///// GETTING FILES FOR CHAT FROM FIRESTORE (LIMIT 15)//////
+              const getFilesInt = setInterval(() => {
+                if (!this.visibleMessages?.length) return;
+                this.firestore
+                  .getFilesFromChat(this.userProfile.key as string)
+                  .subscribe((data: any) => {
+                    data.forEach((doc: any) => {
+                      if (!docIdsArr.includes(doc.payload.doc.id)) {
+                        docIdsArr.push(doc.payload.doc.id);
+                        this.sentFilesArr.push({
+                          docId: doc.payload.doc.id,
+                          ...doc.payload.doc.data(),
+                        });
+                      }
+                    });
+                    console.log('**** FÁJLOK LEKÉRVE ****');
+                    this.firestore.filesBehSubject.next(this.sentFilesArr);
                   });
-                  console.log('**** FÁJLOK LEKÉRVE ****');
-                  this.firestore.filesBehSubject.next(this.sentFilesArr);
-                });
+                clearInterval(getFilesInt);
+              }, 200);
+              ///// GETTING FILES FOR CHAT END//////
             }
             this.reactions = this.utilService.setReactionsArr();
             this.msgThemes = this.utilService.getMsgThemes();
@@ -312,11 +319,8 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   insertReply(text: string) {
-    // TODO: illeszd be a chat inputodba / küldd el
     this.message.message.message = text;
-    this.addMessage();
     this.suggestions = [];
-    console.log('Kiválasztott:', text);
   }
 
   scrollToLastMsg() {
@@ -346,7 +350,9 @@ export class MessageComponent implements OnInit, OnDestroy {
     );
   }
 
-  async setReactionForMsg(msg: Chat, reac: any) {
+  async setReactionForMsg(reac: any, msg: any) {
+    console.log('Reaction selected:', reac, msg);
+
     msg.message.reaction = {
       reactionIcon: reac.reactionIcon,
       color: reac.color,
@@ -358,6 +364,7 @@ export class MessageComponent implements OnInit, OnDestroy {
       this.selectedFriend.key,
       this.userProfile.key
     );
+    this.addReactionOn = false;
   }
 
   addMessage() {
@@ -387,6 +394,7 @@ export class MessageComponent implements OnInit, OnDestroy {
                     chatId: this.message.key,
                     senderId: this.userProfile.uid,
                     receiverId: this.selectedFriendId,
+                    createdAt: new Date().getTime(),
                   };
                   this.firestore
                     .addFilesToChat(
@@ -971,6 +979,15 @@ export class MessageComponent implements OnInit, OnDestroy {
 
     this.firestore.filesSubject.subscribe((file: any) => {
       this.filesArr.push(file);
+      console.log(
+        'FÁJL FELTÖLTVE AZ ÜZENETHEZ:',
+        this.filesArr,
+        this.sentFilesArr
+      );
+      setTimeout(() => {
+        console.log('FÁJLOK TÖMB:', this.filesArr, this.sentFilesArr);
+      }, 2000);
+
       this.disabled = false;
       const format = file.fileName.split('.').pop();
       if (
@@ -1158,7 +1175,6 @@ export class MessageComponent implements OnInit, OnDestroy {
         this.getLastIntersectingMsg();
       }
     }
-    console.log(this.visibleMessages);
 
     // this.visibleMessages.reverse();
     return this.visibleMessages;
@@ -1313,7 +1329,13 @@ export class MessageComponent implements OnInit, OnDestroy {
   }
 
   onPlayAudio(audioElement: HTMLAudioElement) {
-    audioElement.play();
+    audioElement.play().then(() => {
+      audioElement.muted = false;
+      audioElement.volume = 1.0;
+    });
+    audioElement.onended = () => {
+      audioElement.currentTime = 0;
+    };
   }
 
   ngOnDestroy(): void {

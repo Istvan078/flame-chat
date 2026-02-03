@@ -20,6 +20,18 @@
     },
     "username": "Username",
     "profilePic": "Profile picture",
+    "online": {
+      "lastTimeOnline": "Online",
+      "minutesAgo": "minutes ago",
+      "hoursAgo": "hours ago",
+      "daysAgo": "days ago"
+    },
+    "message": {
+      "sent": "sent",
+      "seen": "seen",
+      "type": "Type a message...",
+      "recorded": "Message recorded - "
+    },
     "basicDetails": "Basic Details",
     "uploadProfPicOpt": "Upload your profile picture (optional)",
     "chooseProfPic": "Choose profile picture",

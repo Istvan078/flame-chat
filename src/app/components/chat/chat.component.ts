@@ -205,7 +205,6 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
         this.userProfile = user.userProfile;
       }
       if (user.userNotFriends) this.userNotFriends = user.userNotFriends;
-      console.log(this.userNotFriends);
       if (user.userFriends) {
         this.userFriends = user.userFriends;
         this.getNumberOfNewMessages();
@@ -418,6 +417,7 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     setTimeout(() => this.updateSuggNav());
+    console.log(this.notConfirmedMeUsers);
   }
 
   async showProfPics(friend: any) {
@@ -462,28 +462,32 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  async confirmedFriend(friend: string) {
-    const friendProf = this.notConfirmedMeUsers.find(uP => {
-      if (uP.displayName === friend) return uP.displayName === friend;
-      if (uP.email === friend) return uP.email === friend;
-    });
-    console.log(friendProf);
-    await this.base.updateFriendsFriend(friendProf!.key, this.userProfile.key, {
+  async confirmedFriend(friend: UserClass) {
+    console.log(friend);
+    // const friendProf = this.notConfirmedMeUsers.find(uP => {
+    //   if (uP.displayName === friend) return uP.displayName === friend;
+    //   if (uP.email === friend) return uP.email === friend;
+    // });
+    // console.log(friendProf);
+    await this.base.updateFriendsFriend(friend.key, this.userProfile.key, {
       confirmed: true,
     } as any);
     await this.base.updateFriend(
-      friendProf!.key,
+      friend.key,
       { areFriends: true } as any,
       this.userProfile.key
     );
     this.utilService.forUserSubject.notConfirmedMeUsers =
-      this.notConfirmedMeUsers.filter(uP => {
-        if (uP.displayName === friend) return uP.displayName !== friend;
-        if (uP.email === friend) return uP.email !== friend;
-      });
+      this.notConfirmedMeUsers.filter(uP => uP.key !== friend.key);
     this.utilService.subjectValueTransfer(
       this.utilService.forUserSubject,
       this.utilService.userSubject
+    );
+  }
+
+  notConfirmFriend(friend: UserClass) {
+    this.notConfirmedMeUsers = this.notConfirmedMeUsers.filter(
+      uP => uP.key !== friend.key
     );
   }
 
@@ -539,16 +543,19 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async removeFriend(friend: any) {
     await this.base.removeFriendsFriend(friend.friendKey, this.userProfile.key);
-    this.base.removeFriend(friend.friendKey, this.userProfile.key).then(() => {
-      const modalRef = this.ngbModal.open(ModalComponent, {
-        ariaLabelledBy: 'modal-basic-title',
-        centered: true,
-      });
-      modalRef.componentInstance.name = 'Törölve az ismerősök közül.';
-      if (this.toastVal.uid == friend.friendId) {
-        modalRef.componentInstance.friendName = this.toastVal.displayName;
-      }
+    await this.base.removeFriend(friend.friendKey, this.userProfile.key);
+    const modalRef = this.ngbModal.open(ModalComponent, {
+      ariaLabelledBy: 'modal-basic-title',
+      centered: true,
     });
+    modalRef.componentInstance.name = 'Törölve az ismerősök közül.';
+    this.userFriends = this.userFriends?.filter(
+      fr => fr.friendKey !== friend.friendKey
+    );
+    const isFriendInNotFriends = this.userNotFriends.find(
+      nFr => nFr.friendKey === friend.friendKey
+    );
+    if (!isFriendInNotFriends) this.userNotFriends.unshift(friend);
   }
 
   setDefaultProfilePic() {
@@ -720,68 +727,15 @@ export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate([`/${person.friendId}/friend-profile`]);
   }
 
-  toFriendProfile(friendId: string) {
-    const userProfile = this.userProfile;
-    const promise = new Promise((res, rej) => {
-      const friendProfile = this.userProfiles.find(uP => {
-        return uP.uid === friendId;
-      });
-      if (friendProfile?.friends) {
-        const friendsArrIterable = [...Object.entries(friendProfile!.friends)];
-        const friendsArr: any = friendsArrIterable.flat();
-
-        const friendsArray = [];
-        let obj: any = {};
-        for (let i = 0; i < friendsArr.length; i++) {
-          if (typeof friendsArr[i] === 'string') {
-            obj.key = friendsArr[i];
-          } else {
-            obj.friendId = friendsArr[i].friendId;
-            friendsArray.push(obj);
-            obj = {};
-          }
-        }
-        const user: any = friendsArray.find(
-          (f: any) => f.friendId === userProfile.uid
-        );
-        if (user) user.seenMe = true;
-        if (!user?.key) {
-          this.notConfirmedSignedAsFriend = true;
-          if (this.toastService.toasts.length) this.toastService.toasts = [];
-          this.toastService.addToast(
-            'A FELHASZNÁLÓ MÉG NEM IGAZOLTA VISSZA ISMERŐSNEK JELÖLÉSED',
-            ''
-          );
-        }
-        if (user?.key)
-          this.base
-            .updateFriend(
-              user.key,
-              { seenMe: user.seenMe } as any,
-              friendProfile.key
-            )
-            .then(() => {
-              this.base.userProfilesSubject.next(this.userProfiles);
-              this.base.friendProfileSubject.next(friendProfile);
-              res('');
-            });
-      } else {
-        this.notConfirmedSignedAsFriend = true;
-        if (this.toastService.toasts.length) this.toastService.toasts = [];
-        this.toastService.addToast(
-          'A FELHASZNÁLÓ MÉG NEM IGAZOLTA VISSZA ISMERŐSNEK JELÖLÉSED',
-          ''
-        );
-        this.base.friendProfileSubject.next(friendProfile);
-        res('');
-      }
-    });
-
-    promise.then(() => {
-      if (this.userProfile.uid)
-        this.router.navigate(['/' + friendId + '/friend-profile']);
-    });
+  // REDIRECT TO THE CHOSEN USER'S PROFILE //
+  toFriendProfile(friend: any) {
+    if (!friend?.key) friend.key = friend.friendKey;
+    const friendProf = this.userProfiles.find(uP => uP.key === friend.key);
+    this.base.userProfilesSubject.next(this.userProfiles);
+    this.base.friendProfileSubject.next(friendProf);
+    this.router.navigate(['/' + friendProf?.uid + '/friend-profile']);
   }
+  // REDIRECT TO THE CHOSEN USER'S PROFILE END //
 
   refreshMyPosts() {
     return this.firestore

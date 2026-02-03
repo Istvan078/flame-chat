@@ -20,6 +20,18 @@
     },
     "username": "Felhasznalonev",
     "profilePic": "Profilkep",
+    "online": {
+      "lastTimeOnline": "Elerhető",
+      "minutesAgo": "perccel ezelőtt",
+      "hoursAgo": "órával ezelőtt",
+      "daysAgo": "napja"
+    },
+    "message": {
+      "sent": "elkuldve",
+      "seen": "latta",
+      "type": "Üzenet írása...",
+      "recorded": "Felvetel Rogzitve - "
+    },
     "basicDetails": "Alap adatok",
     "uploadProfPicOpt": "Toltsd fel a profilkeped (opcionalis)",
     "chooseProfPic": "Valassz profilkepet",

@@ -31,7 +31,7 @@
       class="d-flex flex-wrap justify-content-center align-items-center tape"
     >
       <div class="left ms-2">
-        <span *ngIf="actIndex > 0" (click)="left()"><</span>
+        <span *ngIf="actIndex > 0" (click)="toLeft()"><</span>
       </div>
       <img
         (mouseover)="showPicBig(i)"
@@ -44,7 +44,7 @@
         alt="Felhasználó képe"
       />
       <div class="right">
-        <span *ngIf="actIndex + 4 <= allPicsArr.length" (click)="right()"
+        <span *ngIf="actIndex + 4 <= allPicsArr.length" (click)="toRight()"
           >></span
         >
       </div>

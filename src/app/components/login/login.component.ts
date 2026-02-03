@@ -38,30 +38,21 @@ export class LoginComponent {
     private utilService: UtilityService
   ) {}
 
-  loginWithEmAndPa() {
-    this.authService.loginWithEmAndPa(this.email, this.password).catch(err => {
-      err.message = 'Hibás e-mail cím, vagy jelszó, kérlek próbáld újra!';
-      this.modalRef.open(ModalComponent, {
-        centered: true,
-      }).componentInstance.error = err;
-    });
-
-    this.authService.isLoggedIn().subscribe(user => {
+  async loginWithEmAndPa() {
+    try {
+      const userCred = await this.authService.loginWithEmAndPa(
+        this.email,
+        this.password
+      );
+      const user = userCred?.user;
       if (!user?.emailVerified) {
-        user
-          ?.sendEmailVerification()
-          .then(() => {
-            this.modalRef.dismissAll();
-            const actModal = this.modalRef.open(ModalComponent, {
-              centered: true,
-            });
-            actModal.componentInstance.userEmail = user.email;
-          })
-          .then(async () => {
-            await this.authService.signOut();
-            this.authService.userLoggedInSubject.next(new UserClass());
-          })
-          .catch(err => console.log(err));
+        await user?.sendEmailVerification();
+        if (this.modalRef.hasOpenModals()) this.modalRef.dismissAll();
+        const actModal = this.modalRef.open(ModalComponent, {
+          centered: true,
+        });
+        if (user?.email) actModal.componentInstance.userEmail = user.email;
+        throw new Error('unverified-email');
       }
 
       if (user?.emailVerified) {
@@ -105,7 +96,20 @@ export class LoginComponent {
           }
         });
       }
-    });
+    } catch (err: any) {
+      this.authService.signOut();
+      this.authService.userLoggedInSubject.next(new UserClass());
+      if (err.message === 'unverified-email') {
+        return;
+      }
+      const badCreds = new Error(
+        'Hibás e-mail cím, vagy jelszó, kérlek próbáld újra!'
+      );
+      if (this.modalRef.hasOpenModals()) this.modalRef.dismissAll();
+      this.modalRef.open(ModalComponent, {
+        centered: true,
+      }).componentInstance.error = badCreds;
+    }
   }
 
   loginWithGoogle(): void {

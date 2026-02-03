@@ -1,0 +1,233 @@
+<!-- Kereső sor kerekített, outline stílussal -->
+<!-- <div class="searchbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Üzenet keresése</mat-label>
+      <input
+        matInput
+        [(ngModel)]="searchWord"
+        placeholder="Keresés a beszélgetésben"
+      />
+      <button
+        *ngIf="searchWord"
+        matSuffix
+        mat-icon-button
+        (click)="searchWord = ''"
+        aria-label="Törlés"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+  </div> -->
+
+<div #scrollContainer class="chat-body">
+  <ng-container *ngIf="userProfile.uid && selectedFriendId">
+    <div
+      *ngFor="let msg of visibleMessages | filter : searchWord; let i = index"
+      class="bubble"
+      [class.right]="msg.message.senderId === userProfile.uid"
+      [attr.data-index]="i"
+      [id]="'msg-' + i"
+    >
+      <!-- Bal oldali (barát) avatar -->
+      <div class="avatar-container">
+        <img
+          *ngIf="msg.message.senderId === selectedFriendId"
+          class="avatar mb-5"
+          [src]="selectedFriend.profilePicture"
+          alt="friend-profile-picture"
+          (click)="showFriendsProfPics()"
+        />
+      </div>
+
+      <div class="msg scroll-to-new-mess">
+        <!-- időbélyeg a buborék felett -->
+        <div
+          class="time"
+          [class.align-right]="msg.message.senderId === userProfile.uid"
+        >
+          {{ msg.message.viewTimeStamp }}
+        </div>
+
+        <!-- képek / videók -->
+        <ng-container *ngFor="let file of sentFilesArr">
+          <ng-container *ngIf="file.chatId === msg.key">
+            <div class="attachments">
+              <ng-container *ngFor="let pic of file.files; let pIdx = index">
+                <img
+                  *ngIf="
+                    !pic.fileName.includes('.mp4') &&
+                    !pic.fileName.includes('m4a') &&
+                    !pic.fileName.includes('webm') &&
+                    !pic.fileName.includes('wav')
+                  "
+                  class="photo"
+                  [src]="pic.url"
+                  [alt]="pic.fileName"
+                  (click)="fileModalOpen(file.files, pIdx)"
+                />
+                <video
+                  *ngIf="pic.fileName.includes('.mp4')"
+                  class="video"
+                  [src]="pic.url"
+                  controls
+                ></video>
+              </ng-container>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <!-- szöveg + válaszolt üzenet -->
+        <div matButton [matMenuTriggerFor]="msgOptionsMenu">
+          <mat-menu
+            #msgOptionsMenu="matMenu"
+            class="msg-options-menu my-1"
+            [backdropClass]="'msg-options-backdrop'"
+          >
+            <button
+              *ngIf="msg.message.senderId !== userProfile.uid"
+              mat-menu-item
+              class="menu-reply-msg"
+              (click)="
+                msg.message.senderId === selectedFriendId
+                  ? replyMessage(msg)
+                  : null
+              "
+            >
+              <mat-icon>reply</mat-icon>
+              Valasz
+            </button>
+            <button
+              *ngIf="
+                msg.message.senderId === userProfile.uid &&
+                !msg.message.cancelled
+              "
+              class="menu-mod-msg"
+              mat-menu-item
+              (click)="editMessage(msg)"
+            >
+              <mat-icon>edit</mat-icon>
+              Modositas
+            </button>
+            <button
+              *ngIf="
+                msg.message.senderId === userProfile.uid &&
+                !msg.message.cancelled
+              "
+              class="menu-del-msg"
+              mat-menu-item
+              (click)="cancelMyMessage(msg)"
+            >
+              <mat-icon>delete</mat-icon>
+              Torles
+            </button>
+          </mat-menu>
+          <ng-container *ngIf="msg.message.message || msg.message.voiceMessage">
+            <div
+              class="text"
+              [class.emphasis]="msg.replyMessage?.message"
+              (click)="devFunction(msg.message)"
+            >
+              <b
+                >{{ msg.replyMessage?.message ? msg.replyMessage.message :
+                msg.message.message }}</b
+              >
+              <ng-container *ngIf="msg.replyMessage?.message">
+                <hr />
+                <i>
+                  {{ msg.message.senderId === selectedFriendId ?
+                  userProfile.displayName + ' írta' : 'Válaszoltál neki: ' +
+                  selectedFriend.displayName }}
+                </i>
+                <div class="reply-footer">
+                  <span class="msg-span">{{ msg.message.message }}</span>
+                  <img
+                    [src]="
+                      msg.message.senderId === selectedFriendId
+                        ? userProfile.profilePicture
+                        : selectedFriend.profilePicture
+                    "
+                    alt=""
+                    class="reply-avatar"
+                  />
+                </div>
+              </ng-container>
+
+              <div *ngIf="msg.message.voiceMessage">
+                <div *ngIf="msg.message.voiceMessage" class="audio">
+                  <mat-icon
+                    class="audio__play-button"
+                    (click)="onPlayAudio(audioElement)"
+                    >play_arrow</mat-icon
+                  >
+                </div>
+                <audio #audioElement preload="auto">
+                  <source
+                    [src]="sanitize(msg.message.voiceMessage)"
+                    [attr.type]="
+                      msg.message.voiceMessage?.includes('.m4a')
+                        ? 'audio/mp4'
+                        : 'audio/webm'
+                    "
+                  />
+                  A böngésződ nem támogatja az audio lejátszót.
+                </audio>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- reakciók -->
+        <div class="reactions">
+          <button
+            *ngIf="msg.message.senderId !== userProfile.uid"
+            mat-icon-button
+            [matMenuTriggerFor]="reactMenu"
+          >
+            <mat-icon>add_reaction</mat-icon>
+          </button>
+          <mat-menu #reactMenu="matMenu">
+            <button
+              *ngFor="let reaction of reactions"
+              mat-menu-item
+              (click)="setReactionForMsg(msg, reaction)"
+            >
+              <span>{{ reaction.reactionName }}</span>
+            </button>
+          </mat-menu>
+          <mat-icon *ngIf="msg.message?.reaction" class="reaction-icon"
+            >{{ msg.message.reaction.reactionIcon }}</mat-icon
+          >
+        </div>
+
+        <!-- látta jelzés saját üzenetnél -->
+        <div
+          class="seen"
+          *ngIf="
+            msg.message.senderId === userProfile.uid &&
+            msg.message.status === 'sent'
+          "
+        >
+          elküldve <mat-icon style="font-size: 1.8em">done</mat-icon>
+        </div>
+        <div
+          class="seen"
+          *ngIf="
+            msg.message.senderId === userProfile.uid &&
+            msg.message.status === 'delivered'
+          "
+        >
+          kezbesitve <mat-icon style="font-size: 1.8em">done_all</mat-icon>
+        </div>
+        <div
+          class="seen"
+          *ngIf="
+            msg.message.senderId === userProfile.uid &&
+            msg.message.status === 'read'
+          "
+        >
+          látta <img [src]="selectedFriend.profilePicture" alt="" />
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

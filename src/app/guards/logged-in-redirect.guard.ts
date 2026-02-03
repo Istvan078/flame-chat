@@ -16,7 +16,7 @@ export const loggedInRedirectGuard: CanMatchFn = (route, segments) => {
           const routePath = route.path ?? '';
           const requestedUrl = segments.map(s => s.path).join('/');
           const isRootMatch = routePath === '' && !requestedUrl;
-          const isLoggedIn = Boolean(user?.uid);
+          const isLoggedIn = Boolean(user?.uid && user?.emailVerified);
           const isAuthRoute = routePath === 'login' || routePath === 'signup';
           const requiresAuthentication =
             routePath === '' || routePath.startsWith('profile');

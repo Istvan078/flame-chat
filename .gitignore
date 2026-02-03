@@ -47,3 +47,7 @@ src/app/environments.ts
 
 # Firebase Cache
 .firebase
+
+# Other Caches
+.angular
+.vscode

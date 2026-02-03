@@ -22,6 +22,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userLoggedInSubjSub = this.auth.userLoggedInSubject.subscribe(usr => {
+      console.log('Bottom nav user:', usr);
       this.userLoggedIn = usr.uid ? true : false;
     });
     const int = setInterval(() => {
