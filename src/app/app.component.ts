@@ -1,3 +1,5 @@
+import { MessagesService } from 'src/app/features/messaging/messages.service';
+import { PeopleService } from 'src/app/features/people/people.service';
 import {
   Component,
   DestroyRef,
@@ -5,7 +7,6 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { BaseService } from './services/base.service';
 import { Subscription } from 'rxjs';
 import { SwUpdate } from '@angular/service-worker';
 import { MatDialog } from '@angular/material/dialog';
@@ -19,6 +20,8 @@ import { TranslateService } from '@ngx-translate/core';
   standalone: false,
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private peopleService = inject(PeopleService);
+
   title = 'Flame Chat';
   routerOutletOff: boolean = false;
   isShowMessages: boolean = false;
@@ -29,7 +32,7 @@ export class AppComponent implements OnInit, OnDestroy {
   user: any;
   private matDialog = inject(MatDialog);
   private onDestroyRef = inject(DestroyRef);
-  private base = inject(BaseService);
+  private base = inject(MessagesService);
   private utilService = inject(UtilityService);
 
   constructor(
@@ -80,7 +83,7 @@ export class AppComponent implements OnInit, OnDestroy {
           // matDialogRef.afterClosed().subscribe(res => {
           //   window.location.reload();
           // });
-          const profsSub = this.base
+          const profsSub = this.peopleService
             .getUserProfiles()
             .subscribe(async uProfs => {
               const uProf = uProfs.find(
@@ -89,7 +92,7 @@ export class AppComponent implements OnInit, OnDestroy {
               );
               uProf.appVersion = '1.1.6';
               console.log(``);
-              await this.base.updateUserData(uProf, uProf.key);
+              await this.peopleService.updateUserData(uProf, uProf.key);
               profsSub.unsubscribe();
             });
           setTimeout(async () => {

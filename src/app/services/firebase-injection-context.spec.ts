@@ -5,12 +5,19 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { isObservable, queueScheduler } from 'rxjs';
-import { BaseService } from './base.service';
-import { FirestoreService } from './firestore.service';
+import { PeopleService } from 'src/app/features/people/people.service';
+import { MessagesService } from 'src/app/features/messaging/messages.service';
+import { MessagingFirestoreService } from 'src/app/features/messaging/messaging-firestore.service';
+import { PostsService } from 'src/app/features/posts/posts.service';
+import { PushNotificationsService } from 'src/app/features/notifications/push-notifications.service';
+import { SwPush } from '@angular/service-worker';
 
 describe('Firebase calls outside the construction injection context', () => {
-  let base: BaseService;
-  let firestore: FirestoreService;
+  let base: PeopleService;
+  let messages: MessagesService;
+  let firestore: MessagingFirestoreService;
+  let posts: PostsService;
+  let pushNotifications: PushNotificationsService;
   let update: jasmine.Spy;
   let deleteDocument: jasmine.Spy;
   let document: jasmine.Spy;
@@ -66,8 +73,12 @@ describe('Firebase calls outside the construction injection context', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        BaseService,
-        FirestoreService,
+        PeopleService,
+        MessagesService,
+        MessagingFirestoreService,
+        PostsService,
+        PushNotificationsService,
+        { provide: SwPush, useValue: {} },
         { provide: AngularFireDatabase, useValue: database },
         { provide: AngularFirestore, useValue: store },
         { provide: AngularFireStorage, useValue: {} },
@@ -85,17 +96,20 @@ describe('Firebase calls outside the construction injection context', () => {
       ngZone: TestBed.inject(NgZone),
       schedulers: { outsideAngular: queueScheduler },
     });
-    base = TestBed.inject(BaseService);
-    firestore = TestBed.inject(FirestoreService);
+    base = TestBed.inject(PeopleService);
+    messages = TestBed.inject(MessagesService);
+    firestore = TestBed.inject(MessagingFirestoreService);
+    posts = TestBed.inject(PostsService);
+    pushNotifications = TestBed.inject(PushNotificationsService);
   });
 
   it('creates friend and message streams from a component callback', () => {
     expect(isObservable(base.getFriends('user'))).toBeTrue();
-    expect(isObservable(base.getNewMessages('user', 'friend'))).toBeTrue();
-    expect(isObservable(base.getUpdatedMessages('user', 'friend'))).toBeTrue();
-    expect(isObservable(base.getScrolledMessages('user', 'friend'))).toBeTrue();
+    expect(isObservable(messages.getNewMessages('user', 'friend'))).toBeTrue();
+    expect(isObservable(messages.getUpdatedMessages('user', 'friend'))).toBeTrue();
+    expect(isObservable(messages.getScrolledMessages('user', 'friend'))).toBeTrue();
     expect(
-      isObservable(base.getAllMessagesFromFriend('friend', 'user', 'f', 'u')),
+      isObservable(messages.getAllMessagesFromFriend('friend', 'user', 'f', 'u')),
     ).toBeTrue();
   });
 
@@ -107,22 +121,22 @@ describe('Firebase calls outside the construction injection context', () => {
   });
 
   it('creates Firestore streams from a component callback', () => {
-    expect(isObservable(firestore.refreshSharedWithMePosts())).toBeTrue();
-    expect(isObservable(firestore.refreshMyPosts('user'))).toBeTrue();
+    expect(isObservable(posts.refreshSharedWithMePosts())).toBeTrue();
+    expect(isObservable(posts.refreshMyPosts('user'))).toBeTrue();
     expect(isObservable(firestore.getFilesFromChat('user'))).toBeTrue();
-    expect(isObservable(firestore.getUserNotiSubscription('user'))).toBeTrue();
+    expect(isObservable(pushNotifications.getUserNotiSubscription('user'))).toBeTrue();
     expect(isObservable(firestore.getAILimit())).toBeTrue();
   });
 
   it('creates Firestore document references when updating a post', async () => {
-    await firestore.updatePost('post', { message: 'Updated post' });
+    await posts.updatePost('post', { message: 'Updated post' });
 
     expect(document).toHaveBeenCalledWith('post');
     expect(update).toHaveBeenCalledWith({ message: 'Updated post' });
   });
 
   it('creates private post references after awaiting the shared post deletion', async () => {
-    await firestore.deletePost('shared-post', 'user', 'private-post');
+    await posts.deletePost('shared-post', 'user', 'private-post');
 
     expect(collection).toHaveBeenCalledWith(
       'users/posts/my-posts/user/my-posts',

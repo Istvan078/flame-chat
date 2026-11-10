@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanMatchFn, Router } from '@angular/router';
 import { filter, map, switchMap, take } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../core/session/auth.service';
 
 export const loggedInRedirectGuard: CanMatchFn = (route, segments) => {
   const router = inject(Router);
@@ -23,10 +23,10 @@ export const loggedInRedirectGuard: CanMatchFn = (route, segments) => {
           const returnUrl = requestedUrl
             ? `/${requestedUrl}`
             : isRootMatch
-            ? '/chat'
-            : routePath
-            ? `/${routePath}`
-            : '/';
+              ? '/chat'
+              : routePath
+                ? `/${routePath}`
+                : '/';
 
           if (isRootMatch && isLoggedIn) {
             return router.createUrlTree(['/chat']);
@@ -43,8 +43,8 @@ export const loggedInRedirectGuard: CanMatchFn = (route, segments) => {
           }
 
           return true;
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 };

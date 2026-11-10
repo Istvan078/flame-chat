@@ -1,24 +1,24 @@
 import { Routes } from '@angular/router';
-import { UsersComponent } from './components/users/users.component';
-import { isAdminGuard } from './guards/is-admin.guard';
+import { UsersComponent } from './features/admin/users/users.component';
+import { isAdminGuard } from './features/admin/is-admin.guard';
 import { loggedInRedirectGuard } from './guards/logged-in-redirect.guard';
-import { MainMenuComponent } from './components/chat/main-menu/main-menu.component';
+import { MainMenuComponent } from './shell/main-menu/main-menu.component';
 
 export const routes: Routes = [
   {
     path: 'signup',
     canMatch: [loggedInRedirectGuard],
     loadComponent: () =>
-      import('./components/signup/signup.component').then(
-        mod => mod.SignupComponent
+      import('./features/auth/signup/signup.component').then(
+        mod => mod.SignupComponent,
       ),
   },
   {
     path: 'login',
     canMatch: [loggedInRedirectGuard],
     loadComponent: () =>
-      import('./components/login/login.component').then(
-        mod => mod.LoginComponent
+      import('./features/auth/login/login.component').then(
+        mod => mod.LoginComponent,
       ),
   },
   { path: 'users', component: UsersComponent, canActivate: [isAdminGuard] },
@@ -26,15 +26,15 @@ export const routes: Routes = [
     path: 'profile/:uid',
     canMatch: [loggedInRedirectGuard],
     loadComponent: () =>
-      import('./components/user-profile/user-profile.component').then(
-        mod => mod.UserProfileComponent
+      import('./features/people/user-profile/user-profile.component').then(
+        mod => mod.UserProfileComponent,
       ),
   },
   {
     path: 'admin',
     loadComponent: () =>
-      import('./components/admin/admin.component').then(
-        mod => mod.AdminComponent
+      import('./features/admin/admin/admin.component').then(
+        mod => mod.AdminComponent,
       ),
     canActivate: [isAdminGuard],
   },
@@ -43,7 +43,7 @@ export const routes: Routes = [
     path: '',
     canMatch: [loggedInRedirectGuard],
     loadChildren: () =>
-      import('./components/chat/chat.module').then(m => m.ChatModule),
+      import('./features/home/chat.module').then(m => m.ChatModule),
   },
   {
     path: '**',
