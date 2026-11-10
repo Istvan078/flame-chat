@@ -1,4 +1,4 @@
-<div class="main-container">
+<!-- <div class="main-container">
   <form (ngSubmit)="createUserWithEmAndPa()" #f="ngForm">
     <mat-form-field>
       <mat-label for="email">{{ 'auth.email' | translate }}</mat-label>
@@ -13,9 +13,9 @@
       />
     </mat-form-field>
     <div class="text-center mt-0 container-2">
-      <span *ngIf="!emaill.valid && emaill.touched"
-        >Kerlek adj meg egy ervenyes e-mail cimet</span
-      >
+      @if (!emaill.valid && emaill.touched) {
+        <span>Kerlek adj meg egy ervenyes e-mail cimet</span>
+      }
     </div>
     <mat-form-field>
       <mat-label for="password">{{ 'auth.password' | translate }}</mat-label>
@@ -104,4 +104,177 @@
       </div>
     </div>
   </div>
-</div>
+</div> -->
+
+<ion-content class="signup-page">
+  <!-- @if (authStore.loading()) { -->
+  <!-- <div class="spinner-wrapper">
+    <ion-spinner></ion-spinner>
+  </div> -->
+  <!-- } -->
+  <!-- <div class="lang-container"> -->
+
+  <!-- </div> -->
+  <div class="signup signup--background">
+    <!-- <div class="img-wrapper">
+      <img class="img" src="/assets/pics/flame-bg.png" />
+    </div> -->
+    <div class="lang-container">
+      <ion-item class="select--lang">
+        <ion-select
+          interface="popover"
+          [(ngModel)]="lang"
+          name="lang"
+          (ionChange)="changeLang($event)"
+        >
+          <ion-icon slot="start" name="globe-outline"></ion-icon>
+          <ion-select-option value="hu">{{
+            'hu' | translate
+          }}</ion-select-option>
+          <ion-select-option value="en">{{
+            'en' | translate
+          }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+    <header class="header">
+      <div class="img-wrapper--logo">
+        <img
+          class="img-logo"
+          src="/assets/icons/logo-with-text.svg"
+          alt="flamechat-logo"
+        />
+      </div>
+      <!-- <ion-title>FlameChat</ion-title> -->
+    </header>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ 'auth.signupTitle' | translate }}</ion-card-title>
+        <ion-card-subtitle>{{
+          'auth.signupSubtitle' | translate
+        }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <!-- <div>
+          <h2>{{ 'auth.signupTitle' | translate }}</h2>
+          <p>{{ 'auth.signupSubtitle' | translate }}</p>
+        </div> -->
+        <form
+          class="signup-form"
+          (ngSubmit)="onSignup('email', signupForm)"
+          #signupForm="ngForm"
+        >
+          <ion-input
+            [placeholder]="'user.username' | translate"
+            ngModel
+            name="displayName"
+            fill="outline"
+            label="{{ 'user.username' | translate }}"
+            labelPlacement="stacked"
+            required
+            minlength="4"
+            type="text"
+            ><ion-icon slot="start" name="person-outline"></ion-icon
+          ></ion-input>
+          <!-- <ion-input
+            placeholder="Last name"
+            required
+            ngModel
+            fill="outline"
+            name="lastName"
+            minlength="2"
+            type="text"
+            ><ion-icon slot="start" name="person-outline"></ion-icon
+          ></ion-input> -->
+          <div>
+            <ion-input
+              [placeholder]="'auth.exampleEmail' | translate"
+              required
+              ngModel
+              label="{{ 'auth.email' | translate }}"
+              labelPlacement="stacked"
+              name="email"
+              email
+              type="text"
+              fill="outline"
+            >
+              <ion-icon slot="start" name="mail-outline"></ion-icon>
+            </ion-input>
+          </div>
+          <div>
+            <ion-input
+              #password
+              required
+              name="password"
+              ngModel
+              minlength="6"
+              [label]="'auth.password' | translate"
+              labelPlacement="stacked"
+              type="password"
+              [placeholder]="'auth.passwordMinChar' | translate"
+              fill="outline"
+            >
+              <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+              <ion-button
+                (click)="
+                  password.type === 'password'
+                    ? (password.type = 'text')
+                    : (password.type = 'password')
+                "
+                class="btn btn--password-visible"
+                slot="end"
+                ><ion-icon name="eye-outline"></ion-icon
+              ></ion-button>
+            </ion-input>
+          </div>
+          <div>
+            <ion-input
+              #confirmPassword
+              required
+              name="confirmPassword"
+              minlength="6"
+              [label]="'auth.confirmPassword' | translate"
+              labelPlacement="stacked"
+              type="password"
+              [placeholder]="'auth.passwordNeedsMatch' | translate"
+              fill="outline"
+            >
+              <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+              <ion-button
+                (click)="
+                  password.type === 'password'
+                    ? (password.type = 'text')
+                    : (password.type = 'password')
+                "
+                class="btn btn--password-visible"
+                slot="end"
+                ><ion-icon name="eye-outline"></ion-icon
+              ></ion-button>
+            </ion-input>
+          </div>
+          <ion-button
+            class="btn--signup"
+            [disabled]="
+              !signupForm.valid || password.value !== confirmPassword.value
+            "
+            type="submit"
+            >{{ 'auth.signup' | translate }}</ion-button
+          >
+        </form>
+        <div class="divider-container">
+          <div></div>
+          <span>or</span>
+          <div></div>
+        </div>
+        <ion-button (click)="onSignup('google')" class="btn--google"
+          ><ion-icon name="logo-google" slot="start"></ion-icon
+          >{{ 'auth.continueWithGoogle' | translate }}</ion-button
+        >
+        <div class="to-login-container">
+          <span>{{ 'auth.alreadyHaveAccount' | translate }} </span>
+          <a routerLink="/login">{{ 'auth.login' | translate }}</a>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { NgbToastOptions } from '@ng-bootstrap/ng-bootstrap/toast/toast-config';
+import { NgbToastOptions } from '@ng-bootstrap/ng-bootstrap';
 
 export interface ToastInfo {
   header: string;

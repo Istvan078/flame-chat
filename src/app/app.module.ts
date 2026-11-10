@@ -31,6 +31,7 @@ import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component
 import { TranslateModule } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { MainMenuComponent } from './components/chat/main-menu/main-menu.component';
+import { IonApp, IonRouterOutlet, provideIonicAngular } from '@ionic/angular';
 
 @NgModule({
   declarations: [
@@ -50,6 +51,8 @@ import { MainMenuComponent } from './components/chat/main-menu/main-menu.compone
   ],
   bootstrap: [AppComponent], // melyik komponenssel inditsa az appot
   imports: [
+    IonApp,
+    IonRouterOutlet,
     BrowserModule,
     TranslateModule.forRoot({
       fallbackLang: 'hu',
@@ -70,6 +73,10 @@ import { MainMenuComponent } from './components/chat/main-menu/main-menu.compone
       registrationStrategy: 'registerWhenStable:10000',
     }),
   ],
-  providers: [NgbTooltipConfig, provideHttpClient(withInterceptorsFromDi())],
+  providers: [
+    NgbTooltipConfig,
+    provideHttpClient(withInterceptorsFromDi()),
+    provideIonicAngular(),
+  ],
 })
 export class AppModule {}

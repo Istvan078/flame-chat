@@ -24,6 +24,7 @@ class Friend {
   selector: 'app-notifications',
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
+  standalone: false,
 })
 export class NotificationsComponent implements AfterViewInit {
   @ViewChild('sidenav') sideNav!: MatSidenav;

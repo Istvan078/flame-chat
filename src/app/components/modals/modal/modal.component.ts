@@ -13,6 +13,7 @@ import { ToastService } from 'src/app/services/toast.service';
   selector: 'app-modal',
   templateUrl: './modal.component.html',
   styleUrls: ['./modal.component.scss'],
+  standalone: false,
 })
 export class ModalComponent implements OnInit {
   usersApiUrl = Environments.API_URL;

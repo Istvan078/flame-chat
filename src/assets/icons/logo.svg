@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none" role="img" aria-labelledby="flamechat-title flamechat-desc">
+  <title id="flamechat-title">FlameChat</title>
+  <desc id="flamechat-desc">Korall, borostyán és lila láng, átlátszó chatbuborékkal és két ponttal.</desc>
+  <defs>
+    <linearGradient id="flamechat-gradient" x1="145" y1="20" x2="105" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB35C"/>
+      <stop offset="0.42" stop-color="#FF735F"/>
+      <stop offset="0.72" stop-color="#DE65AD"/>
+      <stop offset="1" stop-color="#8455D8"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(-21 -10) scale(1.17)" fill="url(#flamechat-gradient)">
+    <path fill-rule="evenodd" d="M131 19C137 55 111 66 118 94C133 87 143 73 146 58C175 83 197 110 197 146C197 187 166 217 125 217C83 217 54 186 54 148C54 117 74 91 89 72C90 90 96 104 105 112C96 76 110 53 131 19Z M105 119H149C158 119 165 126 165 135V149C165 158 158 165 149 165H124L106 180V165H105C96 165 89 158 89 149V135C89 126 96 119 105 119Z"/>
+    <circle cx="114" cy="142" r="5.5"/>
+    <circle cx="140" cy="142" r="5.5"/>
+  </g>
+</svg>

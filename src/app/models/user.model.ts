@@ -1,4 +1,4 @@
-import firebase from 'firebase/compat';
+import type firebase from 'firebase/compat/app';
 import { Subscription } from 'rxjs';
 type Claims = {
   basic: boolean;

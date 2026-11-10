@@ -9,6 +9,7 @@ import { UtilityService } from 'src/app/services/utility.service';
   selector: 'app-bottom-nav',
   templateUrl: './bottom-nav.component.html',
   styleUrls: ['./bottom-nav.component.scss'],
+  standalone: false,
 })
 export class BottomNavComponent implements OnInit, OnDestroy {
   userLoggedIn = false;

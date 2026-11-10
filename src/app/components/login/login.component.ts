@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { PhoneAuthProvider } from '@angular/fire/auth';
 import { NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -9,15 +9,18 @@ import { BaseService } from 'src/app/services/base.service';
 import { ModalComponent } from '../modals/modal/modal.component';
 import { UtilityService } from 'src/app/services/utility.service';
 import { SharedModule } from '../shared/shared.module';
+import { IonicModule } from '../shared/ionic.module';
+import { SelectCustomEvent } from '@ionic/angular';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
-  imports: [SharedModule],
+  imports: [SharedModule, IonicModule],
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email: string = '';
   password: string = '';
   phoneNumber: any;
@@ -28,6 +31,7 @@ export class LoginComponent {
   isPhone: boolean = false;
   reCapthcaOff: boolean = false;
   userProfiles: any[] = [];
+  lang: string = '';
   @ViewChild('loginForm') loginForm!: NgForm;
 
   constructor(
@@ -35,14 +39,27 @@ export class LoginComponent {
     private router: Router,
     private base: BaseService,
     private modalRef: NgbModal,
-    private utilService: UtilityService
+    private utilService: UtilityService,
+    private translateService: TranslateService,
   ) {}
+
+  ngOnInit(): void {
+    const lang = this.translateService.getCurrentLang();
+    this.lang = lang;
+  }
+
+  // Change the selected language
+  changeLang(event: SelectCustomEvent<string>) {
+    const lang = event.detail.value;
+    localStorage.setItem('lang', lang);
+    this.translateService.use(lang);
+  }
 
   async loginWithEmAndPa() {
     try {
       const userCred = await this.authService.loginWithEmAndPa(
         this.email,
-        this.password
+        this.password,
       );
       const user = userCred?.user;
       if (!user?.emailVerified) {
@@ -60,7 +77,7 @@ export class LoginComponent {
           this.userProfiles = userProfiles;
 
           let userProfile = this.userProfiles.filter(
-            (userProfile: any) => userProfile.uid === user?.uid
+            (userProfile: any) => userProfile.uid === user?.uid,
           );
 
           this.base.userProfileSubject.next(userProfile);
@@ -103,7 +120,7 @@ export class LoginComponent {
         return;
       }
       const badCreds = new Error(
-        'Hibás e-mail cím, vagy jelszó, kérlek próbáld újra!'
+        'Hibás e-mail cím, vagy jelszó, kérlek próbáld újra!',
       );
       if (this.modalRef.hasOpenModals()) this.modalRef.dismissAll();
       this.modalRef.open(ModalComponent, {
@@ -112,40 +129,38 @@ export class LoginComponent {
     }
   }
 
-  loginWithGoogle(): void {
-    this.authService.signInWithGoogle().then(() => {
-      this.authService.isLoggedIn().subscribe((user: any) => {
-        if (user) {
-          this.base.getUserProfiles().subscribe((userProfiles: any) => {
-            this.userProfiles = userProfiles;
+  async loginWithGoogle(): Promise<void> {
+    const userCreds = await this.authService.signInWithGoogle();
+    this.authService.isLoggedIn().subscribe((user: any) => {
+      if (user) {
+        this.base.getUserProfiles().subscribe((userProfiles: any) => {
+          this.userProfiles = userProfiles;
 
-            let userProfile = this.userProfiles.find(
-              (userProfile: any) => userProfile.uid === user.uid
-            );
-            if (userProfile?.uid) {
-              this.utilService.forUserSubject.userProfile = userProfile;
-              this.utilService.forUserSubject.userProfiles = this.userProfiles;
-              this.utilService.getFriends().subscribe();
-              document.location.reload();
-            }
+          let userProfile = this.userProfiles.find(
+            (userProfile: any) => userProfile.uid === user.uid,
+          );
+          console.log(userProfile);
+          if (userProfile?.uid) {
+            this.utilService.forUserSubject.userProfile = userProfile;
+            this.utilService.forUserSubject.userProfiles = this.userProfiles;
+            this.utilService.getFriends().subscribe();
+            document.location.reload();
+          }
 
-            if (!userProfile?.uid) {
-              userProfile = user;
-              for (let i = 0; i < 1; i++) {
-                this.base.addUserData({
-                  uid: userProfile.uid,
-                  email: user.email,
-                });
-              }
-            }
-            if (!userProfile?.birthDate) {
-              this.router.navigate(['/profile/' + user.uid]);
-            } else {
-              this.router.navigate(['/chat']);
-            }
-          });
-        }
-      });
+          if (!userProfile?.uid) {
+            userProfile = user;
+            this.base.addUserData({
+              uid: userProfile.uid,
+              email: user.email,
+            });
+          }
+          if (!userProfile?.birthDate) {
+            this.router.navigate(['/profile/' + user.uid]);
+          } else {
+            this.router.navigate(['/chat']);
+          }
+        });
+      }
     });
   }
 
@@ -159,13 +174,13 @@ export class LoginComponent {
   verifyPhoneNumberAndLogin() {
     const credentials = PhoneAuthProvider.credential(
       this.verificationId,
-      this.verificationCode
+      this.verificationCode,
     );
     this.authService.verifyPhoneNumberAndSignIN(credentials).then(() => {
       this.authService.isLoggedIn().subscribe((user: any) => {
         this.base.getUserProfiles().subscribe((userProfiles: any[]) => {
           let userProfile = userProfiles.find(
-            (userProf: UserClass) => userProf.uid === user.uid
+            (userProf: UserClass) => userProf.uid === user.uid,
           );
           if (!userProfile?.uid) {
             userProfile = user;
@@ -185,5 +200,10 @@ export class LoginComponent {
         });
       });
     });
+  }
+
+  onLogin(type: 'google' | 'email', loginForm?: NgForm) {
+    if (type === 'google') this.loginWithGoogle();
+    if (type === 'email') this.loginWithEmAndPa();
   }
 }

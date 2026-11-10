@@ -26,7 +26,7 @@ export class UtilityService {
   private translate = inject(TranslateService);
   private genAI = new GoogleGenerativeAI(Environments.geminiApiKey);
   private model = this.genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-lite',
+    model: 'gemini-3.5-flash-lite',
   });
   userProfile: UserClass = new UserClass();
   userProfiles: UserClass[] = [];
@@ -88,7 +88,7 @@ export class UtilityService {
           userProfile: this.userProfile,
           userFriends: this.userFriends,
         };
-      })
+      }),
     );
   }
 
@@ -103,7 +103,7 @@ export class UtilityService {
             {
               seenMe: fr.seenMe,
             } as any,
-            this.userProfile.key
+            this.userProfile.key,
           );
         }
         // //////////////////// LEÍRÁS ///////////////////
@@ -111,9 +111,9 @@ export class UtilityService {
         const now = Date.now(); // mostani idő milliszekundumban
         const fiveMinutesAgo = now - 5 * 60 * 1000;
         if (fr.confirmed || fr.areFriends !== false) {
-          (fr.displayName = friendProf?.displayName),
+          ((fr.displayName = friendProf?.displayName),
             (fr.profilePicture = friendProf?.profilePicture),
-            (fr.email = friendProf?.email);
+            (fr.email = friendProf?.email));
           if (friendProf?.lastTimeOnline)
             fr.online =
               friendProf?.lastTimeOnline < fiveMinutesAgo
@@ -143,7 +143,7 @@ export class UtilityService {
         uP =>
           !this.friendsUids.includes(uP.uid) &&
           uP.uid !== this.userProfile.uid &&
-          !this.signedAsFriendUids.includes(uP.uid)
+          !this.signedAsFriendUids.includes(uP.uid),
       )
       .map((uP: any) => {
         uP.friendId = uP.uid;
@@ -169,7 +169,7 @@ export class UtilityService {
           this.setUserNotFriendsArr();
           this.userSubject.next(this.forUserSubject);
         }
-      })
+      }),
     );
   }
 
@@ -185,7 +185,7 @@ export class UtilityService {
           })
           ?.map((fr, i, arr) => {
             friendProfile = this.userProfiles.find(
-              uP => uP.uid === fr.friendId
+              uP => uP.uid === fr.friendId,
             );
             const friend = Object.assign({}, ...arr);
             friend.displayName = friendProfile?.displayName;
@@ -195,7 +195,7 @@ export class UtilityService {
             return friend;
           });
         return seenMeArr;
-      })
+      }),
     );
   }
 
@@ -204,13 +204,13 @@ export class UtilityService {
   // új üzenetnél és mikor elolvassuk az üzenetet //
   filterShowFriendsMessArr(
     haventSeenMessagesArr: any[],
-    showFriendsMess: any[]
+    showFriendsMess: any[],
   ) {
     // a nemlátott üzenetek tömböt iterálja, kiszűri a baráttól való
     // eddig nem láttott üzeneteket és kap egy
     // seen:false property-t + az adott barát összes többi tulajdonságát
     const messSenderIds = haventSeenMessagesArr?.map(
-      mess => mess?.message?.senderId
+      mess => mess?.message?.senderId,
     );
     const friendNewMessageFrom: any = this.userFriends
       ?.filter(fr => messSenderIds?.includes(fr.friendId))
@@ -273,7 +273,7 @@ export class UtilityService {
     if (!this.isUserOnlineNow) {
       await this.base.updateUserData(
         { online: true, lastTimeOnline: new Date().getTime() },
-        this.userProfile?.key
+        this.userProfile?.key,
       );
       this.isUserOnlineNow = true;
     }
@@ -283,7 +283,7 @@ export class UtilityService {
     if (this.isUserOnlineNow) {
       await this.base.updateUserData(
         { online: false, lastTimeOnline: new Date().getTime() },
-        this.userProfile?.key
+        this.userProfile?.key,
       );
       this.isUserOnlineNow = false;
     }
@@ -294,7 +294,7 @@ export class UtilityService {
     file: File,
     maxWidth: number,
     maxHeight: number,
-    quality: number
+    quality: number,
   ): Promise<Blob> {
     return new Promise((res, rej) => {
       const img = new Image();
@@ -329,7 +329,7 @@ export class UtilityService {
             } else rej(new Error('A vászon üres'));
           },
           'image/jpg',
-          quality
+          quality,
         );
       };
       reader.onerror = error => {
@@ -401,7 +401,7 @@ export class UtilityService {
 
     if (passedMinsSMessSent < 60)
       return `${passedMinsSMessSent} ${this.translate.instant(
-        'user.online.minutesAgo'
+        'user.online.minutesAgo',
       )}`;
 
     if (hours < 24)

@@ -1,99 +1,104 @@
-﻿<section *ngIf="userProf.uid" class="album-shell">
-  <mat-card class="album-card">
-    <mat-toolbar class="album-toolbar">
-      <button
-        mat-icon-button
-        type="button"
-        routerLink="/chat"
-        aria-label="Vissza a beszélgetéshez"
-      >
-        <mat-icon>keyboard_backspace</mat-icon>
-      </button>
-      <span class="album-toolbar__title">Fotóalbum</span>
-      <span class="album-toolbar__spacer"></span>
-    </mat-toolbar>
-
-    <div class="upload-panel">
-      <div
-        class="upload-dropzone"
-        (click)="onDropzoneClick()"
-        [class.upload-dropzone--completed]="uploadFinished"
-      >
-        <mat-icon class="upload-dropzone__icon">
-          {{ uploadFinished ? 'collections' : 'cloud_upload' }}
-        </mat-icon>
-        <div class="upload-dropzone__copy">
-          <h3>
-            {{ uploadFinished ? 'Új képek kiválasztása' : '' }}
-          </h3>
-          <p>
-            {{
-              uploadFinished
-                ? 'Tölts fel akár több fotót egyszerre.'
-                : 'Kattints a feltöltéshez.'
-            }}
-          </p>
-        </div>
-        <input
-          *ngIf="uploadFinished"
-          #picUploadInput
-          id="picUploadInput"
-          type="file"
-          multiple
-          (change)="selectedFs($event)"
-        />
-      </div>
-
-      <mat-progress-bar
-        *ngIf="percent && percent < 100"
-        class="upload-progress"
-        mode="determinate"
-        color="accent"
-        [value]="percent"
-      ></mat-progress-bar>
-
-      <div *ngIf="percent === 100" class="upload-status">
-        <mat-icon>check_circle</mat-icon>
-        <span>Feltöltés kész!</span>
-      </div>
-    </div>
-
-    <div *ngIf="userPictures.length" class="album-grid-container">
-      <div class="album-grid__header">
-        <mat-icon class="album-grid__icon">folder_open</mat-icon>
-        <div class="album-grid__meta">
-          <span class="album-grid__title">Feltöltött képek</span>
-          <small class="album-grid__subtitle">2025</small>
-        </div>
-      </div>
-
-      <div class="album-grid">
-        <div class="album-tile" *ngFor="let pic of userPictures; let i = index">
-          <button
-            type="button"
-            class="album-tile__preview"
-            (click)="viewPic(i)"
-          >
-            <img
-              [src]="pic.url"
-              [alt]="pic.name || 'Megosztott kép'"
-              loading="lazy"
+﻿@if (userProf.uid) {
+  <section class="album-shell">
+    <mat-card class="album-card">
+      <mat-toolbar class="album-toolbar">
+        <button
+          mat-icon-button
+          type="button"
+          routerLink="/chat"
+          aria-label="Vissza a beszélgetéshez"
+        >
+          <mat-icon>keyboard_backspace</mat-icon>
+        </button>
+        <span class="album-toolbar__title">Fotóalbum</span>
+        <span class="album-toolbar__spacer"></span>
+      </mat-toolbar>
+      <div class="upload-panel">
+        <div
+          class="upload-dropzone"
+          (click)="onDropzoneClick()"
+          [class.upload-dropzone--completed]="uploadFinished"
+        >
+          <mat-icon class="upload-dropzone__icon">
+            {{ uploadFinished ? 'collections' : 'cloud_upload' }}
+          </mat-icon>
+          <div class="upload-dropzone__copy">
+            <h3>
+              {{ uploadFinished ? 'Új képek kiválasztása' : '' }}
+            </h3>
+            <p>
+              {{
+                uploadFinished
+                  ? 'Tölts fel akár több fotót egyszerre.'
+                  : 'Kattints a feltöltéshez.'
+              }}
+            </p>
+          </div>
+          @if (uploadFinished) {
+            <input
+              #picUploadInput
+              id="picUploadInput"
+              type="file"
+              multiple
+              (change)="selectedFs($event)"
             />
-          </button>
-          <div class="tile-actions">
-            <button
-              mat-icon-button
-              color="warn"
-              type="button"
-              class="text-center"
-              aria-label="Kép törlése"
-              (click)="deleteUserPicture(pic)"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
+          }
+        </div>
+        @if (percent && percent < 100) {
+          <mat-progress-bar
+            class="upload-progress"
+            mode="determinate"
+            color="accent"
+            [value]="percent"
+          ></mat-progress-bar>
+        }
+        @if (percent === 100) {
+          <div class="upload-status">
+            <mat-icon>check_circle</mat-icon>
+            <span>Feltöltés kész!</span>
+          </div>
+        }
+      </div>
+      @if (userPictures.length) {
+        <div class="album-grid-container">
+          <div class="album-grid__header">
+            <mat-icon class="album-grid__icon">folder_open</mat-icon>
+            <div class="album-grid__meta">
+              <span class="album-grid__title">Feltöltött képek</span>
+              <small class="album-grid__subtitle">2025</small>
+            </div>
+          </div>
+          <div class="album-grid">
+            @for (pic of userPictures; track pic; let i = $index) {
+              <div class="album-tile">
+                <button
+                  type="button"
+                  class="album-tile__preview"
+                  (click)="viewPic(i)"
+                >
+                  <img
+                    [src]="pic.url"
+                    [alt]="pic.name || 'Megosztott kép'"
+                    loading="lazy"
+                  />
+                </button>
+                <div class="tile-actions">
+                  <button
+                    mat-icon-button
+                    color="warn"
+                    type="button"
+                    class="text-center"
+                    aria-label="Kép törlése"
+                    (click)="deleteUserPicture(pic)"
+                  >
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </div>
+              </div>
+            }
           </div>
         </div>
-      </div>
-    </div>
-  </mat-card>
-</section>
+      }
+    </mat-card>
+  </section>
+}

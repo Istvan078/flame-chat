@@ -9,6 +9,7 @@ import {
   signal,
   ViewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { SharedModule } from 'src/app/components/shared/shared.module';
@@ -31,7 +32,16 @@ export class PostsComponent implements OnInit, AfterContentInit {
   AllFormData = signal<Form[]>([]);
   utilService = inject(UtilityService);
   fBuilder = inject(FormBuilder);
-  publishForm!: FormGroup;
+  publishForm: FormGroup = this.fBuilder.group({
+    name: [{ value: '', disabled: true }],
+    message: ['', [Validators.required, Validators.minLength(5)]],
+    pictures: this.fBuilder.array([]),
+    notSeen: this.fBuilder.control<string[]>([]),
+    isShared: ['yes'],
+    timeStamp: [''],
+    displayName: [''],
+    iFrame: [''],
+  });
   userProfile: UserClass = new UserClass();
   userProfilesUidsArr: string[] = [];
   chosenFiles: any;
@@ -41,36 +51,21 @@ export class PostsComponent implements OnInit, AfterContentInit {
   onDestroyRef = inject(DestroyRef);
 
   async ngOnInit() {
-    setTimeout(() => {
-      this.publishForm.patchValue({
-        name: this.userProfile.displayName,
-        displayName: this.userProfile.displayName,
-      });
-    }, 1000);
-    const obs = await this.utilService.getUserProfiles();
-    this.userProfilesSub = obs.subscribe(uProfs => {
-      (this.userProfile = uProfs.userProfile),
-        (this.userProfilesUidsArr = uProfs.userProfilesUidsArr);
-    });
-    this.publishForm = this.fBuilder.group({
-      name: [{ value: this.userProfile.displayName, disabled: true }],
-      message: ['', [Validators.required, Validators.minLength(5)]],
-      pictures: this.fBuilder.array([]),
-      notSeen: [...this.userProfilesUidsArr],
-      isShared: ['yes'],
-      timeStamp: [''],
-      displayName: [this.userProfile.displayName],
-      iFrame: [''],
-    });
     this.AllFormData.set(this.utilService.getFormDataForPosts());
-    console.log(this.AllFormData);
-    // console.log(this.formGroup);
-    // setTimeout(() => {
-    //   this.formGroup = this.FormData()![0].formGroup;
-    // }, 2000);
-    this.onDestroyRef.onDestroy(() => {
-      if (this.userProfilesSub) this.userProfilesSub?.unsubscribe();
-    });
+    const obs = await this.utilService.getUserProfiles();
+    if (this.onDestroyRef.destroyed) return;
+
+    this.userProfilesSub = obs
+      .pipe(takeUntilDestroyed(this.onDestroyRef))
+      .subscribe(uProfs => {
+        this.userProfile = uProfs.userProfile;
+        this.userProfilesUidsArr = uProfs.userProfilesUidsArr;
+        this.publishForm.patchValue({
+          name: this.userProfile.displayName,
+          displayName: this.userProfile.displayName,
+          notSeen: [...this.userProfilesUidsArr],
+        });
+      });
   }
 
   ngAfterContentInit(): void {

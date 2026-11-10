@@ -1,24 +1,11 @@
-<div
-  *ngIf="!user?.uid"
-  class="text-end"
-  style="position: fixed; top: 0; right: 0"
->
-  <mat-form-field>
-    <mat-label>{{ 'lang' | translate }}</mat-label>
-    <mat-select
-      [(ngModel)]="lang"
-      name="lang"
-      (valueChange)="changeLang($event)"
-    >
-      <mat-option value="hu">{{ 'hu' | translate }}</mat-option>
-      <mat-option value="en">{{ 'en' | translate }}</mat-option>
-    </mat-select>
-  </mat-form-field>
-</div>
-<div class="main-img mt-0 mb-0 p-0"></div>
-<div *ngIf="!routerOutletOff" class="m-0 p-0 outlet-cont">
-  <router-outlet></router-outlet>
-</div>
-@if(!isShowMessages){
-<app-bottom-nav></app-bottom-nav>
-}
+<ion-app>
+  <div class="main-img mt-0 mb-0 p-0"></div>
+  @if (!routerOutletOff) {
+    <div class="m-0 p-0 outlet-cont">
+      <ion-router-outlet></ion-router-outlet>
+    </div>
+  }
+  @if (!isShowMessages) {
+    <app-bottom-nav></app-bottom-nav>
+  }
+</ion-app>

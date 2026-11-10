@@ -91,6 +91,7 @@ import { UtilityService } from 'src/app/services/utility.service';
       ]),
     ]),
   ],
+  standalone: false,
 })
 export class ChatComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(MatAccordion) accordion!: MatAccordion;

@@ -6,6 +6,7 @@ import { ToastService } from 'src/app/services/toast.service';
   selector: 'app-toast',
   templateUrl: './toast.component.html',
   styleUrl: './toast.component.scss',
+  standalone: false,
 })
 export class ToastComponent {
   notConfirmedSignedMe = input<boolean>();

@@ -11,6 +11,7 @@ import { MainMenuModalComponent } from '../../modals/main-menu-modal/main-menu-m
   selector: 'app-main-menu',
   templateUrl: './main-menu.component.html',
   styleUrl: './main-menu.component.scss',
+  standalone: false,
 })
 export class MainMenuComponent implements OnInit {
   userProfile = new UserClass();

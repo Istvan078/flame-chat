@@ -1,8 +1,14 @@
-import { Injectable } from '@angular/core';
+import {
+  EnvironmentInjector,
+  inject,
+  Injectable,
+  runInInjectionContext,
+} from '@angular/core';
 import {
   AngularFirestore,
   AngularFirestoreCollection,
   DocumentData,
+  QueryFn,
 } from '@angular/fire/compat/firestore';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import {
@@ -20,8 +26,9 @@ import { MyPost, Post } from '../models/post.model';
   providedIn: 'root',
 })
 export class FirestoreService {
+  private readonly injector = inject(EnvironmentInjector);
   private filesFromChat!: AngularFirestoreCollection;
-  private sharedPostRef = this.fireStore.collection(`users/posts/shared`);
+  private sharedPostRef = this.collection(`users/posts/shared`);
   private myPostsRef = 'users/posts/my-posts';
   picturesSubject: Subject<any> = new Subject();
   filesSubject: Subject<any> = new Subject();
@@ -38,6 +45,23 @@ export class FirestoreService {
     private fireStorage: AngularFireStorage
   ) {}
 
+  // Re-enter DI for every new reference, including calls made after await.
+  private collection<T = DocumentData>(
+    path: string,
+    queryFn?: QueryFn
+  ): AngularFirestoreCollection<T> {
+    return runInInjectionContext(this.injector, () =>
+      this.fireStore.collection<T>(path, queryFn)
+    );
+  }
+
+  private document<T>(
+    collection: AngularFirestoreCollection<T>,
+    docId: string
+  ) {
+    return runInInjectionContext(this.injector, () => collection.doc(docId));
+  }
+
   getMyPostsSub() {
     return this.getMyPostsSubject;
   }
@@ -47,7 +71,7 @@ export class FirestoreService {
   }
 
   async updatePost(docId: string, post: Partial<Post>) {
-    return this.sharedPostRef.doc(docId).update(post);
+    return this.document(this.sharedPostRef, docId).update(post);
   }
 
   getMyPostsNotiSubj() {
@@ -92,11 +116,9 @@ export class FirestoreService {
   }
 
   refreshSharedWithMePosts() {
-    return this.fireStore
-      .collection(`users/posts/shared`, ref =>
-        ref.orderBy('newestTimeStamp', 'desc').limit(10)
-      )
-      .valueChanges(['child_changed']);
+    return this.collection(`users/posts/shared`, ref =>
+      ref.orderBy('newestTimeStamp', 'desc').limit(10)
+    ).valueChanges(['child_changed']);
   }
 
   refreshPostsAfterLike() {
@@ -110,22 +132,20 @@ export class FirestoreService {
   }
 
   refreshMyPosts(userKey: string) {
-    return this.fireStore
-      .collection(`${this.myPostsRef}/${userKey}/my-posts`, ref =>
-        ref.where('seen', '==', false).limit(10)
-      )
-      .valueChanges(['child_changed']);
+    return this.collection(`${this.myPostsRef}/${userKey}/my-posts`, ref =>
+      ref.where('seen', '==', false).limit(10)
+    ).valueChanges(['child_changed']);
   }
 
   async createMyPost(post: any, userKey: string) {
-    const myPostsRef = this.fireStore.collection(
+    const myPostsRef = this.collection(
       `${this.myPostsRef}/${userKey}/my-posts`
     );
     return myPostsRef.add(post);
   }
 
   async getMyPosts(userKey: string) {
-    const myPostsRef = this.fireStore.collection(
+    const myPostsRef = this.collection(
       `${this.myPostsRef}/${userKey}/my-posts`
     );
     return myPostsRef.ref.get().then((querySnapshot: any) => {
@@ -138,10 +158,10 @@ export class FirestoreService {
   }
 
   async updateMyPost(userKey: string, docId: string, data: Partial<MyPost>) {
-    const myPostsRef = this.fireStore.collection(
+    const myPostsRef = this.collection(
       `${this.myPostsRef}/${userKey}/my-posts`
     );
-    return myPostsRef.doc(docId).update(data);
+    return this.document(myPostsRef, docId).update(data);
   }
 
   updateDocument(
@@ -150,12 +170,11 @@ export class FirestoreService {
     isShared: boolean,
     userKey?: string
   ) {
-    const myPostsRef = this.fireStore.collection(
+    const myPostsRef = this.collection(
       `${this.myPostsRef}/${userKey}/my-posts`
     );
     if (!isShared)
-      return myPostsRef
-        .doc(docId)
+      return this.document(myPostsRef, docId)
         .update(updatedData)
         .then(() => {
           console.log('Document successfully updated!');
@@ -164,8 +183,7 @@ export class FirestoreService {
           console.error('Error updating document: ', error);
         });
     if (isShared)
-      return this.sharedPostRef
-        .doc(docId)
+      return this.document(this.sharedPostRef, docId)
         .update(updatedData)
         .then(() => {
           console.log('Document successfully updated!');
@@ -201,18 +219,17 @@ export class FirestoreService {
   // }
 
   addFilesToChat(data: any, userKey: string) {
-    this.filesFromChat = this.fireStore.collection(
+    this.filesFromChat = this.collection(
       `users/private/chats/${userKey}/files`
     );
     return this.filesFromChat.add(data);
   }
 
   getFilesFromChat(userKey: string): Observable<DocumentData> {
-    return ((this.filesFromChat as any) = this.fireStore
-      .collection(`users/private/chats/${userKey}/files`, ref =>
-        ref.orderBy('createdAt', 'desc').limit(15)
-      )
-      .snapshotChanges(['added']));
+    return ((this.filesFromChat as any) = this.collection(
+      `users/private/chats/${userKey}/files`,
+      ref => ref.orderBy('createdAt', 'desc').limit(15)
+    ).snapshotChanges(['added']));
   }
 
   addPublicPictures(file: any, userKey: string) {
@@ -250,12 +267,12 @@ export class FirestoreService {
       );
       storageRef.delete().subscribe(() => console.log(`Sikeres törlés!`));
     }
-    await this.sharedPostRef.doc(sharedPostId).delete();
+    await this.document(this.sharedPostRef, sharedPostId).delete();
     if (myPostId) {
-      const myPostsRef = this.fireStore.collection(
+      const myPostsRef = this.collection(
         `${this.myPostsRef}/${userKey}/my-posts`
       );
-      await myPostsRef.doc(myPostId).delete();
+      await this.document(myPostsRef, myPostId).delete();
     }
   }
 
@@ -281,42 +298,42 @@ export class FirestoreService {
   }
 
   deleteFilesFromFirestore(docId: string, userKey: string) {
-    const collectionPath = this.fireStore.collection(
+    const collectionPath = this.collection(
       `users/private/chats/${userKey}/files`
     );
-    return collectionPath.doc(docId).delete();
+    return this.document(collectionPath, docId).delete();
   }
 
   saveUserNotiSubscription(userKey: string, sub: any) {
-    const notiSubPath = this.fireStore.collection(
+    const notiSubPath = this.collection(
       `users/profiles/pushSubscription/${userKey}/subscription`
     );
     return notiSubPath.add(sub);
   }
 
   getUserNotiSubscription(userKey: string) {
-    const notiSubPath = this.fireStore.collection(
+    const notiSubPath = this.collection(
       `users/profiles/pushSubscription/${userKey}/subscription`
     );
     return notiSubPath.valueChanges();
   }
 
   getUserNotiSubscriptionReformed(userKey: string, endpoint: string) {
-    const notiSubPath = this.fireStore.collection(
+    const notiSubPath = this.collection(
       `users/profiles/pushSubscription/${userKey}/subscription`
     );
     return notiSubPath.ref.where('endpoint', '==', endpoint).get();
   }
 
   deleteUserNotificationSub(userKey: string, id: string) {
-    const notiSubPath = this.fireStore.collection(
+    const notiSubPath = this.collection(
       `users/profiles/pushSubscription/${userKey}/subscription`
     );
-    return notiSubPath.doc(id).delete();
+    return this.document(notiSubPath, id).delete();
   }
 
   deleteUserNotiSubscription(userKey: string, endpoint: string) {
-    const notiSubPath = this.fireStore.collection(
+    const notiSubPath = this.collection(
       `users/profiles/pushSubscription/${userKey}/subscription`
     );
     return new Promise((res, rej) => {
@@ -329,8 +346,7 @@ export class FirestoreService {
           } else {
             docs.forEach((doc: any) => {
               console.log(doc.id, doc.data());
-              const deletedDoc = notiSubPath
-                .doc(doc.id)
+              const deletedDoc = this.document(notiSubPath, doc.id)
                 .delete()
                 .then(() => {
                   console.log('törlés');
@@ -391,24 +407,22 @@ export class FirestoreService {
   }
 
   getAILimit() {
-    return this.fireStore.collection('ai/messaging/usage').valueChanges();
+    return this.collection('ai/messaging/usage').valueChanges();
   }
   addToAiUsage(usage: any) {
-    return this.fireStore.collection('ai/messaging/usage').add(usage);
+    return this.collection('ai/messaging/usage').add(usage);
   }
   async updateAiUsage(usage: any) {
     const docId: string = await new Promise((res, rej) => {
-      this.fireStore
-        .collection('ai/messaging/usage')
+      this.collection('ai/messaging/usage')
         .get()
         .forEach(doc => {
           if (doc.docs[0]?.id) res(doc.docs[0]?.id);
           if (doc.empty) this.addToAiUsage(usage);
         });
     });
-    return this.fireStore
-      .collection('ai/messaging/usage')
-      .doc(docId)
-      .update(usage);
+    return this.document(this.collection('ai/messaging/usage'), docId).update(
+      usage
+    );
   }
 }

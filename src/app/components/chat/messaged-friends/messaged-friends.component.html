@@ -2,12 +2,12 @@
   <!-- Header / App bar -->
   <mat-toolbar color="primary" class="appbar" role="heading" aria-level="1">
     <!-- <button
-      mat-icon-button
-      (click)="openMainMenu?.()"
-      aria-label="Menü megnyitása"
+    mat-icon-button
+    (click)="openMainMenu?.()"
+    aria-label="Menü megnyitása"
     >
-      <mat-icon>menu</mat-icon>
-    </button> -->
+    <mat-icon>menu</mat-icon>
+  </button> -->
 
     <span class="title">Üzenetek</span>
 
@@ -16,9 +16,13 @@
     <button
       mat-icon-button
       (click)="openNotifications?.()"
-      aria-label="Értesítések"
+      [attr.aria-label]="'Értesítések: ' + (haventSeenMessagesArr?.length || 0)"
     >
       <mat-icon
+        aria-hidden="false"
+        [attr.aria-label]="
+          'Értesítések: ' + (haventSeenMessagesArr?.length || 0)
+        "
         [ngClass]="haventSeenMessagesArr?.length ? 'text-primary' : ''"
         [matBadge]="haventSeenMessagesArr?.length"
         [matBadgeColor]="haventSeenMessagesArr?.length ? 'warn' : 'primary'"
@@ -27,47 +31,47 @@
     </button>
 
     <!-- <button mat-icon-button (click)="openProfile?.()" aria-label="Profil">
-      <mat-icon>account_circle</mat-icon>
-    </button> -->
+    <mat-icon>account_circle</mat-icon>
+  </button> -->
   </mat-toolbar>
 
   <!-- Top actions (Új üzenet / Archív) -->
-  @if(messagedFriends.length) {
-  <div class="text-center mb-0 mt-2 mess-search-cont">
-    <mat-form-field appearance="outline" class="friend-search-field">
-      <mat-label>Keresés</mat-label>
-      <input
-        (keyup)="searchMessage()"
-        matInput
-        [(ngModel)]="friendSearch"
-        placeholder="Ismerős neve"
-      />
-      <button
-        *ngIf="friendSearch"
-        matSuffix
-        mat-icon-button
-        (click)="friendSearch = ''; searchMessage()"
-        aria-label="Keresőmező törlése"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
-  </div>
-  } @else {
-  <div
-    class="d-flex justify-content-center align-items-center no-mess-fallback-cont"
-  >
-    <h2
-      class="mt-2 ps-2 fw-bolder text-secondary text-left no-mess-fallback-text"
-    >
-      Kattints az uj uzenet-re es kezdd el begepelni a nevet a keresobe hogy
-      kivalaszthasd beszelgetopartnered
-    </h2>
-    <div class="no-mess-fallback">
-      <img src="../../../../assets/no-mess-placeholder.jpg" alt="" />
+  @if (messagedFriends.length) {
+    <div class="text-center mb-0 mt-2 mess-search-cont">
+      <mat-form-field appearance="outline" class="friend-search-field">
+        <mat-label>Keresés</mat-label>
+        <input
+          (keyup)="searchMessage()"
+          matInput
+          [(ngModel)]="friendSearch"
+          placeholder="Ismerős neve"
+        />
+        @if (friendSearch) {
+          <button
+            matSuffix
+            mat-icon-button
+            (click)="friendSearch = ''; searchMessage()"
+            aria-label="Keresőmező törlése"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
     </div>
-  </div>
-
+  } @else {
+    <div
+      class="d-flex justify-content-center align-items-center no-mess-fallback-cont"
+    >
+      <h2
+        class="mt-2 ps-2 fw-bolder text-secondary text-left no-mess-fallback-text"
+      >
+        Kattints az uj uzenet-re es kezdd el begepelni a nevet a keresobe hogy
+        kivalaszthasd beszelgetopartnered
+      </h2>
+      <div class="no-mess-fallback">
+        <img src="../../../../assets/no-mess-placeholder.jpg" alt="" />
+      </div>
+    </div>
   }
   <div class="top-actions">
     <button
@@ -81,85 +85,95 @@
 
     <!-- <button mat-button class="top-action"> -->
     <!-- <mat-icon>search</mat-icon>
-      <span>Kereses</span> -->
+    <span>Kereses</span> -->
 
     <!-- </button> -->
 
     <!-- <button
-      mat-button
-      class="top-action"
-      (click)="showAllFriends = !showAllFriends"
-    >
-      <mat-icon>group</mat-icon>
-      <span>Új üzenet</span>
-    </button> -->
+  mat-button
+  class="top-action"
+  (click)="showAllFriends = !showAllFriends"
+  >
+  <mat-icon>group</mat-icon>
+  <span>Új üzenet</span>
+</button> -->
 
     <!-- <button mat-button class="top-action" (click)="toArchivedMsgs()">
-      <mat-icon>archive</mat-icon>
-      <span>Archivált üzenetek</span>
-    </button> -->
+<mat-icon>archive</mat-icon>
+<span>Archivált üzenetek</span>
+</button> -->
   </div>
 
   <!-- Friend search reveal -->
-  <section *ngIf="showFriendsToChoose" class="friend-search">
-    <mat-form-field appearance="outline" class="friend-search-field">
-      <mat-label>Keresés ismerősre</mat-label>
-      <input matInput [(ngModel)]="friendSearch" placeholder="Ismerős neve" />
-      <button
-        *ngIf="friendSearch"
-        matSuffix
-        mat-icon-button
-        (click)="friendSearch = ''"
-        aria-label="Keresőmező törlése"
-      >
-        <mat-icon>close</mat-icon>
-      </button>
-    </mat-form-field>
-
-    <div *ngFor="let friend of showFriendsMess | filter : friendSearch">
-      <div *ngIf="friendSearch && !friend.messaging" class="search-result-item">
-        <img
-          [src]="friend.profilePicture"
-          [alt]="friend.displayName + ' profilképe'"
-          class="avatar-small"
-        />
-        <span class="friend-name">{{ friend.displayName }}</span>
-        <button
-          mat-stroked-button
-          color="primary"
-          class="start-chat-btn"
-          (click)="firstMessageToFriend(friend)"
-        >
-          <mat-icon class="align-middle">message</mat-icon>
-          Üzenet írása
-        </button>
-      </div>
-    </div>
-  </section>
+  @if (showFriendsToChoose) {
+    <section class="friend-search">
+      <mat-form-field appearance="outline" class="friend-search-field">
+        <mat-label>Keresés ismerősre</mat-label>
+        <input matInput [(ngModel)]="friendSearch" placeholder="Ismerős neve" />
+        @if (friendSearch) {
+          <button
+            matSuffix
+            mat-icon-button
+            (click)="friendSearch = ''"
+            aria-label="Keresőmező törlése"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+      </mat-form-field>
+      @for (friend of showFriendsMess | filter: friendSearch; track friend) {
+        <div>
+          @if (friendSearch && !friend.messaging) {
+            <div class="search-result-item">
+              <img
+                [src]="friend.profilePicture"
+                [alt]="friend.displayName + ' profilképe'"
+                class="avatar-small"
+              />
+              <span class="friend-name">{{ friend.displayName }}</span>
+              <button
+                mat-stroked-button
+                color="primary"
+                class="start-chat-btn"
+                (click)="firstMessageToFriend(friend)"
+              >
+                <mat-icon class="align-middle">message</mat-icon>
+                Üzenet írása
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
 
   <!-- All friends list (expand) -->
-  <section *ngIf="showAllFriends" class="show-all-friends">
-    <div *ngFor="let friend of showFriendsMess" class="friend-tile">
-      <img
-        [src]="friend.profilePicture"
-        [alt]="friend.displayName + ' profilképe'"
-        class="avatar-small"
-      />
-      <div class="name">{{ friend.displayName }}</div>
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="firstMessageToFriend(friend); showAllFriends = false"
-      >
-        Új üzenet
-      </button>
-    </div>
-  </section>
+  @if (showAllFriends) {
+    <section class="show-all-friends">
+      @for (friend of showFriendsMess; track friend) {
+        <div class="friend-tile">
+          <img
+            [src]="friend.profilePicture"
+            [alt]="friend.displayName + ' profilképe'"
+            class="avatar-small"
+          />
+          <div class="name">{{ friend.displayName }}</div>
+          <button
+            mat-raised-button
+            color="primary"
+            (click)="firstMessageToFriend(friend); showAllFriends = false"
+          >
+            Új üzenet
+          </button>
+        </div>
+      }
+    </section>
+  }
 
   <!-- Conversation list -->
   <section class="chat-list">
-    <ng-container *ngFor="let friend of showFriendsMess; let i = index">
-      <ng-container *ngIf="friend.messaging || friend.seen === false">
+    @for (friend of showFriendsMess; track friend; let i = $index) {
+      @if (friend.messaging || friend.seen === false) {
         <mat-card class="conversation-card" (click)="getMessageUser(friend)">
           <div class="left">
             <div class="avatar-container">
@@ -168,43 +182,40 @@
                 [alt]="friend.displayName + ' profilképe'"
                 class="avatar"
               />
-              <span
-                *ngIf="friend.online && friend.visibility"
-                class="online-dot"
-              ></span>
+              @if (friend.online && friend.visibility) {
+                <span class="online-dot"></span>
+              }
             </div>
           </div>
-
           <div class="center">
             <div class="name">{{ friend.displayName }}</div>
             <div class="last-msg" [class.unread]="friend.newMessageNumber">
-              <ng-container *ngIf="lastMsgsWithFriends">
-                <ng-container *ngFor="let lastMsgWithFr of lastMsgsWithFriends">
-                  <span
-                    *ngIf="
-                      lastMsgWithFr?.message.senderId === friend.friendId ||
-                      lastMsgWithFr?.participants[1] === friend.friendId
-                    "
-                  >
-                    {{
-                      lastMsgWithFr?.replyMessage
-                        ? lastMsgWithFr.replyMessage.message
-                        : lastMsgWithFr?.message.message
-                    }}
-                  </span>
-                </ng-container>
-              </ng-container>
+              @if (lastMsgsWithFriends) {
+                @for (lastMsgWithFr of lastMsgsWithFriends; track $index) {
+                  @if (
+                    lastMsgWithFr?.message.senderId === friend.friendId ||
+                    lastMsgWithFr?.participants[1] === friend.friendId
+                  ) {
+                    <span>
+                      {{
+                        lastMsgWithFr?.replyMessage
+                          ? lastMsgWithFr.replyMessage.message
+                          : lastMsgWithFr?.message.message
+                      }}
+                    </span>
+                  }
+                }
+              }
             </div>
             <!-- <div
-              class="last-seen"
+                class="last-seen"
               *ngIf="
                 !friend.newMessageNumber && friend.visibility && !friend.online
               "
-            >
-              Utoljára elérhető: {{ friend.lastTimeOnline }}
-            </div> -->
+                >
+                Utoljára elérhető: {{ friend.lastTimeOnline }}
+              </div> -->
           </div>
-
           <div class="right">
             <button
               mat-icon-button
@@ -214,12 +225,13 @@
             >
               <mat-icon>more_vert</mat-icon>
             </button>
-            <div *ngIf="friend.newMessageNumber" class="unread-badge">
-              {{ friend.newMessageNumber }}
-            </div>
+            @if (friend.newMessageNumber) {
+              <div class="unread-badge">
+                {{ friend.newMessageNumber }}
+              </div>
+            }
           </div>
         </mat-card>
-
         <mat-menu #menu="matMenu">
           <button
             mat-menu-item
@@ -236,11 +248,13 @@
             <span>Törlés</span>
           </button>
         </mat-menu>
-      </ng-container>
-    </ng-container>
+      }
+    }
 
-    <div *ngIf="showFriendsMess.length === 0" class="no-friends-msg">
-      Válassz ki egy ismerőst új üzenet írásához!
-    </div>
+    @if (showFriendsMess.length === 0) {
+      <div class="no-friends-msg">
+        Válassz ki egy ismerőst új üzenet írásához!
+      </div>
+    }
   </section>
 </div>

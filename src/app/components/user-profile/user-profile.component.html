@@ -1,5 +1,5 @@
 <!-- <div class="row justify-content-center">
-  <div class="col-12 col-md-7 col-lg-8 col-xl-8"> -->
+<div class="col-12 col-md-7 col-lg-8 col-xl-8"> -->
 <div class="d-flex flex-wrap justify-content-center">
   <form
     class="d-flex flex-column flex-wrap justify-content-center"
@@ -74,20 +74,22 @@
             required
           />
         </mat-form-field>
-        <div *ngFor="let gender of genders">
-          <label>
-            <input
-              [(ngModel)]="userProf['gender']"
-              ngModel
-              [value]="gender"
-              type="radio"
-              name="gender"
-              id="gender"
-              required
-            />
-            {{ gender }}
-          </label>
-        </div>
+        @for (gender of genders; track gender) {
+          <div>
+            <label>
+              <input
+                [(ngModel)]="userProf['gender']"
+                ngModel
+                [value]="gender"
+                type="radio"
+                name="gender"
+                id="gender"
+                required
+              />
+              {{ gender }}
+            </label>
+          </div>
+        }
         <div class="d-flex justify-content-end">
           <button
             [disabled]="!f.form.valid"
@@ -119,111 +121,119 @@
               name="profilePicture"
             />
           </button>
-          <div class="text-primary mt-1" *ngIf="profilePhoto">
-            {{ profilePhoto.name }}
-          </div>
-          @if(profilePhoto.name){
-          <button
-            [disabled]="!profilePhoto || !uploadFinished"
-            (click)="addOrChangeProfilePic()"
-            type="button"
-            class="btn btn-success ms-1 mt-1"
-          >
-            <mat-icon class="align-middle">upload</mat-icon>
-            {{ 'user.uploadProfPic' | translate }}
-          </button>
+          @if (profilePhoto) {
+            <div class="text-primary mt-1">
+              {{ profilePhoto.name }}
+            </div>
+          }
+          @if (profilePhoto.name) {
+            <button
+              [disabled]="!profilePhoto || !uploadFinished"
+              (click)="addOrChangeProfilePic()"
+              type="button"
+              class="btn btn-success ms-1 mt-1"
+            >
+              <mat-icon class="align-middle">upload</mat-icon>
+              {{ 'user.uploadProfPic' | translate }}
+            </button>
           }
         </div>
-        <div
-          *ngIf="profilePhoto && percent && percent < 100"
-          class="progress mt-2 progressC"
-          style="height: 50px; width: 100%"
-        >
+        @if (profilePhoto && percent && percent < 100) {
           <div
-            [style]="{ width: percent + '%' }"
-            class="progress-bar progressC"
-            role="progressbar"
-            [attr.aria-valuenow]="percent"
-            [attr.aria-valuemin]="percent"
-            aria-valuemax="100"
+            class="progress mt-2 progressC"
+            style="height: 50px; width: 100%"
           >
-            <h4 class="pt-2">{{ percent }}%</h4>
+            <div
+              [style]="{ width: percent + '%' }"
+              class="progress-bar progressC"
+              role="progressbar"
+              [attr.aria-valuenow]="percent"
+              [attr.aria-valuemin]="percent"
+              aria-valuemax="100"
+            >
+              <h4 class="pt-2">{{ percent }}%</h4>
+            </div>
           </div>
-        </div>
-        <div *ngIf="profilePhotoUrl" class="d-flex justify-content-center">
-          <div class="profilePicContainer">
-            <img [src]="profilePhotoUrl" alt="Profilkép" />
+        }
+        @if (profilePhotoUrl) {
+          <div class="d-flex justify-content-center">
+            <div class="profilePicContainer">
+              <img [src]="profilePhotoUrl" alt="Profilkép" />
+            </div>
           </div>
-        </div>
-        <ng-container
-          *ngIf="userProf.profilePicture === chosenProfPic?.nativeElement.src"
-        >
+        }
+        @if (userProf.profilePicture === chosenProfPic?.nativeElement.src) {
           <h3 class="fw-bold text-center mb-0 text-primary border-1">
             Beállított <mat-icon class="align-middle">photo</mat-icon>
           </h3>
           <mat-icon class="text-center d-inline-block w-100 text-warning"
             >arrow_downward</mat-icon
           >
-        </ng-container>
-        <div *ngIf="profilePicsArr.length && !profilePhotoUrl" class="slider">
-          <div class="mainContainer">
-            <!-- <div *ngIf="isLoading" class="loadingSpinner">*</div> -->
-            <!-- <ng-template [ngIf]="error">
-              <div class="errorContainer">
-                {{ this.showErrorAlert() }}
-                <button (click)="clearError()" type="button">Rendben</button>
+        }
+        @if (profilePicsArr.length && !profilePhotoUrl) {
+          <div class="slider">
+            <div class="mainContainer">
+              <!-- <div *ngIf="isLoading" class="loadingSpinner">*</div> -->
+              <!-- <ng-template [ngIf]="error">
+                                <div class="errorContainer">
+                                  {{ this.showErrorAlert() }}
+                                  <button (click)="clearError()" type="button">Rendben</button>
+                                </div>
+                              </ng-template> -->
+              <div class="left-arrow">
+                @if (isLeftArrow) {
+                  <span (click)="toLeft()"><</span>
+                }
               </div>
-            </ng-template> -->
-            <div class="left-arrow">
-              <span *ngIf="isLeftArrow" (click)="toLeft()"><</span>
-            </div>
-            <ng-container *ngFor="let pic of profilePicsArr">
-              <div class="products">
-                <div class="imgContainer">
-                  <img
-                    id="myProfilePic"
-                    #profilePic
-                    [src]="pic"
-                    [attr.data-src]="pic"
-                    alt="Profilkép"
-                  />
+              @for (pic of profilePicsArr; track pic) {
+                <div class="products">
+                  <div class="imgContainer">
+                    <img
+                      id="myProfilePic"
+                      #profilePic
+                      [src]="pic"
+                      [attr.data-src]="pic"
+                      alt="Profilkép"
+                    />
+                  </div>
                 </div>
+              }
+              <div class="right-arrow">
+                @if (isRightArrow) {
+                  <span (click)="toRight()">></span>
+                }
               </div>
-            </ng-container>
-            <div class="right-arrow">
-              <span *ngIf="isRightArrow" (click)="toRight()">></span>
             </div>
+            @if (userProf.profilePicture !== chosenProfPic?.nativeElement.src) {
+              <div class="change-profpic-button">
+                <button
+                  color="primary"
+                  mat-raised-button
+                  (click)="updateProfilePic()"
+                  class="pt-2 pb-2 bg-primary"
+                  type="button"
+                >
+                  {{ 'user.changeProfPic' | translate }}
+                </button>
+              </div>
+            }
           </div>
-          <div
-            *ngIf="userProf.profilePicture !== chosenProfPic?.nativeElement.src"
-            class="change-profpic-button"
-          >
-            <button
-              color="primary"
-              mat-raised-button
-              (click)="updateProfilePic()"
-              class="pt-2 pb-2 bg-primary"
-              type="button"
-            >
-              {{ 'user.changeProfPic' | translate }}
-            </button>
-          </div>
-        </div>
+        }
         <!-- <div class="row justify-content-center mt-2">
-          <div
-            *ngIf="percent === 0 || pictures; else newPic"
-            class="col-12 d-flex justify-content-center align-items-center"
-            style="height: 40vh"
-          >
-            <img
-              width="100%"
-              height="100%"
-              class="rounded"
-              [src]="userProf.profilePicture"
-              [alt]="userProf.profilePicture"
-            />
-          </div>
-        </div> -->
+                          <div
+                            *ngIf="percent === 0 || pictures; else newPic"
+                            class="col-12 d-flex justify-content-center align-items-center"
+                            style="height: 40vh"
+                            >
+                            <img
+                              width="100%"
+                              height="100%"
+                              class="rounded"
+                              [src]="userProf.profilePicture"
+                              [alt]="userProf.profilePicture"
+                              />
+                            </div>
+                          </div> -->
         <ng-template #newPic>
           <div class="d-grid justify-content-center">
             <div class="profilePicContainer">
@@ -282,35 +292,35 @@
 </div>
 
 <!-- <div  *ngIf="userPictures.length > 0" [attr.data-bs-interval]="false" id="picturesCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div  class="carousel-indicators">
-              <button *ngFor="let pic of userPictures; let i = index" type="button" [attr.data-bs-target]="'#picturesCarousel'" [attr.data-bs-slide-to]="i" [class.active]="i === 0" attr.aria-label="Slide {{i + 1}}"></button>
-            </div>
-            <div  class="carousel-inner">
-              <div style="height: 70vh;" *ngFor="let pic of userPictures; let i = index" class="carousel-item" [ngClass]="{'active': i === 0}">
-                
-                  <mat-icon (click)="deletePicture(pic)" class="deletePicture">delete_forever</mat-icon>
-                
-                <img style="width: 100%; max-height: 70vh;" [src]="pic.url" class="d-block rounded position-absolute top-50 start-50 translate-middle" [alt]="pic.url">
-              </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#picturesCarousel" data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#picturesCarousel" data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Next</span>
-            </button>
-          </div>
+                  <div  class="carousel-indicators">
+                    <button *ngFor="let pic of userPictures; let i = index" type="button" [attr.data-bs-target]="'#picturesCarousel'" [attr.data-bs-slide-to]="i" [class.active]="i === 0" attr.aria-label="Slide {{i + 1}}"></button>
+                  </div>
+                  <div  class="carousel-inner">
+                    <div style="height: 70vh;" *ngFor="let pic of userPictures; let i = index" class="carousel-item" [ngClass]="{'active': i === 0}">
+
+                      <mat-icon (click)="deletePicture(pic)" class="deletePicture">delete_forever</mat-icon>
+
+                      <img style="width: 100%; max-height: 70vh;" [src]="pic.url" class="d-block rounded position-absolute top-50 start-50 translate-middle" [alt]="pic.url">
+                    </div>
+                  </div>
+                  <button class="carousel-control-prev" type="button" data-bs-target="#picturesCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#picturesCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                  </button>
+                </div>
 
 
 
-      <button [disabled]="!f.valid" class="mt-2" color="accent" mat-raised-button type="submit">
-        Profil mentése
-      </button>
-      <button [disabled]="!userBirthDate" routerLink="/chat" class="greenButton mt-1" mat-raised-button type="button">
-        Vissza
-      </button> -->
+                <button [disabled]="!f.valid" class="mt-2" color="accent" mat-raised-button type="submit">
+                  Profil mentése
+                </button>
+                <button [disabled]="!userBirthDate" routerLink="/chat" class="greenButton mt-1" mat-raised-button type="button">
+                  Vissza
+                </button> -->
 <!-- </form> -->
 <!-- </div>
-</div> -->
+          </div> -->

@@ -55,95 +55,101 @@
 
   <!-- SEARCH RESULTS BLOCK -->
   <section class="search-results u-flex">
-    @for(user of userSearchedProfiles; track $index; let i = $index){
-    <div
-      *ngIf="user.uid !== 'NR8BsiJ2DtUy32bGgVnEijzBZ9F2'"
-      class="search-results__box u-grid"
-    >
-      <!-- BACK ARROW -->
-      <!-- @if(i===0) {
-      <mat-icon>arrow_back_ios</mat-icon>
-      } -->
-      <button class="btn search-results__btn" (click)="toFriendProfile(user)">
-        <img [src]="user.profilePicture" alt="profilkép" class="avatar" />
-        <div class="name">{{ user.displayName }}</div>
-      </button>
-      @for (notFriend of userNotFriends; track $index;) {
-
-      <button
-        *ngIf="notFriend.friendId === user.uid"
-        class="btn btn-add-friend"
-        (click)="signAsAFriend(notFriend)"
-      >
-        <mat-icon class="u-align-middle">person_add</mat-icon>
-        {{ 'user.signAsFriend' | translate }}
-      </button>
+    @for (user of userSearchedProfiles; track $index; let i = $index) {
+      @if (user.uid !== 'NR8BsiJ2DtUy32bGgVnEijzBZ9F2') {
+        <div class="search-results__box u-grid">
+          <!-- BACK ARROW -->
+          <!-- @if(i===0) {
+              <mat-icon>arrow_back_ios</mat-icon>
+              } -->
+          <button
+            class="btn search-results__btn"
+            (click)="toFriendProfile(user)"
+          >
+            <img [src]="user.profilePicture" alt="profilkép" class="avatar" />
+            <div class="name">{{ user.displayName }}</div>
+          </button>
+          @for (notFriend of userNotFriends; track $index) {
+            @if (notFriend.friendId === user.uid) {
+              <button
+                class="btn btn-add-friend"
+                (click)="signAsAFriend(notFriend)"
+              >
+                <mat-icon class="u-align-middle">person_add</mat-icon>
+                {{ 'user.signAsFriend' | translate }}
+              </button>
+            }
+          }
+          <!-- FORWARD ARROW -->
+          <!-- @if(i===3) {
+              <mat-icon>arrow_forward_ios</mat-icon>
+              } -->
+        </div>
       }
-      <!-- FORWARD ARROW -->
-      <!-- @if(i===3) {
-      <mat-icon>arrow_forward_ios</mat-icon>
-
-      } -->
-    </div>
-    } @empty { @for(user of userNotFriends; track $index; let i = $index){
-    <div
-      *ngIf="user.friendId !== 'NR8BsiJ2DtUy32bGgVnEijzBZ9F2'"
-      class="search-results__box u-grid"
-    >
-      <!-- BACK ARROW -->
-      <!-- @if(i===0) {
-      <mat-icon>arrow_back_ios</mat-icon>
-      } -->
-
-      <button class="btn search-results__btn" (click)="toFriendProfile(user)">
-        <img [src]="user.profilePicture" alt="profilkép" class="avatar" />
-        <div class="name">{{ user.displayName }}</div>
-      </button>
-      @for (notFriend of userNotFriends; track $index;) {
-
-      <button
-        *ngIf="notFriend.friendId === user.friendId"
-        class="btn btn-add-friend"
-        (click)="signAsAFriend(notFriend)"
-      >
-        <mat-icon class="u-align-middle">person_add</mat-icon>
-        {{ 'user.signAsFriend' | translate }}
-      </button>
+    } @empty {
+      @for (user of userNotFriends; track $index; let i = $index) {
+        @if (user.friendId !== 'NR8BsiJ2DtUy32bGgVnEijzBZ9F2') {
+          <div class="search-results__box u-grid">
+            <!-- BACK ARROW -->
+            <!-- @if(i===0) {
+                <mat-icon>arrow_back_ios</mat-icon>
+                } -->
+            <button
+              class="btn search-results__btn"
+              (click)="toFriendProfile(user)"
+            >
+              <img [src]="user.profilePicture" alt="profilkép" class="avatar" />
+              <div class="name">{{ user.displayName }}</div>
+            </button>
+            @for (notFriend of userNotFriends; track $index) {
+              @if (notFriend.friendId === user.friendId) {
+                <button
+                  class="btn btn-add-friend"
+                  (click)="signAsAFriend(notFriend)"
+                >
+                  <mat-icon class="u-align-middle">person_add</mat-icon>
+                  {{ 'user.signAsFriend' | translate }}
+                </button>
+              }
+            }
+            <!-- FORWARD ARROW -->
+            <!-- @if(i===3) {
+                <mat-icon>arrow_forward_ios</mat-icon>
+                } -->
+          </div>
+        }
       }
-      <!-- FORWARD ARROW -->
-      <!-- @if(i===3) {
-      <mat-icon>arrow_forward_ios</mat-icon>
-
-      } -->
-    </div>
-    } }
+    }
   </section>
   <!-- SEARCH RESULTS AND SUGGESTED FRIENDS BLOCK END -->
 
   <!-- FRIEND CONFIRMATION SECTION -->
-  @if(notConfirmedMeUsers.length){
-  <section class="signed-me-section u-flex">
-    @for(user of notConfirmedMeUsers; track $index){
-    <div class="signed-me-section__box u-grid">
-      <h4 class="friend-name">{{ user.displayName }}</h4>
-      <p class="friend-signed-text">Ismerősnek jelölt</p>
-      <img
-        [src]="user.profilePicture"
-        alt="Profilkép"
-        class="avatar"
-        (click)="toFriendProfile(user.uid)"
-      />
-      <button (click)="confirmedFriend(user)" class="btn btn-confirm-friend">
-        Megerosites</button
-      ><button
-        (click)="notConfirmFriend(user)"
-        class="btn btn-not-confirm-friend"
-      >
-        Nem ismerem
-      </button>
-    </div>
-    }
-  </section>
+  @if (notConfirmedMeUsers.length) {
+    <section class="signed-me-section u-flex">
+      @for (user of notConfirmedMeUsers; track $index) {
+        <div class="signed-me-section__box u-grid">
+          <h4 class="friend-name">{{ user.displayName }}</h4>
+          <p class="friend-signed-text">Ismerősnek jelölt</p>
+          <img
+            [src]="user.profilePicture"
+            alt="Profilkép"
+            class="avatar"
+            (click)="toFriendProfile(user.uid)"
+          />
+          <button
+            (click)="confirmedFriend(user)"
+            class="btn btn-confirm-friend"
+          >
+            Megerosites</button
+          ><button
+            (click)="notConfirmFriend(user)"
+            class="btn btn-not-confirm-friend"
+          >
+            Nem ismerem
+          </button>
+        </div>
+      }
+    </section>
   }
   <!-- FRIEND CONFIRMATION SECTION END-->
 
@@ -174,6 +180,12 @@
         <div class="sub">{{ 'mainPage.myFeeds' | translate }}</div>
       </div>
       <mat-icon
+        aria-hidden="false"
+        [attr.aria-label]="
+          ('mainPage.myFeeds' | translate) +
+          ': ' +
+          (myPostsNotificationNumber || 0)
+        "
         [matBadgeDisabled]="!myPostsNotificationNumber"
         [matBadge]="myPostsNotificationNumber"
         matBadgeColor="primary"
@@ -202,6 +214,10 @@
         <div class="sub">{{ 'mainPage.publicPosts' | translate }}</div>
       </div>
       <mat-icon
+        aria-hidden="false"
+        [attr.aria-label]="
+          ('mainPage.feeds' | translate) + ': ' + (postsNotificationNumber || 0)
+        "
         [matBadgeDisabled]="!postsNotificationNumber"
         [matBadge]="postsNotificationNumber"
         matBadgeColor="primary"
@@ -219,6 +235,10 @@
         <div class="sub">{{ 'mainPage.yourConvs' | translate }}</div>
       </div>
       <mat-icon
+        aria-hidden="false"
+        [attr.aria-label]="
+          ('mainPage.messages' | translate) + ': ' + (newMessageNumber || 0)
+        "
         [matBadgeDisabled]="!newMessageNumber"
         [matBadge]="newMessageNumber"
         matBadgeColor="primary"
@@ -266,6 +286,10 @@
         <div class="sub">{{ 'mainPage.yourFriends' | translate }}</div>
       </div>
       <mat-icon
+        aria-hidden="false"
+        [attr.aria-label]="
+          ('mainPage.friends' | translate) + ': ' + (userFriends?.length || 0)
+        "
         [matBadgeDisabled]="!userFriends?.length"
         [matBadge]="userFriends?.length"
         matBadgeColor="primary"
@@ -296,55 +320,65 @@
   </section>
 
   <!-- Tartalmi szekciók (panelek helyett) -->
-  <section class="content scroll-to-content" *ngIf="isMyPostsOpen">
-    <app-my-posts></app-my-posts>
-  </section>
+  @if (isMyPostsOpen) {
+    <section class="content scroll-to-content">
+      <app-my-posts></app-my-posts>
+    </section>
+  }
 
-  <section class="content scroll-to-content" *ngIf="isFeedOpen">
-    <app-news [userFriends]="this.userFriends"></app-news>
-  </section>
+  @if (isFeedOpen) {
+    <section class="content scroll-to-content">
+      <app-news [userFriends]="this.userFriends"></app-news>
+    </section>
+  }
 
-  <section class="content scroll-to-content" *ngIf="isFriendsOpen">
-    <div class="friends-grid">
-      @for(friend of userFriends; let i = $index; track $index){ @defer(on
-      viewport){
-      <mat-card class="friend-card">
-        <img
-          [src]="friend.profilePicture"
-          width="56"
-          height="56"
-          class="avatar"
-          alt=""
-          (click)="showProfPics(friend)"
-        />
-        <div class="fname">{{ friend.displayName }}</div>
-        <div class="femail">{{ friend.email }}</div>
-        <div class="actions">
-          <button
-            mat-stroked-button
-            color="primary"
-            (click)="toFriendProfile(friend)"
-          >
-            <mat-icon>person</mat-icon>
-            Profil
-          </button>
-          <button
-            mat-stroked-button
-            color="warn"
-            (click)="removeFriend(friend)"
-          >
-            <mat-icon>person_remove</mat-icon>
-            Törlés
-          </button>
-        </div>
-      </mat-card>
-      } @placeholder{
-      <p>Ismerosok listaja toltodik...</p>
-      } }
-    </div>
-  </section>
+  @if (isFriendsOpen) {
+    <section class="content scroll-to-content">
+      <div class="friends-grid">
+        @for (friend of userFriends; let i = $index; track $index) {
+          @defer (on
+                          viewport) {
+            <mat-card class="friend-card">
+              <img
+                [src]="friend.profilePicture"
+                width="56"
+                height="56"
+                class="avatar"
+                alt=""
+                (click)="showProfPics(friend)"
+              />
+              <div class="fname">{{ friend.displayName }}</div>
+              <div class="femail">{{ friend.email }}</div>
+              <div class="actions">
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  (click)="toFriendProfile(friend)"
+                >
+                  <mat-icon>person</mat-icon>
+                  Profil
+                </button>
+                <button
+                  mat-stroked-button
+                  color="warn"
+                  (click)="removeFriend(friend)"
+                >
+                  <mat-icon>person_remove</mat-icon>
+                  Törlés
+                </button>
+              </div>
+            </mat-card>
+          } @placeholder {
+            <p>Ismerosok listaja toltodik...</p>
+          }
+        }
+      </div>
+    </section>
+  }
 
-  <section class="content" *ngIf="isUserProfileOn && userProfile.uid">
-    <app-user-profile></app-user-profile>
-  </section>
+  @if (isUserProfileOn && userProfile.uid) {
+    <section class="content">
+      <app-user-profile></app-user-profile>
+    </section>
+  }
 </div>

@@ -1,60 +1,99 @@
+import { provideHttpClient } from '@angular/common/http';
 import {
   ComponentFixture,
   fakeAsync,
+  flushMicrotasks,
   TestBed,
   tick,
 } from '@angular/core/testing';
-import { NewsComponent } from './news.component';
-import { SharedModule } from '../../shared/shared.module';
-import { HttpClientModule } from '@angular/common/http';
-import { SwPush } from '@angular/service-worker';
-import { AuthService } from 'src/app/services/auth.service';
-import { BaseService } from 'src/app/services/base.service';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { UserClass } from 'src/app/models/user.model';
-import { Observable, of } from 'rxjs';
-
-class MockSwPush {}
+import { BaseService } from 'src/app/services/base.service';
+import { FirestoreService } from 'src/app/services/firestore.service';
+import { UtilityService } from 'src/app/services/utility.service';
+import { NewsComponent } from './news.component';
 
 describe('NewsComponent', () => {
   let component: NewsComponent;
   let fixture: ComponentFixture<NewsComponent>;
+  let utilityService: jasmine.SpyObj<UtilityService>;
+  let userDetails: Subject<{
+    userProfiles: UserClass[];
+    userProfile: UserClass;
+    userProfilesUidsArr: string[];
+  }>;
 
   beforeEach(async () => {
+    userDetails = new Subject();
+    utilityService = jasmine.createSpyObj('UtilityService', [
+      'getUserProfiles',
+    ]);
+    utilityService.getUserProfiles.and.resolveTo(userDetails.asObservable());
+
     await TestBed.configureTestingModule({
-      declarations: [NewsComponent],
-      imports: [SharedModule, HttpClientModule],
-      providers: [{ provide: SwPush, useClass: MockSwPush }],
+      imports: [NewsComponent],
+      providers: [
+        provideHttpClient(),
+        provideNoopAnimations(),
+        { provide: UtilityService, useValue: utilityService },
+        {
+          provide: BaseService,
+          useValue: { selectedFriendSubject: new BehaviorSubject({}) },
+        },
+        {
+          provide: FirestoreService,
+          useValue: {
+            picturesSubject: new Subject(),
+            getMyPostsSub: () => new Subject(),
+          },
+        },
+      ],
     }).compileComponents();
+
+    fixture = TestBed.createComponent(NewsComponent);
+    component = fixture.componentInstance;
+    spyOn(component, 'init').and.resolveTo();
   });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(NewsComponent);
-    const app = fixture.debugElement.componentInstance;
-    // fixture.detectChanges();
-    expect(app).toBeTruthy();
+  it('should create without connecting to Firebase', () => {
+    expect(component).toBeTruthy();
   });
 
-  it('should create', () => {
-    // expect(component).toBeTruthy();
-    // const app = fixture.debugElement.componentInstance;
-    // const userService = fixture.debugElement.injector.get(BaseService);
-    // fixture.detectChanges();
-    // expect(userService.userKey).toEqual(component.userProfile.key);
-  });
-  it('shouldnt fetch data successfully if not called asynchronously!', fakeAsync(() => {
-    let user = new UserClass();
-    let tomb: any[] = [];
-    tomb.push(user);
-    fixture = TestBed.createComponent(NewsComponent);
-    const app = fixture.debugElement.componentInstance;
-    const userService = fixture.debugElement.injector.get(BaseService);
-    const spy = spyOn(userService, 'getUserProfiles').and.returnValue(of(tomb));
+  it('accepts synchronous cached profiles without unsubscribing before assignment', fakeAsync(() => {
+    const user = Object.assign(new UserClass(), { uid: 'cached-user' });
+    utilityService.getUserProfiles.and.resolveTo(
+      of({
+        userProfile: user,
+        userProfiles: [user],
+        userProfilesUidsArr: [user.uid],
+      })
+    );
     fixture.detectChanges();
-    tick();
-    expect(app.userProfiles).toBeTruthy();
-    // fixture.whenStable().then(() => {
+    flushMicrotasks();
+    tick(1000);
+    expect(component.userProfile).toBe(user);
+    expect(component.userProfilesSub.closed).toBeTrue();
+  }));
 
-    // });
-    // expect(app.userProfiles).toBe(undefined);
+  it('updates profiles after the asynchronous user data arrives', fakeAsync(() => {
+    const user = Object.assign(new UserClass(), { uid: 'test-user' });
+    fixture.detectChanges();
+    expect(utilityService.getUserProfiles).toHaveBeenCalled();
+    expect(component.userProfiles).toEqual([]);
+
+    flushMicrotasks();
+    userDetails.next({
+      userProfiles: [user],
+      userProfile: user,
+      userProfilesUidsArr: [user.uid],
+    });
+    fixture.detectChanges();
+
+    expect(component.userProfiles).toEqual([user]);
+    expect(component.userProfile).toBe(user);
+    expect(component.userProfilesUidsArr).toEqual([user.uid]);
+    tick(1000);
+    expect(component.init).toHaveBeenCalled();
   }));
 });

@@ -1,4 +1,4 @@
-﻿:host {
+:host {
   display: block;
   color: #e8ecff;
 }
@@ -251,8 +251,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  --mdc-icon-button-state-layer-size: 32px;
-  --mdc-icon-button-ripple-color: rgba(255, 82, 82, 0.25);
+  --mat-icon-button-state-layer-size: 32px;
+  --mat-icon-button-ripple-color: rgba(255, 82, 82, 0.25);
   transition: transform 0.2s ease, background 0.2s ease;
 }
 

@@ -7,6 +7,7 @@ import { UtilityService } from 'src/app/services/utility.service';
   selector: 'app-visited-me',
   templateUrl: './visited-me.component.html',
   styleUrls: ['./visited-me.component.scss'],
+  standalone: false,
 })
 export class VisitedMeComponent implements OnInit {
   @Input() friendsSeenMe: any[] = [];

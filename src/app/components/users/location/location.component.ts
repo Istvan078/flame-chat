@@ -5,6 +5,7 @@ import { UserClass } from 'src/app/models/user.model';
   selector: 'app-location',
   templateUrl: './location.component.html',
   styleUrl: './location.component.scss',
+  standalone: false,
 })
 export class LocationComponent implements AfterViewInit {
   curUserPosition!: string;

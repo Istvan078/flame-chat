@@ -7,30 +7,42 @@
     "login": "Bejelentkezés",
     "password": "Jelszó",
     "email": "Email",
+    "confirmPassword": "Jelszó megerősítése",
+    "passwordMinChar": "Legalább 6 karakter",
+    "passwordNeedsMatch": "A jelszavaknak egyezniük kell",
+    "exampleEmail": "example@gmail.com",
+    "alreadyHaveAccount": "Már van fiókod?",
+    "noAccount": "Nincs fiókod?",
+    "signupTitle": "Hozd létre a fiókodat",
+    "signupSubtitle": "Indítsd útra a lángodat ma.",
+    "loginTitle": "Jelentkezz be a fiókodba",
+    "loginSubtitle": "Üdv újra, hiányoztál.",
+    "continueWithGoogle": "Folytatás Google-lal",
+    "usernameOrEmail": "Felhasználónév vagy Email",
     "otherLoginTypes": "Vagy"
   },
   "user": {
-    "lastname": "Vezeteknev",
-    "firstname": "Keresztnev",
-    "birthDate": "Szuletesi ido",
+    "lastname": "Vezetéknév",
+    "firstname": "Keresztnév",
+    "birthDate": "Születési idő",
     "age": "Kor",
     "gender": {
-      "man": "Ferfi",
-      "woman": "No"
+      "man": "Férfi",
+      "woman": "Nő"
     },
-    "username": "Felhasznalonev",
-    "profilePic": "Profilkep",
+    "username": "Felhasználónév",
+    "profilePic": "Profilkép",
     "online": {
-      "lastTimeOnline": "Elerhető",
+      "lastTimeOnline": "Elérhető",
       "minutesAgo": "perccel ezelőtt",
       "hoursAgo": "órával ezelőtt",
       "daysAgo": "napja"
     },
     "message": {
-      "sent": "elkuldve",
-      "seen": "latta",
+      "sent": "elküldve",
+      "seen": "látta",
       "type": "Üzenet írása...",
-      "recorded": "Felvetel Rogzitve - "
+      "recorded": "Felvétel Rogzitve - "
     },
     "basicDetails": "Alap adatok",
     "uploadProfPicOpt": "Toltsd fel a profilkeped (opcionalis)",
@@ -60,15 +72,16 @@
   },
   "menu": {
     "online": "Elerhető",
-    "offline": "Nem latható",
+    "offline": "Nem látható",
     "changeVis": "Láthatóság megváltoztatása"
   },
   "bottom-nav": {
-    "messages": "Uzenetek",
-    "mainPage": "Fooldal"
+    "messages": "Üzenetek",
+    "mainPage": "Kezdőlap",
+    "menu": "Menü"
   },
   "directions": {
-    "next": "Kovetkezo",
+    "next": "Következő",
     "back": "Vissza"
   }
 }

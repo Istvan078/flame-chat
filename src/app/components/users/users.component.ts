@@ -21,6 +21,7 @@ import { FirestoreService } from 'src/app/services/firestore.service';
   selector: 'app-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
+  standalone: false,
 })
 export class UsersComponent implements OnInit, OnDestroy {
   isSideNavOn: boolean = false;

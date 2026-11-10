@@ -1,8 +1,16 @@
-import { Injectable } from '@angular/core';
+import {
+  EnvironmentInjector,
+  inject,
+  Injectable,
+  runInInjectionContext,
+} from '@angular/core';
 
 import {
   AngularFireDatabase,
   AngularFireList,
+  AngularFireObject,
+  PathReference,
+  QueryFn,
 } from '@angular/fire/compat/database';
 import {
   BehaviorSubject,
@@ -27,6 +35,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
   providedIn: 'root',
 })
 export class BaseService {
+  private readonly injector = inject(EnvironmentInjector);
   profilePicUrlSubject: Subject<string> = new Subject();
   picturesSubject: Subject<string[]> = new Subject();
   refChats!: AngularFireList<Chat>;
@@ -57,21 +66,37 @@ export class BaseService {
   constructor(
     private realTimeDatabase: AngularFireDatabase,
     private fireStorage: AngularFireStorage,
-    private modalRef: NgbModal
+    private modalRef: NgbModal,
   ) {
-    this.refChats = realTimeDatabase.list(`/chats`);
-    this.refUsers = realTimeDatabase.list('/users');
-    this.dbRef = realTimeDatabase.list(this.basePath);
+    this.refChats = this.databaseList(`/chats`);
+    this.refUsers = this.databaseList('/users');
+    this.dbRef = this.databaseList(this.basePath);
+  }
+
+  // AngularFire 21 reference factories use inject(), including from callbacks.
+  private databaseList<T = any>(
+    path: PathReference,
+    queryFn?: QueryFn,
+  ): AngularFireList<T> {
+    return runInInjectionContext(this.injector, () =>
+      this.realTimeDatabase.list<T>(path, queryFn),
+    );
+  }
+
+  private databaseObject<T = any>(path: PathReference): AngularFireObject<T> {
+    return runInInjectionContext(this.injector, () =>
+      this.realTimeDatabase.object<T>(path),
+    );
   }
 
   getUserProfiles(): Observable<any> {
     return this.refUsers.snapshotChanges().pipe(
       map(changes =>
-        changes.map(c => ({ key: c.payload.key, ...c.payload.val() }))
+        changes.map(c => ({ key: c.payload.key, ...c.payload.val() })),
       ),
       catchError((err, caught) => {
         throw err;
-      })
+      }),
     );
   }
 
@@ -80,13 +105,13 @@ export class BaseService {
   }
 
   addFriends(friend: any, friendKey: string, userKey: string) {
-    return this.realTimeDatabase
-      .object(`users/${userKey}/friends/${friendKey}`)
-      .update(friend);
+    return this.databaseObject(`users/${userKey}/friends/${friendKey}`).update(
+      friend,
+    );
   }
 
   updateFriend(friendKey: string, body: UserClass, userKey: string) {
-    const refFriends = this.realTimeDatabase.list(`users/${userKey}/friends`);
+    const refFriends = this.databaseList(`users/${userKey}/friends`);
     return firebase
       .database()
       .ref(`users/${userKey}/friends`)
@@ -97,17 +122,17 @@ export class BaseService {
   }
 
   updateFriendsFriend(friendKey: string, userProfKey: string, data: any) {
-    const ref = this.realTimeDatabase.list(`users/${friendKey}/friends`);
+    const ref = this.databaseList(`users/${friendKey}/friends`);
     return ref.update(userProfKey, data);
   }
 
   removeFriend(friendKey: string, userKey: string) {
-    const refFriends = this.realTimeDatabase.list(`users/${userKey}/friends`);
+    const refFriends = this.databaseList(`users/${userKey}/friends`);
     return refFriends.remove(friendKey);
   }
 
   removeFriendsFriend(friendKey: string, userProfKey: string) {
-    const ref = this.realTimeDatabase.list(`users/${friendKey}/friends`);
+    const ref = this.databaseList(`users/${friendKey}/friends`);
     return ref.remove(userProfKey);
   }
 
@@ -130,15 +155,15 @@ export class BaseService {
     friendUid: string,
     userKey: string,
     friendKey: string,
-    isGetLastMsgWithFr?: boolean
+    isGetLastMsgWithFr?: boolean,
   ): Observable<Promise<any[]>> {
     if (friendUid) {
-      const threeMthsAgo = new Date();
-      threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
+      const twentyFourMthsAgo = new Date();
+      twentyFourMthsAgo.setMonth(twentyFourMthsAgo.getMonth() - 24);
       return new Observable(obs => {
         const currTime = new Date().getTime();
         const promise1 = new Promise(res => {
-          const ref2 = this.realTimeDatabase.list(
+          const ref2 = this.databaseList(
             `chats/${userKey}/${friendKey}`,
             ref2 => {
               return isGetLastMsgWithFr
@@ -147,7 +172,7 @@ export class BaseService {
                     .startAt(
                       ((userUid + friendUid) as string) +
                         '-' +
-                        threeMthsAgo.getTime()
+                        twentyFourMthsAgo.getTime(),
                     )
                     .endAt(((userUid + friendUid) as string) + '-' + currTime)
                     .limitToLast(1)
@@ -156,11 +181,11 @@ export class BaseService {
                     .startAt(
                       ((userUid + friendUid) as string) +
                         '-' +
-                        threeMthsAgo.getTime()
+                        twentyFourMthsAgo.getTime(),
                     )
                     .endAt(((userUid + friendUid) as string) + '-' + currTime)
                     .limitToLast(15);
-            }
+            },
           );
           ref2.valueChanges(['child_added']).subscribe(val => {
             return res(val);
@@ -168,26 +193,26 @@ export class BaseService {
         });
 
         const promise2 = new Promise(res => {
-          const ref3 = this.realTimeDatabase.list(
+          const ref3 = this.databaseList(
             `chats/${friendKey}/${userKey}`,
             ref3 => {
               return isGetLastMsgWithFr
                 ? ref3
                     .orderByChild('message/senderId_receiverId')
                     .startAt(
-                      `${friendUid}_${userUid}_${threeMthsAgo.getTime()}`
+                      `${friendUid}_${userUid}_${twentyFourMthsAgo.getTime()}`,
                     )
                     .endAt(`${friendUid}_${userUid}_${currTime}`)
                     .limitToLast(1)
                 : ref3
                     .orderByChild('message/senderId_receiverId')
                     .startAt(
-                      `${friendUid}_${userUid}_${threeMthsAgo.getTime()}`
+                      `${friendUid}_${userUid}_${twentyFourMthsAgo.getTime()}`,
                     )
                     .endAt(`${friendUid}_${userUid}_${currTime}`)
                     .limitToLast(15);
               // .equalTo(`${userUid}_${friendUid}`)
-            }
+            },
           );
           ref3.valueChanges(['child_added']).subscribe(val => {
             res(val);
@@ -195,7 +220,7 @@ export class BaseService {
         });
         const myAllMessagesArr = [promise1, promise2];
         const frAndMyMessages: Promise<any[]> = Promise.all(
-          myAllMessagesArr
+          myAllMessagesArr,
         ).then(res => {
           return res.flat();
         });
@@ -259,9 +284,8 @@ export class BaseService {
   // }
 
   getScrolledMessages(userKey: string, friendKey: string) {
-    const ref2 = this.realTimeDatabase.list(
-      `chats/${friendKey}/${userKey}`,
-      ref2 => ref2.orderByValue().limitToLast(15)
+    const ref2 = this.databaseList(`chats/${friendKey}/${userKey}`, ref2 =>
+      ref2.orderByValue().limitToLast(15),
     );
     return ref2.valueChanges();
   }
@@ -270,11 +294,12 @@ export class BaseService {
     userKey: string,
     friendKey: string,
     number: string,
-    userOrFriendId?: string
+    userOrFriendId?: string,
   ) {
     let value: any;
-    this.realTimeDatabase
-      .object(`chats/${friendKey}/${userKey}/${userOrFriendId}_${number}`)
+    this.databaseObject(
+      `chats/${friendKey}/${userKey}/${userOrFriendId}_${number}`,
+    )
       .query.get()
       .then(val => (value = val));
     return new Observable(obs => {
@@ -291,38 +316,34 @@ export class BaseService {
 
   getNewMessages(userKey: string, friendKey?: string) {
     if (friendKey) {
-      const ref = this.realTimeDatabase.list(
-        `chats/${friendKey}/${userKey}`,
-        ref2 => ref2.orderByChild('message/seen').equalTo(false).limitToLast(7)
+      const ref = this.databaseList(`chats/${friendKey}/${userKey}`, ref2 =>
+        ref2.orderByChild('message/seen').equalTo(false).limitToLast(7),
       );
       return ref
         .snapshotChanges(['child_added'])
         .pipe(
           map(ch =>
-            ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
-          )
+            ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() })),
+          ),
         );
     }
   }
 
   getUpdatedMessages(userKey: string, friendKey: string) {
-    const ref = this.realTimeDatabase.list(
-      `chats/${userKey}/${friendKey}`,
-      ref2 => ref2.orderByChild('message/timeStamp').limitToLast(8)
+    const ref = this.databaseList(`chats/${userKey}/${friendKey}`, ref2 =>
+      ref2.orderByChild('message/timeStamp').limitToLast(8),
     );
     return ref
       .snapshotChanges(['child_changed', 'child_added'])
       .pipe(
         map(ch =>
-          ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() }))
-        )
+          ch.map((c: any) => ({ key: c.payload.key, ...c.payload.val() })),
+        ),
       );
   }
 
   getFriends(userProfKey: string): Observable<Friends[]> {
-    const refFriends = this.realTimeDatabase.list(
-      `users/${userProfKey}/friends`
-    );
+    const refFriends = this.databaseList(`users/${userProfKey}/friends`);
     if (userProfKey) {
       return <Observable<Friends[]>>(
         refFriends
@@ -334,12 +355,12 @@ export class BaseService {
                   <Friends>{
                     key: c.payload.key,
                     ...c.payload.val(),
-                  }
-              )
+                  },
+              ),
             ),
             catchError(errorRes => {
               return throwError(errorRes);
-            })
+            }),
           )
       );
     }
@@ -352,28 +373,24 @@ export class BaseService {
   }
 
   addUserPictures(userKey: any, body: any) {
-    this.refUser = this.realTimeDatabase.list(`users/`);
+    this.refUser = this.databaseList(`users/`);
     this.refUser.update(userKey, body);
   }
 
   // tanarral
   addFileData(user: any, fname: any, fsUrl: any) {
     const data = { name: fname, url: fsUrl };
-    this.dbRef = this.realTimeDatabase.list(
-      `users/${user.key}/${this.basePath}`
-    );
+    this.dbRef = this.databaseList(`users/${user.key}/${this.basePath}`);
     this.dbRef.push(data);
   }
 
   getData(user: any) {
-    this.dbRef = this.realTimeDatabase.list(
-      `users/${user['key']}${this.basePath}`
-    );
+    this.dbRef = this.databaseList(`users/${user['key']}${this.basePath}`);
     return this.dbRef;
   }
 
   deleteUserPicture(user: any, file: any) {
-    this.refUser = this.realTimeDatabase.list(`users/${user['key']}/pictures`);
+    this.refUser = this.databaseList(`users/${user['key']}/pictures`);
     this.refUser.remove(file.key).then(() => {
       const picturePath = `${this.basePath}/${user.displayName}/${file.name}`;
       const storegeRef = this.fireStorage.ref(picturePath);
@@ -401,7 +418,7 @@ export class BaseService {
             .then(url => urls.push(url))
             .then(resolve => {
               res(urls);
-            })
+            }),
         );
       });
     });
@@ -426,7 +443,7 @@ export class BaseService {
           return storageRef.getDownloadURL().subscribe((url: string) => {
             this.profilePicUrlSubject.next(url);
           });
-        })
+        }),
       )
       .subscribe();
     return upload.percentageChanges();
@@ -443,16 +460,14 @@ export class BaseService {
           return storageRef.getDownloadURL().subscribe((url: any) => {
             this.addFileData(user, file.name, url);
           });
-        })
+        }),
       )
       .subscribe();
     return upload.percentageChanges();
   }
 
   addMessage(body: Chat, userKey: string, friendKey: string) {
-    const userChats = this.realTimeDatabase.list(
-      `chats/${userKey}/${friendKey}`
-    );
+    const userChats = this.databaseList(`chats/${userKey}/${friendKey}`);
     return userChats.push(body);
   }
 
@@ -460,11 +475,9 @@ export class BaseService {
     key: any,
     body: Partial<Chat>,
     userKey: string,
-    friendKey: string
+    friendKey: string,
   ) {
-    const userChats = this.realTimeDatabase.list(
-      `chats/${userKey}/${friendKey}`
-    );
+    const userChats = this.databaseList(`chats/${userKey}/${friendKey}`);
     return userChats.update(key, body);
   }
 
@@ -473,12 +486,8 @@ export class BaseService {
   }
 
   deleteAllMsgsWithFriend(userKey: string, friendKey: string) {
-    const userChats = this.realTimeDatabase.list(
-      `chats/${userKey}/${friendKey}`
-    );
-    const friendChats = this.realTimeDatabase.list(
-      `chats/${friendKey}/${userKey}`
-    );
+    const userChats = this.databaseList(`chats/${userKey}/${friendKey}`);
+    const friendChats = this.databaseList(`chats/${friendKey}/${userKey}`);
     return Promise.all([userChats.remove(), friendChats.remove()]);
   }
 
@@ -487,16 +496,14 @@ export class BaseService {
   }
 
   getMessages(userKey: string, friendKey: string) {
-    const userChats = this.realTimeDatabase.list(
-      `chats/${userKey}/${friendKey}`
-    );
+    const userChats = this.databaseList(`chats/${userKey}/${friendKey}`);
     return userChats.snapshotChanges().pipe(
       map(changes =>
         changes.map(c => ({
           key: c.payload.key,
           ...(c.payload.val() as any),
-        }))
-      )
+        })),
+      ),
     );
   }
 
@@ -506,7 +513,7 @@ export class BaseService {
    */
   listenConversation(userKey: string) {
     const newMessNumberRef = this.realTimeDatabase.database.ref(
-      `users/${userKey}/friends/`
+      `users/${userKey}/friends/`,
     );
     this.listenMessDelHelper(newMessNumberRef, userKey, 'child_added');
     this.listenMessDelHelper(newMessNumberRef, userKey, 'child_changed');
@@ -515,14 +522,13 @@ export class BaseService {
   listenMessDelHelper(
     newMessNumberRef: firebase.database.Reference,
     userKey: string,
-    onAction: firebase.database.EventType
+    onAction: firebase.database.EventType,
   ) {
     newMessNumberRef.orderByChild('newMessSentTime').on(onAction, snap => {
       const friend = snap.val();
       if (!friend?.newMessageNumber) return;
       if (friend.newMessageNumber > 0) {
-        this.realTimeDatabase
-          .object(`chats/${friend.friendKey}/${userKey}/`)
+        this.databaseObject(`chats/${friend.friendKey}/${userKey}/`)
           .query.orderByChild('message/status')
           .equalTo('sent')
           .get()
@@ -566,7 +572,7 @@ export class BaseService {
       templateParams,
       {
         publicKey: 'fEZkI9mcDSDrrWEze',
-      }
+      },
     );
     return res;
   }
@@ -579,7 +585,7 @@ export class BaseService {
     };
     const res = await this.sendEmail(
       Environments.EMAILJS_WELCOME_TEMPLATE_ID,
-      templateParams
+      templateParams,
     );
     console.log(res, 'E-mail sikeresen elküldve');
   }
@@ -587,7 +593,7 @@ export class BaseService {
   async sendMessNotificationEmail(
     friend: Friends,
     message: Chat,
-    user: UserClass
+    user: UserClass,
   ) {
     let templateParams = {
       username: friend.displayName,
@@ -600,7 +606,7 @@ export class BaseService {
     };
     const res = await this.sendEmail(
       Environments.EMAILJS_MESSAGED_ME_TEMPLATE_ID,
-      templateParams
+      templateParams,
     );
     console.log(res, 'E-mail sikeresen elküldve');
   }
@@ -611,17 +617,15 @@ export class BaseService {
     friendKey: string,
     userKey: string,
     friendUid: string,
-    userUid: string
+    userUid: string,
   ) {
     const threeMthsAgo = new Date();
     threeMthsAgo.setMonth(threeMthsAgo.getMonth() - 3);
-    const ref = this.realTimeDatabase.list(
-      'chats/' + friendKey + '/' + userKey,
-      ref =>
-        ref
-          .orderByChild('message/senderId_receiverId')
-          .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
-          .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`)
+    const ref = this.databaseList('chats/' + friendKey + '/' + userKey, ref =>
+      ref
+        .orderByChild('message/senderId_receiverId')
+        .startAt(`${friendUid}_${userUid}_${threeMthsAgo.getTime()}`)
+        .endAt(`${friendUid}_${userUid}_${new Date().getTime()}`),
     );
     return ref.valueChanges();
   }

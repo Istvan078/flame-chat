@@ -1,48 +1,55 @@
-@if (isPostSharing()) { @for (toast of toastService.toasts; track toast) {
-<ngb-toast
-  *ngIf="toast?.body !== 'Ismerősnek jelölt téged'"
-  class="toast-normal"
-  [header]="toast.header"
-  [autohide]="toast?.options?.autohide === false ? false : true"
-  [delay]="toast?.options?.delay ? toast?.options?.delay : 5000"
-  (hidden)="toastService.removeToast(toast)"
-  >{{ toast?.body }}</ngb-toast
->
-} } @if (notConfirmedSignedMe()) { @for (toast of toastService.toasts; track
-toast) {
-<ngb-toast
-  class="d-grid justify-content-center align-items-center"
-  #notConfirmedSignedMeToast
-  style="width: 100%"
-  [header]="toast.header"
-  [autohide]="toast?.options?.autohide === false ? false : true"
-  [delay]="toast?.options?.delay ? toast?.options?.delay : 5000"
-  (hidden)="toastService.removeToast(toast)"
->
-  <div
-    class="d-flex flex-wrap flex-column justify-content-center align-items-center"
-  >
-    <p class="fw-bold confirm-friend-toast-text">{{ toast?.body }}</p>
-    <div class="text-center">
-      <button
-        (click)="confirmFriend(notConfirmedSignedMeToast)"
-        mat-raised-button
-        class="bg-success me-1 mb-1 text-white"
-        type="button"
+@if (isPostSharing()) {
+  @for (toast of toastService.toasts; track toast) {
+    @if (toast?.body !== 'Ismerősnek jelölt téged') {
+      <ngb-toast
+        class="toast-normal"
+        [header]="toast.header"
+        [autohide]="toast?.options?.autohide === false ? false : true"
+        [delay]="toast?.options?.delay ? toast?.options?.delay : 5000"
+        (hidden)="toastService.removeToast(toast)"
+        >{{ toast?.body }}</ngb-toast
       >
-        Visszaigazolás
-        <mat-icon class="align-middle text-warning"> person_add </mat-icon>
-      </button>
-      <button
-        (click)="notConfirmedSignedMeToast.hide()"
-        mat-raised-button
-        class="bg-primary mb-1 text-white"
-        type="button"
+    }
+  }
+}
+@if (notConfirmedSignedMe()) {
+  @for (toast of toastService.toasts; track toast) {
+    <ngb-toast
+      class="d-grid justify-content-center align-items-center"
+      #notConfirmedSignedMeToast
+      style="width: 100%"
+      [header]="toast.header"
+      [autohide]="toast?.options?.autohide === false ? false : true"
+      [delay]="toast?.options?.delay ? toast?.options?.delay : 5000"
+      (hidden)="toastService.removeToast(toast)"
+    >
+      <div
+        class="d-flex flex-wrap flex-column justify-content-center align-items-center"
       >
-        Nem ismerem
-        <mat-icon class="align-middle text-danger"> person_remove </mat-icon>
-      </button>
-    </div>
-  </div></ngb-toast
->
-} }
+        <p class="fw-bold confirm-friend-toast-text">{{ toast?.body }}</p>
+        <div class="text-center">
+          <button
+            (click)="confirmFriend(notConfirmedSignedMeToast)"
+            mat-raised-button
+            class="bg-success me-1 mb-1 text-white"
+            type="button"
+          >
+            Visszaigazolás
+            <mat-icon class="align-middle text-warning"> person_add </mat-icon>
+          </button>
+          <button
+            (click)="notConfirmedSignedMeToast.hide()"
+            mat-raised-button
+            class="bg-primary mb-1 text-white"
+            type="button"
+          >
+            Nem ismerem
+            <mat-icon class="align-middle text-danger">
+              person_remove
+            </mat-icon>
+          </button>
+        </div>
+      </div></ngb-toast
+    >
+  }
+}

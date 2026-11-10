@@ -3,10 +3,22 @@
   "en": "English",
   "hu": "Hungarian",
   "auth": {
-    "signup": "Sign Up",
+    "signup": "Create Account",
     "login": "Login",
     "email": "Email",
     "password": "Password",
+    "confirmPassword": "Confirm your password",
+    "passwordMinChar": "At least 6 characters",
+    "passwordNeedsMatch": "Passwords need to match",
+    "exampleEmail": "example@gmail.com",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "signupTitle": "Create your account",
+    "signupSubtitle": "Start your flame today.",
+    "loginTitle": "Login to your account",
+    "continueWithGoogle": "Continue with Google",
+    "loginSubtitle": "Welcome back, we missed you.",
+    "usernameOrEmail": "Username or Email",
     "otherLoginTypes": "or"
   },
   "user": {
@@ -65,7 +77,8 @@
   },
   "bottom-nav": {
     "messages": "Messages",
-    "mainPage": "Main"
+    "mainPage": "Main",
+    "menu": "Menu"
   },
   "directions": {
     "next": "Next",

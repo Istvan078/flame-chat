@@ -23,15 +23,17 @@
       />
       <div class="chat__nav-meta">
         <div class="chat__nav-meta-name">{{ selectedFriend?.displayName }}</div>
-        <div class="chat__nav-meta-status" *ngIf="selectedFriend?.visibility">
-          {{
-            selectedFriend?.online
-              ? 'online'
-              : ('user.online.lastTimeOnline' | translate) +
-                ' ' +
-                selectedFriend?.lastTimeOnline
-          }}
-        </div>
+        @if (selectedFriend?.visibility) {
+          <div class="chat__nav-meta-status">
+            {{
+              selectedFriend?.online
+                ? 'online'
+                : ('user.online.lastTimeOnline' | translate) +
+                  ' ' +
+                  selectedFriend?.lastTimeOnline
+            }}
+          </div>
+        }
       </div>
 
       <button
@@ -58,296 +60,325 @@
   </mat-menu>
 
   <mat-menu class="chat__menu-themes" #themesMenu="matMenu">
-    <button
-      class="chat__menu-themes-button"
-      (click)="chooseMsgTheme(theme)"
-      mat-menu-item
-      *ngFor="let theme of msgThemes"
-    >
-      <img
-        class="chat__menu-themes-img"
-        width="64"
-        height="36"
-        [src]="theme.url"
-        [alt]="theme.name"
-      />
-      <span class="chat__menu-themes-name">{{ theme.name }}</span>
-    </button>
+    @for (theme of msgThemes; track theme) {
+      <button
+        class="chat__menu-themes-button"
+        (click)="chooseMsgTheme(theme)"
+        mat-menu-item
+      >
+        <img
+          class="chat__menu-themes-img"
+          width="64"
+          height="36"
+          [src]="theme.url"
+          [alt]="theme.name"
+        />
+        <span class="chat__menu-themes-name">{{ theme.name }}</span>
+      </button>
+    }
   </mat-menu>
   <!-- MAIN MENU END -->
 
   <!-- AI MESSAGE REPLY RECOMMENDATIONS -->
-  <div *ngIf="!hideAiBtn" class="chat__ai-suggestions">
-    <div class="chat__ai-suggestions-button-container">
-      <button
-        class="chat__ai-suggestions-button"
-        style="font-style: italic"
-        [disabled]="loading"
-        (click)="!suggestions.length ? getAiReplies() : (suggestions = [])"
-      >
-        <mat-icon class="material-symbols-outlined align-middle"
-          >robot_2</mat-icon
+  @if (!hideAiBtn) {
+    <div class="chat__ai-suggestions">
+      <div class="chat__ai-suggestions-button-container">
+        <button
+          class="chat__ai-suggestions-button"
+          style="font-style: italic"
+          [disabled]="loading"
+          (click)="!suggestions.length ? getAiReplies() : (suggestions = [])"
         >
-        {{ loading ? 'Gondolkodom…' : '→' }}
-      </button>
+          <mat-icon class="material-symbols-outlined align-middle"
+            >robot_2</mat-icon
+          >
+          {{ loading ? 'Gondolkodom…' : '→' }}
+        </button>
+      </div>
+      @if (suggestions.length) {
+        <div class="chat__ai-suggestions-list">
+          @for (s of suggestions; track s) {
+            <button
+              class="chat__ai-suggestions-list-item"
+              (click)="insertReply(s)"
+            >
+              {{ s }}
+            </button>
+          }
+        </div>
+      }
+      @if (error) {
+        <div class="chat__ai-suggestions-error">{{ error }}</div>
+      }
     </div>
-
-    <div class="chat__ai-suggestions-list" *ngIf="suggestions.length">
-      <button
-        class="chat__ai-suggestions-list-item"
-        *ngFor="let s of suggestions"
-        (click)="insertReply(s)"
-      >
-        {{ s }}
-      </button>
-    </div>
-
-    <div class="chat__ai-suggestions-error" *ngIf="error">{{ error }}</div>
-  </div>
+  }
   <!-- AI MESSAGE REPLY RECOMMENDATIONS END -->
 
   <!-- MAIN CHAT MESSAGES PART -->
-  @for(msg of visibleMessages; track $index; let i = $index) {
-  <main class="chat__messages u-grid">
-    <!-- MSG FROM FRIEND -->
-    @if(msg.message.senderId === selectedFriendId) {
-    <div class="chat__messages-friend u-grid grid-item">
-      <div class="chat__picture-box grid-item">
-        <img
-          [src]="selectedFriend?.profilePicture"
-          alt="Friend avatar"
-          class="chat__avatar"
-        />
-      </div>
-
-      <div
-        class="chat__messages-friend-message-container u-grid grid-item"
-        [ngClass]="
-          msg.message.voiceMessage ? 'chat__voice-message--included' : ''
-        "
-      >
-        <p class="chat__messages-time-written grid-item paragraph">
-          {{ msg.message.viewTimeStamp }}
-        </p>
-
-        <!-- PICTURES, VIDEOS IN FRIEND MESSAGES -->
-        @for(fileObj of sentFilesArr; track $index) { @if(fileObj.chatId ===
-        msg.key){ @for(file of fileObj.files; track $index; let fileIndex =
-        $index) {
-        <div class="chat_messages-friend-attachments">
-          <img
-            *ngIf="
-              !file.fileName.includes('.mp4') &&
-              !file.fileName.includes('m4a') &&
-              !file.fileName.includes('webm') &&
-              !file.fileName.includes('wav')
-            "
-            class="photo"
-            [src]="file.url"
-            [alt]="file.fileName"
-            (click)="fileModalOpen(fileObj.files, fileIndex)"
-          />
-          <video
-            *ngIf="file.fileName.includes('.mp4')"
-            class="video"
-            [src]="file.url"
-            controls
-          ></video>
-        </div>
-        } } }
-        <!-- PICTURES, VIDEOS IN FRIEND MESSAGES END -->
-
-        <!-- FRIEND MESSAGE VOICEMESSAGE -->
-        @if(msg.message.voiceMessage) {
-        <div class="chat__messages-friend-voicemessage grid-item">
-          <div class="chat__audio">
-            <mat-icon
-              class="chat__audio-play-button"
-              (click)="onPlayAudio(audioElement)"
-              >{{
-                audioElement.ended || audioElement.paused
-                  ? 'play_arrow'
-                  : 'pause'
-              }}</mat-icon
-            >
-            @if(audioElement.currentTime) {
-            <span class="chat__audio--current-time"
-              >{{ audioElement.currentTime | number : '1.0-0' }} mp</span
-            >
-            <input
-              class="chat__audio--range"
-              type="range"
-              [value]="audioElement.currentTime"
-              min="0"
-              [max]="audioElement.duration"
+  @for (msg of visibleMessages; track $index; let i = $index) {
+    <main class="chat__messages u-grid">
+      <!-- MSG FROM FRIEND -->
+      @if (msg.message.senderId === selectedFriendId) {
+        <div class="chat__messages-friend u-grid grid-item">
+          <div class="chat__picture-box grid-item">
+            <img
+              [src]="selectedFriend?.profilePicture"
+              alt="Friend avatar"
+              class="chat__avatar"
             />
-            <span class="chat__audio--duration"
-              >{{ audioElement.duration | number : '1.0-0' }} mp
+          </div>
+
+          <div
+            class="chat__messages-friend-message-container u-grid grid-item"
+            [ngClass]="
+              msg.message.voiceMessage ? 'chat__voice-message--included' : ''
+            "
+          >
+            <p class="chat__messages-time-written grid-item paragraph">
+              {{ msg.message.viewTimeStamp }}
+            </p>
+
+            <!-- PICTURES, VIDEOS IN FRIEND MESSAGES -->
+            @for (fileObj of sentFilesArr; track $index) {
+              @if (fileObj.chatId === msg.key) {
+                @for (
+                  file of fileObj.files;
+                  track $index;
+                  let fileIndex = $index
+                ) {
+                  <div class="chat_messages-friend-attachments">
+                    @if (
+                      !file.fileName.includes('.mp4') &&
+                      !file.fileName.includes('m4a') &&
+                      !file.fileName.includes('webm') &&
+                      !file.fileName.includes('wav')
+                    ) {
+                      <img
+                        class="photo"
+                        [src]="file.url"
+                        [alt]="file.fileName"
+                        (click)="fileModalOpen(fileObj.files, fileIndex)"
+                      />
+                    }
+                    @if (file.fileName.includes('.mp4')) {
+                      <video class="video" [src]="file.url" controls></video>
+                    }
+                  </div>
+                }
+              }
+            }
+            <!-- PICTURES, VIDEOS IN FRIEND MESSAGES END -->
+
+            <!-- FRIEND MESSAGE VOICEMESSAGE -->
+            @if (msg.message.voiceMessage) {
+              <div class="chat__messages-friend-voicemessage grid-item">
+                <div class="chat__audio">
+                  <mat-icon
+                    class="chat__audio-play-button"
+                    (click)="onPlayAudio(audioElement)"
+                    >{{
+                      audioElement.ended || audioElement.paused
+                        ? 'play_arrow'
+                        : 'pause'
+                    }}</mat-icon
+                  >
+                  @if (audioElement.currentTime) {
+                    <span class="chat__audio--current-time"
+                      >{{ audioElement.currentTime | number: '1.0-0' }} mp</span
+                    >
+                    <input
+                      class="chat__audio--range"
+                      type="range"
+                      [value]="audioElement.currentTime"
+                      min="0"
+                      [max]="audioElement.duration"
+                    />
+                    <span class="chat__audio--duration"
+                      >{{ audioElement.duration | number: '1.0-0' }} mp
+                    </span>
+                  }
+                </div>
+                <audio #audioElement preload="auto">
+                  <source
+                    [src]="sanitize(msg.message.voiceMessage)"
+                    [attr.type]="
+                      msg.message.voiceMessage?.includes('.m4a')
+                        ? 'audio/mp4'
+                        : 'audio/webm'
+                    "
+                  />
+                  A böngésződ nem támogatja az audio lejátszót.
+                </audio>
+              </div>
+            }
+            <!-- FRIEND MESSAGE VOICEMESSAGE END -->
+
+            @if (msg.replyMessage?.message || msg.message.message) {
+              <div
+                (click)="replyMessage(msg)"
+                class="chat__messages-box--friend grid-item"
+              >
+                {{
+                  msg.replyMessage?.message
+                    ? msg.replyMessage.message
+                    : msg.message.message
+                }}
+                <i class="reaction-icon">{{
+                  msg.message?.reaction?.reactionIcon
+                }}</i>
+              </div>
+            }
+
+            <div class="chat__messages-reaction grid-item">
+              @if (!msg.message?.reaction?.reactionIcon) {
+                <mat-icon
+                  class=""
+                  (click)="selectedMsg = msg; addReactionOn = true"
+                >
+                  add_reaction
+                </mat-icon>
+              }
+            </div>
+          </div>
+        </div>
+      }
+      @if (addReactionOn) {
+        <app-chat-modal
+          (reactionSelected)="setReactionForMsg($event, selectedMsg)"
+          [reactionsArr]="reactions"
+        ></app-chat-modal>
+      }
+      <!-- MSG FROM FRIEND END -->
+
+      <!-- MSG SENT BY USER -->
+      @if (msg.message.senderId === userProfile.uid) {
+        <div
+          class="chat__messages-user u-grid grid-item"
+          [ngClass]="
+            msg.message.voiceMessage ? 'chat__voice-message--included' : ''
+          "
+        >
+          <p class="chat__messages-time-written grid-item paragraph">
+            {{ msg.message.viewTimeStamp }}
+          </p>
+
+          <!-- PICTURES, VIDEOS IN USER MESSAGES -->
+          @for (fileObj of sentFilesArr; track $index) {
+            @if (fileObj.chatId === msg.key) {
+              @for (
+                file of fileObj.files;
+                track $index;
+                let fileIndex = $index
+              ) {
+                <div class="chat__messages-user-attachments">
+                  @if (
+                    !file.fileName.includes('.mp4') &&
+                    !file.fileName.includes('m4a') &&
+                    !file.fileName.includes('webm') &&
+                    !file.fileName.includes('wav')
+                  ) {
+                    <img
+                      class="photo"
+                      [src]="file.url"
+                      [alt]="file.fileName"
+                      (click)="fileModalOpen(fileObj.files, fileIndex)"
+                    />
+                  }
+                  @if (file.fileName.includes('.mp4')) {
+                    <video class="video" [src]="file.url" controls></video>
+                  }
+                </div>
+              }
+            }
+          }
+          <!-- PICTURES, VIDEOS IN USER MESSAGES END -->
+
+          <!-- USER MESSAGE VOICEMESSAGE -->
+          @if (msg.message.voiceMessage) {
+            <div class="chat__messages-user-voicemessage grid-item">
+              <div class="chat__audio">
+                <mat-icon
+                  class="chat__audio-play-button"
+                  (click)="onPlayAudio(audioElement)"
+                  >{{
+                    audioElement.ended || audioElement.paused
+                      ? 'play_arrow'
+                      : 'pause'
+                  }}</mat-icon
+                >
+                @if (audioElement.currentTime) {
+                  <span class="chat__audio--current-time"
+                    >{{ audioElement.currentTime | number: '1.0-0' }} mp</span
+                  >
+                  <input
+                    class="chat__audio--range"
+                    type="range"
+                    [value]="audioElement.currentTime"
+                    min="0"
+                    [max]="audioElement.duration"
+                  />
+                  <span class="chat__audio--duration"
+                    >{{ audioElement.duration | number: '1.0-0' }} mp
+                  </span>
+                }
+              </div>
+              <audio #audioElement preload="auto">
+                <source
+                  [src]="sanitize(msg.message.voiceMessage)"
+                  [attr.type]="
+                    msg.message.voiceMessage?.includes('.m4a')
+                      ? 'audio/mp4'
+                      : 'audio/webm'
+                  "
+                />
+                A böngésződ nem támogatja az audio lejátszót.
+              </audio>
+            </div>
+          }
+          <!-- USER MESSAGE VOICEMESSAGE END -->
+
+          @if (msg.replyMessage?.message || msg.message.message) {
+            <div class="chat__message-box--user grid-item">
+              {{
+                msg.replyMessage?.message
+                  ? msg.replyMessage.message
+                  : msg.message.message
+              }}
+              <i class="reaction-icon">{{
+                msg.message?.reaction?.reactionIcon
+              }}</i>
+            </div>
+          }
+          <div class="chat__messages-seen grid-item u-flex">
+            <span class="chat__messages-seen-span">
+              {{
+                msg.message.status === 'read' &&
+                msg.message.senderId === userProfile.uid
+                  ? ('user.message.seen' | translate)
+                  : ('user.message.sent' | translate)
+              }}
             </span>
+            @if (
+              msg.message.status === 'sent' &&
+              msg.message.senderId === userProfile.uid
+            ) {
+              <mat-icon>done</mat-icon>
+            }
+            @if (
+              msg.message.status === 'read' &&
+              msg.message.senderId === userProfile.uid
+            ) {
+              <img
+                [src]="selectedFriend?.profilePicture"
+                alt="Friend avatar"
+                class="chat__avatar"
+              />
             }
           </div>
-          <audio #audioElement preload="auto">
-            <source
-              [src]="sanitize(msg.message.voiceMessage)"
-              [attr.type]="
-                msg.message.voiceMessage?.includes('.m4a')
-                  ? 'audio/mp4'
-                  : 'audio/webm'
-              "
-            />
-            A böngésződ nem támogatja az audio lejátszót.
-          </audio>
         </div>
-        }
-        <!-- FRIEND MESSAGE VOICEMESSAGE END -->
-
-        @if(msg.replyMessage?.message || msg.message.message) {
-        <div
-          (click)="replyMessage(msg)"
-          class="chat__messages-box--friend grid-item"
-        >
-          {{
-            msg.replyMessage?.message
-              ? msg.replyMessage.message
-              : msg.message.message
-          }}
-          <i class="reaction-icon">{{ msg.message?.reaction?.reactionIcon }}</i>
-        </div>
-        }
-
-        <div class="chat__messages-reaction grid-item">
-          @if(!msg.message?.reaction?.reactionIcon) {
-          <mat-icon class="" (click)="selectedMsg = msg; addReactionOn = true">
-            add_reaction
-          </mat-icon>
-          }
-        </div>
-      </div>
-    </div>
-    } @if(addReactionOn) {
-    <app-chat-modal
-      (reactionSelected)="setReactionForMsg($event, selectedMsg)"
-      [reactionsArr]="reactions"
-    ></app-chat-modal>
-    }
-    <!-- MSG FROM FRIEND END -->
-
-    <!-- MSG SENT BY USER -->
-    @if(msg.message.senderId === userProfile.uid) {
-    <div
-      class="chat__messages-user u-grid grid-item"
-      [ngClass]="
-        msg.message.voiceMessage ? 'chat__voice-message--included' : ''
-      "
-    >
-      <p class="chat__messages-time-written grid-item paragraph">
-        {{ msg.message.viewTimeStamp }}
-      </p>
-
-      <!-- PICTURES, VIDEOS IN USER MESSAGES -->
-      @for(fileObj of sentFilesArr; track $index) { @if(fileObj.chatId ===
-      msg.key){ @for(file of fileObj.files; track $index; let fileIndex =
-      $index) {
-      <div class="chat__messages-user-attachments">
-        <img
-          *ngIf="
-            !file.fileName.includes('.mp4') &&
-            !file.fileName.includes('m4a') &&
-            !file.fileName.includes('webm') &&
-            !file.fileName.includes('wav')
-          "
-          class="photo"
-          [src]="file.url"
-          [alt]="file.fileName"
-          (click)="fileModalOpen(fileObj.files, fileIndex)"
-        />
-        <video
-          *ngIf="file.fileName.includes('.mp4')"
-          class="video"
-          [src]="file.url"
-          controls
-        ></video>
-      </div>
-      } } }
-      <!-- PICTURES, VIDEOS IN USER MESSAGES END -->
-
-      <!-- USER MESSAGE VOICEMESSAGE -->
-      @if(msg.message.voiceMessage) {
-      <div class="chat__messages-user-voicemessage grid-item">
-        <div class="chat__audio">
-          <mat-icon
-            class="chat__audio-play-button"
-            (click)="onPlayAudio(audioElement)"
-            >{{
-              audioElement.ended || audioElement.paused ? 'play_arrow' : 'pause'
-            }}</mat-icon
-          >
-          @if(audioElement.currentTime) {
-          <span class="chat__audio--current-time"
-            >{{ audioElement.currentTime | number : '1.0-0' }} mp</span
-          >
-          <input
-            class="chat__audio--range"
-            type="range"
-            [value]="audioElement.currentTime"
-            min="0"
-            [max]="audioElement.duration"
-          />
-          <span class="chat__audio--duration"
-            >{{ audioElement.duration | number : '1.0-0' }} mp
-          </span>
-          }
-        </div>
-        <audio #audioElement preload="auto">
-          <source
-            [src]="sanitize(msg.message.voiceMessage)"
-            [attr.type]="
-              msg.message.voiceMessage?.includes('.m4a')
-                ? 'audio/mp4'
-                : 'audio/webm'
-            "
-          />
-          A böngésződ nem támogatja az audio lejátszót.
-        </audio>
-      </div>
       }
-      <!-- USER MESSAGE VOICEMESSAGE END -->
-
-      @if(msg.replyMessage?.message || msg.message.message) {
-      <div class="chat__message-box--user grid-item">
-        {{
-          msg.replyMessage?.message
-            ? msg.replyMessage.message
-            : msg.message.message
-        }}
-        <i class="reaction-icon">{{ msg.message?.reaction?.reactionIcon }}</i>
-      </div>
-      }
-      <div class="chat__messages-seen grid-item u-flex">
-        <span class="chat__messages-seen-span">
-          {{
-            msg.message.status === 'read' &&
-            msg.message.senderId === userProfile.uid
-              ? ('user.message.seen' | translate)
-              : ('user.message.sent' | translate)
-          }}
-        </span>
-        @if(msg.message.status === 'sent' && msg.message.senderId ===
-        userProfile.uid) {
-        <mat-icon>done</mat-icon>
-        } @if(msg.message.status === 'read' && msg.message.senderId ===
-        userProfile.uid) {
-        <img
-          [src]="selectedFriend?.profilePicture"
-          alt="Friend avatar"
-          class="chat__avatar"
-        />
-        }
-      </div>
-    </div>
-    }
-    <!-- MSG SENT BY USER END -->
-  </main>
+      <!-- MSG SENT BY USER END -->
+    </main>
   }
   <!-- MAIN CHAT MESSAGES PART END -->
 
@@ -364,22 +395,23 @@
       disabled || message.message.voiceMessage === 'recording-started'
     "
   >
-    <label *ngIf="filesArr.length" for="fileUpload"
-      ><mat-icon>check</mat-icon></label
-    >
-    <label *ngIf="!uploadFinished" for="fileUpload"
-      ><mat-icon>upload</mat-icon></label
-    >
-    <label *ngIf="uploadFinished && !filesArr.length" for="picUploadInput"
-      ><mat-icon>attach_file</mat-icon></label
-    >
-    <input
-      *ngIf="uploadFinished"
-      (change)="uploadFinished ? selectedFs($event) : ''"
-      id="picUploadInput"
-      multiple
-      type="file"
-    />
+    @if (filesArr.length) {
+      <label for="fileUpload"><mat-icon>check</mat-icon></label>
+    }
+    @if (!uploadFinished) {
+      <label for="fileUpload"><mat-icon>upload</mat-icon></label>
+    }
+    @if (uploadFinished && !filesArr.length) {
+      <label for="picUploadInput"><mat-icon>attach_file</mat-icon></label>
+    }
+    @if (uploadFinished) {
+      <input
+        (change)="uploadFinished ? selectedFs($event) : ''"
+        id="picUploadInput"
+        multiple
+        type="file"
+      />
+    }
   </button>
 
   <textarea

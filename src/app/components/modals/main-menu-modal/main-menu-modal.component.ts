@@ -8,6 +8,7 @@ import { UtilityService } from 'src/app/services/utility.service';
   selector: 'app-main-menu-modal',
   templateUrl: './main-menu-modal.component.html',
   styleUrl: './main-menu-modal.component.scss',
+  standalone: false,
 })
 export class MainMenuModalComponent implements OnInit {
   blockedPeople: any[] = [];

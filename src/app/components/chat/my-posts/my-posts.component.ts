@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MyPost, Post } from 'src/app/models/post.model';
 import { ModalComponent } from '../../modals/modal/modal.component';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -6,7 +7,7 @@ import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FirestoreService } from 'src/app/services/firestore.service';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, take } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { UtilityService } from 'src/app/services/utility.service';
 import { MatDialog } from '@angular/material/dialog';
@@ -21,15 +22,25 @@ import { SharedModule } from '../../shared/shared.module';
   imports: [SharedModule],
 })
 export class MyPostsComponent {
+  private readonly destroyRef = inject(DestroyRef);
   submitButtonValue: any;
   sharedPictures: any[] = [];
   post!: Post;
   myPost?: MyPost;
-  publishForm!: FormGroup;
+  publishForm: FormGroup = this.fBuilder.group({
+    name: [{ value: '', disabled: true }],
+    message: ['', [Validators.required, Validators.minLength(5)]],
+    pictures: new FormArray([]),
+    notSeen: this.fBuilder.control<string[]>([]),
+    isShared: ['yes'],
+    timeStamp: [''],
+    displayName: [''],
+    iFrame: [''],
+  });
   chosenFiles: any;
   comment: any = {};
   userProfile: UserClass = new UserClass();
-  userProfilesUidsArr: Partial<UserClass[]> | any[] = [];
+  userProfilesUidsArr: string[] = [];
   userProfiles: UserClass[] = [];
   userFriends: Friends[] = [];
   uploadedPictures: any[] = [];
@@ -64,63 +75,52 @@ export class MyPostsComponent {
 
   async ngOnInit() {
     this.isLoading = true;
-    this.route.url.subscribe(urlSegm => {
-      if (urlSegm.length) {
-        const [{ path }] = urlSegm;
-        if (path === 'my-posts') this.isOnMyPostRoute = true;
-      }
-    });
+    this.route.url
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(urlSegm => {
+        if (urlSegm.length) {
+          const [{ path }] = urlSegm;
+          if (path === 'my-posts') this.isOnMyPostRoute = true;
+        }
+      });
     const AllUserDtlsRes = await this.utilService.getUserProfiles();
-    this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
+    if (this.destroyRef.destroyed) return;
+
+    this.userProfilesSub = AllUserDtlsRes.pipe(
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(AllUserDtls => {
       this.userProfiles = AllUserDtls.userProfiles;
       this.userProfile = AllUserDtls.userProfile;
       this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
-      this.userFriends = AllUserDtls.userFriends!;
+      this.userFriends = AllUserDtls.userFriends ?? [];
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-      this.userProfilesSub.unsubscribe();
-    });
-
-    this.publishForm = this.fBuilder.group({
-      name: [{ value: this.userProfile.displayName, disabled: true }],
-      message: ['', [Validators.required, Validators.minLength(5)]],
-      pictures: new FormArray([]),
-      notSeen: [...this.userProfilesUidsArr],
-      isShared: ['yes'],
-      timeStamp: [''],
-      displayName: [this.userProfile.displayName],
-      iFrame: [''],
-    });
-
-    this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
-      picture => {
-        this.picturesArray.push(picture);
-      }
-    );
-
-    this.picturesSubscription.unsubscribe();
-  }
-
-  ngAfterViewInit() {
-    setTimeout(async () => {
       this.publishForm.patchValue({
         name: this.userProfile.displayName,
         displayName: this.userProfile.displayName,
+        notSeen: [...this.userProfilesUidsArr],
       });
-      this.route.params.subscribe(async par => {
+      this.listenForPostUpdates();
+    });
+  }
+
+  private listenForPostUpdates() {
+    this.route.params
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(async () => {
         this.isActivatedRoute = true;
         await this.init();
       });
 
-      // if (!this.isActivatedRoute) this.init();
-      this.firestoreService.getMyPostsSub().subscribe(async getPosts => {
+    this.firestoreService
+      .getMyPostsSub()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(async getPosts => {
         if (getPosts.isGetMyPosts) {
           await this.init();
           console.log(`***POSZTOK INICIALIZÁLVA***`);
-          // this.firestoreService.getMyPostsSub().next();
         }
-        // else this.firestoreService.getMyPostsSub().unsubscribe();
       });
-    }, 1000);
   }
 
   async init() {
@@ -234,7 +234,7 @@ export class MyPostsComponent {
   renderIFrames() {
     // data-src-t csinálni
     // const innerHeight = (window.innerHeight / 10).toString() + 'px';
-    new Observable(observer => {
+    new Observable<void>(observer => {
       const interval = setInterval(() => {
         this.iFrames = document.getElementsByClassName(
           'iFrames-for-my-posts'

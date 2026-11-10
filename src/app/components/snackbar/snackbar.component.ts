@@ -8,6 +8,7 @@ import {
   selector: 'app-snackbar',
   templateUrl: './snackbar.component.html',
   styleUrl: './snackbar.component.scss',
+  standalone: false,
 })
 export class SnackbarComponent {
   @Input() aiLimitReached = false;

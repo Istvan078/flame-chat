@@ -1,4 +1,4 @@
-<ng-container *ngIf="!isNavDisappeared">
+@if (!isNavDisappeared) {
   <p>
     <mat-toolbar
       class="justify-content-center"
@@ -21,115 +21,116 @@
         </div>
       </div>
       <!-- <span class="spacer"></span> -->
-
       <div
         [ngbCollapse]="isMenuClicked"
         class="justify-content-center"
         [ngClass]="[isMenuClicked ? 'columnDisp' : 'flexDisp']"
       >
-        <span
-          *ngIf="isSuperAdmin || user.claims.admin"
-          (click)="navDisappear()"
-          routerLink="/admin"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-        >
-          Admin
-        </span>
-
-        <span
-          *ngIf="
-            isSuperAdmin ||
-            user.claims.admin ||
-            user.email === 'kalmaristvan078@gmail.com'
-          "
-          (click)="navDisappear()"
-          routerLink="/users"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-        >
-          Felhasználók
-        </span>
-
-        <span
-          (click)="isMenuClicked = false"
-          *ngIf="user.uid && user.displayName"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-          [routerLink]="userProfile.displayName ? '/chat' : '/chat/' + user.uid"
-          >Chat
-        </span>
-
-        <span
-          *ngIf="!user.uid"
-          (click)="isMenuClicked = false"
-          class="nav-link me-3"
-          routerLink="/signup"
-          routerLinkActive="active-link"
-        >
-          Regisztráció
-        </span>
-
-        <span
-          *ngIf="!user.uid"
-          (click)="isMenuClicked = false"
-          class="nav-link me-3"
-          routerLinkActive="active-link"
-          [routerLinkActiveOptions]="{ exact: true }"
-          routerLink="/login"
-          >Bejelentkezés
-        </span>
-
-        <span
-          *ngIf="user.uid"
-          class="nav-link me-3 sign-out"
-          routerLink=""
-          (click)="signOut()"
-          >Kijelentkezés
-        </span>
-
-        <div class="notiFlexDiv">
+        @if (isSuperAdmin || user.claims.admin) {
           <span
-            *ngIf="user.uid && !isMenuClicked"
-            class="text-center me-3 notiFlex"
-            [matBadge]="allNotifications"
-            matBadgeColor="warn"
-            (click)="rOutletOn()"
-            ><mat-icon [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
-              >notifications</mat-icon
-            ></span
+            (click)="navDisappear()"
+            routerLink="/admin"
+            class="nav-link me-3"
+            routerLinkActive="active-link"
           >
+            Admin
+          </span>
+        }
+        @if (
+          isSuperAdmin ||
+          user.claims.admin ||
+          user.email === 'kalmaristvan078@gmail.com'
+        ) {
+          <span
+            (click)="navDisappear()"
+            routerLink="/users"
+            class="nav-link me-3"
+            routerLinkActive="active-link"
+          >
+            Felhasználók
+          </span>
+        }
+        @if (user.uid && user.displayName) {
+          <span
+            (click)="isMenuClicked = false"
+            class="nav-link me-3"
+            routerLinkActive="active-link"
+            [routerLink]="
+              userProfile.displayName ? '/chat' : '/chat/' + user.uid
+            "
+            >Chat
+          </span>
+        }
+        @if (!user.uid) {
+          <span
+            (click)="isMenuClicked = false"
+            class="nav-link me-3"
+            routerLink="/signup"
+            routerLinkActive="active-link"
+          >
+            Regisztráció
+          </span>
+        }
+        @if (!user.uid) {
+          <span
+            (click)="isMenuClicked = false"
+            class="nav-link me-3"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+            routerLink="/login"
+            >Bejelentkezés
+          </span>
+        }
+        @if (user.uid) {
+          <span class="nav-link me-3 sign-out" routerLink="" (click)="signOut()"
+            >Kijelentkezés
+          </span>
+        }
+        <div class="notiFlexDiv">
+          @if (user.uid && !isMenuClicked) {
+            <span
+              class="text-center me-3 notiFlex"
+              [matBadge]="allNotifications"
+              matBadgeColor="warn"
+              (click)="rOutletOn()"
+              ><mat-icon [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
+                >notifications</mat-icon
+              ></span
+            >
+          }
         </div>
       </div>
-
-      <span
-        *ngIf="user.uid"
-        class="text-center noti"
-        [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
-        [matBadge]="allNotifications"
-        matBadgeColor="warn"
-        (click)="rOutletOn()"
-        ><mat-icon>notifications</mat-icon></span
-      >
-      <div *ngIf="user.uid && userProfile" class="ms-1 mt-1 d-flex">
-        <img
-          class="rounded-circle"
-          width="50px"
-          height="50px"
-          [src]="userProfile.profilePicture"
-          alt="Profilkép"
-          (click)="showProfPics()"
-        />
-        <p
-          style="line-height: 17px; font-size: x-small"
-          class="pt-2 ms-2 signedInAs"
+      @if (user.uid) {
+        <span
+          class="text-center noti"
+          [ngClass]="[allNotifications === 0 ? 'noNoti' : '']"
+          [matBadge]="allNotifications"
+          matBadgeColor="warn"
+          (click)="rOutletOn()"
+          ><mat-icon>notifications</mat-icon></span
         >
-          Bejelenkezve, mint <br /><b>{{ userProfile.displayName }}</b>
-        </p>
-      </div>
+      }
+      @if (user.uid && userProfile) {
+        <div class="ms-1 mt-1 d-flex">
+          <img
+            class="rounded-circle"
+            width="50px"
+            height="50px"
+            [src]="userProfile.profilePicture"
+            alt="Profilkép"
+            (click)="showProfPics()"
+          />
+          <p
+            style="line-height: 17px; font-size: x-small"
+            class="pt-2 ms-2 signedInAs"
+          >
+            Bejelenkezve, mint <br /><b>{{ userProfile.displayName }}</b>
+          </p>
+        </div>
+      }
     </mat-toolbar>
   </p>
-</ng-container>
+}
 
 <app-notifications
   (allNotifications)="allNotifications = $event"

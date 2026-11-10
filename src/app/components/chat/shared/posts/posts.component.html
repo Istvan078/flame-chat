@@ -1,64 +1,75 @@
 <!-- <ng-content select="form-container"></ng-content> -->
 
-<form
-  *ngIf="publishForm"
-  class="mt-3 d-grid"
-  [formGroup]="publishForm"
-  (ngSubmit)="onFormSubmit()"
->
-  @for(data of AllFormData(); track data) {
-
-  <mat-form-field>
-    <mat-label>{{ data.label }}</mat-label>
-    @if(data.matIcon){
-    <mat-icon matSuffix>{{ data.matIcon }}</mat-icon>
-    } @if(!data.textArea){
-    <input
-      class="text-center"
-      [formControlName]="data.input.formControlName"
-      matInput
-      [type]="data?.input?.type!"
-    />
-    } @else {<textarea
-      [formControlName]="data.input.formControlName"
-      matInput
-      rows="5"
-    ></textarea>
+@if (publishForm) {
+  <form
+    class="mt-3 d-grid"
+    [formGroup]="publishForm"
+    (ngSubmit)="onFormSubmit()"
+  >
+    @for (data of AllFormData(); track data) {
+      <mat-form-field>
+        <mat-label>{{ data.label }}</mat-label>
+        @if (data.matIcon) {
+          <mat-icon matSuffix>{{ data.matIcon }}</mat-icon>
+        }
+        @if (!data.textArea) {
+          <input
+            class="text-center"
+            [formControlName]="data.input.formControlName"
+            matInput
+            [type]="data?.input?.type!"
+          />
+        } @else {
+          <textarea
+            [formControlName]="data.input.formControlName"
+            matInput
+            rows="5"
+          ></textarea>
+        }
+      </mat-form-field>
     }
-  </mat-form-field>
-  }
-  <div class="text-center">
-    <button class="text-center" color="accent" mat-raised-button type="button">
-      <label class="picture-input-label" for="add-pictures"
-        >Fényképek hozzáadása</label
+    <div class="text-center">
+      <button
+        class="text-center"
+        color="accent"
+        mat-raised-button
+        type="button"
       >
-      <input
-        formArrayName="pictures"
-        (change)="addPictures($event)"
-        type="file"
-        class="picture-input"
-        multiple
-        id="add-pictures"
-      />
-      <mat-icon matSuffix>photo</mat-icon>
-    </button>
-    <h2 *ngIf="chosenFiles?.length" class="fw-bold mt-3 mb-0 pb-0">
-      Bejegyzéshez hozzácsatolt képek
-    </h2>
-    <hr class="mt-0" *ngIf="chosenFiles?.length" />
-    <h3 class="mt-2 mb-0" *ngFor="let file of chosenFiles">{{ file.name }}</h3>
-  </div>
-  <mat-form-field class="select-container mt-2">
-    <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
-    <mat-label>Láthatóság</mat-label>
-    <mat-select formControlName="isShared" id="isShared">
-      <mat-option (click)="notShared = false" ngClass="green" value="yes"
-        >Ismerősök</mat-option
-      >
-      <mat-option (click)="notShared = true" ngClass="yellow" value="no"
-        >Csak nekem</mat-option
-      >
-    </mat-select>
-  </mat-form-field>
-  <ng-content #ngcontent></ng-content>
-</form>
+        <label class="picture-input-label" for="add-pictures"
+          >Fényképek hozzáadása</label
+        >
+        <input
+          formArrayName="pictures"
+          (change)="addPictures($event)"
+          type="file"
+          class="picture-input"
+          multiple
+          id="add-pictures"
+        />
+        <mat-icon matSuffix>photo</mat-icon>
+      </button>
+      @if (chosenFiles?.length) {
+        <h2 class="fw-bold mt-3 mb-0 pb-0">Bejegyzéshez hozzácsatolt képek</h2>
+      }
+      @if (chosenFiles?.length) {
+        <hr class="mt-0" />
+      }
+      @for (file of chosenFiles; track file) {
+        <h3 class="mt-2 mb-0">{{ file.name }}</h3>
+      }
+    </div>
+    <mat-form-field class="select-container mt-2">
+      <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
+      <mat-label>Láthatóság</mat-label>
+      <mat-select formControlName="isShared" id="isShared">
+        <mat-option (click)="notShared = false" ngClass="green" value="yes"
+          >Ismerősök</mat-option
+        >
+        <mat-option (click)="notShared = true" ngClass="yellow" value="no"
+          >Csak nekem</mat-option
+        >
+      </mat-select>
+    </mat-form-field>
+    <ng-content #ngcontent></ng-content>
+  </form>
+}

@@ -5,6 +5,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
   selector: 'app-files-modal',
   templateUrl: './files-modal.component.html',
   styleUrls: ['./files-modal.component.scss'],
+  standalone: false,
 })
 export class FilesModalComponent {
   activeModal = inject(NgbActiveModal);

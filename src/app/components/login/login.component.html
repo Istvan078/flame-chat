@@ -1,107 +1,102 @@
-<div class="main-container">
-  <form
-    #loginForm="ngForm"
-    *ngIf="!emailOrGoogle"
-    (ngSubmit)="loginWithEmAndPa()"
-  >
-    <mat-form-field>
-      <mat-label for="email">{{ 'auth.email' | translate }}</mat-label>
-      <input matInput [(ngModel)]="email" type="email" name="email" />
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label for="password">{{ 'auth.password' | translate }}</mat-label>
-      <input
-        #passRef
-        matInput
-        [(ngModel)]="password"
-        type="password"
-        name="password"
-      />
-      <mat-icon
-        (click)="
-          passRef.type === 'password'
-            ? (passRef.type = 'text')
-            : (passRef.type = 'password')
-        "
-        matIconSuffix
-        >{{
-          passRef.type === 'password' ? 'visibility_off' : 'visibility'
-        }}</mat-icon
-      >
-    </mat-form-field>
-
-    <button color="accent" mat-raised-button type="submit">
-      {{ 'auth.login' | translate }}
-    </button>
-
-    <h4 class="text-center mt-4 fs-5">
-      {{ 'auth.otherLoginTypes' | translate }}
-      <a
-        (click)="loginWithGoogle()"
-        type="button"
-        class="btn btn-warning ms-2 me-2"
-        ><i class="bi bi-google h4"></i
-      ></a>
-      <button
-        (click)="isPhone = !isPhone"
-        class="btn btn-secondary"
-        type="button"
-      >
-        <span class="bi bi-telephone h4"></span>
+<!-- <div class="main-container">
+  @if (!emailOrGoogle) {
+    <form #loginForm="ngForm" (ngSubmit)="loginWithEmAndPa()">
+      <mat-form-field>
+        <mat-label for="email">{{ 'auth.email' | translate }}</mat-label>
+        <input matInput [(ngModel)]="email" type="email" name="email" />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label for="password">{{ 'auth.password' | translate }}</mat-label>
+        <input
+          #passRef
+          matInput
+          [(ngModel)]="password"
+          type="password"
+          name="password"
+        />
+        <mat-icon
+          (click)="
+            passRef.type === 'password'
+              ? (passRef.type = 'text')
+              : (passRef.type = 'password')
+          "
+          matIconSuffix
+          >{{
+            passRef.type === 'password' ? 'visibility_off' : 'visibility'
+          }}</mat-icon
+        >
+      </mat-form-field>
+      <button color="accent" mat-raised-button type="submit">
+        {{ 'auth.login' | translate }}
       </button>
-    </h4>
-  </form>
+      <h4 class="text-center mt-4 fs-5">
+        {{ 'auth.otherLoginTypes' | translate }}
+        <a
+          (click)="loginWithGoogle()"
+          type="button"
+          class="btn btn-warning ms-2 me-2"
+          ><i class="bi bi-google h4"></i
+        ></a>
+        <button
+          (click)="isPhone = !isPhone"
+          class="btn btn-secondary"
+          type="button"
+        >
+          <span class="bi bi-telephone h4"></span>
+        </button>
+      </h4>
+    </form>
+  }
 </div>
 
-<ng-container *ngIf="!reCapthcaOff">
+@if (!reCapthcaOff) {
   <div id="reCaptchaContainer"></div>
+  @if (!reCapthcaOff) {
+    <div
+      class="row no-padding justify-content-center align-items-center"
+      [ngClass]="isPhone ? 'd-flex' : 'd-none'"
+    >
+      <div class="form-floating mt-4 col-12 no-padding">
+        <input
+          class="form-control"
+          [(ngModel)]="phoneNumber"
+          id="phoneNumber"
+          name="phoneNumber"
+          type="text"
+          placeholder="Telefonszám"
+        />
+        <label for="phoneNumber">Magyar (+36201234567)</label>
+      </div>
+      <div class="form-floating mt-4 col-12 no-padding">
+        <input
+          class="form-control"
+          [(ngModel)]="phoneNumber"
+          id="phoneNumber"
+          name="phoneNumber"
+          type="text"
+          placeholder="Telefonszám"
+        />
+        <label for="phoneNumber">Angol (+44123456789)</label>
+      </div>
+      <div class="col-6 mt-4 ms-2 no-padding text-center span-div">
+        <span
+          class="p-2 bi bi-telephone-fill h2 text-dark bg-success rounded"
+        ></span>
+      </div>
+      <div class="col-12 text-center mt-1">
+        <button
+          (click)="startLoginWithPhoneNumber()"
+          type="button"
+          class="btn btn-success"
+        >
+          <i class="bi bi-telephone"></i> Bejelentkezés
+        </button>
+      </div>
+    </div>
+  }
+}
 
-  <div
-    class="row no-padding justify-content-center align-items-center"
-    [ngClass]="isPhone ? 'd-flex' : 'd-none'"
-    *ngIf="!reCapthcaOff"
-  >
-    <div class="form-floating mt-4 col-12 no-padding">
-      <input
-        class="form-control"
-        [(ngModel)]="phoneNumber"
-        id="phoneNumber"
-        name="phoneNumber"
-        type="text"
-        placeholder="Telefonszám"
-      />
-      <label for="phoneNumber">Magyar (+36201234567)</label>
-    </div>
-    <div class="form-floating mt-4 col-12 no-padding">
-      <input
-        class="form-control"
-        [(ngModel)]="phoneNumber"
-        id="phoneNumber"
-        name="phoneNumber"
-        type="text"
-        placeholder="Telefonszám"
-      />
-      <label for="phoneNumber">Angol (+44123456789)</label>
-    </div>
-    <div class="col-6 mt-4 ms-2 no-padding text-center span-div">
-      <span
-        class="p-2 bi bi-telephone-fill h2 text-dark bg-success rounded"
-      ></span>
-    </div>
-
-    <div class="col-12 text-center mt-1">
-      <button
-        (click)="startLoginWithPhoneNumber()"
-        type="button"
-        class="btn btn-success"
-      >
-        <i class="bi bi-telephone"></i> Bejelentkezés
-      </button>
-    </div>
-  </div>
-</ng-container>
-
-<ng-container *ngIf="verificationId">
+@if (verificationId) {
   <div class="col-12 text-center flexToMiddleContainer">
     <input
       class="form-control"
@@ -121,4 +116,117 @@
       Kód megerősítése
     </button>
   </div>
-</ng-container>
+} -->
+
+<ion-content class="login-page">
+  <!-- @if (authStore.loading()) { -->
+  <!-- <div class="spinner-wrapper">
+    <ion-spinner></ion-spinner>
+  </div> -->
+  <!-- } -->
+  <!-- <div class="lang-container"> -->
+
+  <!-- </div> -->
+  <div class="login login--background">
+    <div class="lang-container">
+      <ion-item class="select--lang">
+        <ion-select
+          interface="popover"
+          [(ngModel)]="lang"
+          name="lang"
+          (ionChange)="changeLang($event)"
+        >
+          <ion-icon slot="start" name="globe-outline"></ion-icon>
+          <ion-select-option value="hu">{{
+            'hu' | translate
+          }}</ion-select-option>
+          <ion-select-option value="en">{{
+            'en' | translate
+          }}</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </div>
+    <header class="header">
+      <div class="img-wrapper--logo">
+        <img
+          class="img-logo"
+          src="/assets/icons/logo-with-text.svg"
+          alt="flamechat-logo"
+        />
+      </div>
+    </header>
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>{{ 'auth.loginTitle' | translate }}</ion-card-title>
+        <ion-card-subtitle>{{
+          'auth.loginSubtitle' | translate
+        }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <form
+          class="login-form"
+          (ngSubmit)="onLogin('email', loginForm)"
+          #loginForm="ngForm"
+        >
+          <ion-input
+            [placeholder]="'auth.usernameOrEmail' | translate"
+            ngModel
+            name="usernameOrEmail"
+            fill="outline"
+            label="{{ 'auth.usernameOrEmail' | translate }}"
+            labelPlacement="stacked"
+            required
+            minlength="4"
+            type="text"
+            ><ion-icon slot="start" name="person-outline"></ion-icon
+          ></ion-input>
+          <div>
+            <ion-input
+              #password
+              required
+              name="password"
+              ngModel
+              minlength="6"
+              [label]="'auth.password' | translate"
+              labelPlacement="stacked"
+              type="password"
+              [placeholder]="'auth.password' | translate"
+              fill="outline"
+            >
+              <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+              <ion-button
+                (click)="
+                  password.type === 'password'
+                    ? (password.type = 'text')
+                    : (password.type = 'password')
+                "
+                class="btn btn--password-visible"
+                slot="end"
+                ><ion-icon name="eye-outline"></ion-icon
+              ></ion-button>
+            </ion-input>
+          </div>
+          <ion-button
+            class="btn--login"
+            [disabled]="!loginForm.valid"
+            type="submit"
+            >{{ 'auth.login' | translate }}</ion-button
+          >
+        </form>
+        <div class="divider-container">
+          <div></div>
+          <span>or</span>
+          <div></div>
+        </div>
+        <ion-button (click)="onLogin('google')" class="btn--google"
+          ><ion-icon name="logo-google" slot="start"></ion-icon
+          >{{ 'auth.continueWithGoogle' | translate }}</ion-button
+        >
+        <div class="to-signup-container">
+          <span>{{ 'auth.noAccount' | translate }} </span>
+          <a routerLink="/signup">{{ 'auth.signup' | translate }}</a>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

@@ -1,251 +1,266 @@
 <div class="text-center mt-1">
-  <button
-    *ngIf="isOnMyPostRoute"
-    routerLink="/chat"
-    color="primary"
-    mat-raised-button
-    type="button"
-    class="green me-2 my-1"
-  >
-    <mat-icon> keyboard_backspace </mat-icon>
-    Vissza
-  </button>
-  <button
-    *ngIf="!isNewPost"
-    (click)="isNewPost = !isNewPost"
-    color="primary"
-    mat-raised-button
-    type="button"
-    class="my-1"
-  >
-    Új bejegyzés
-  </button>
-</div>
-<form
-  *ngIf="isNewPost"
-  class="mt-3 d-grid my-posts"
-  (ngSubmit)="onSubmit()"
-  [formGroup]="publishForm"
->
-  <mat-form-field>
-    <mat-label>Név</mat-label>
-    <mat-icon matSuffix>person</mat-icon>
-    <input class="text-center" formControlName="name" matInput type="text" />
-    <span *ngIf="publishForm.get('name')?.touched"
-      >Nem változtathatja meg a nevet!</span
+  @if (isOnMyPostRoute) {
+    <button
+      routerLink="/chat"
+      color="primary"
+      mat-raised-button
+      type="button"
+      class="green me-2 my-1"
     >
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Bejegyzés szövege</mat-label>
-    <textarea formControlName="message" matInput rows="5"></textarea>
-  </mat-form-field>
-
-  <mat-form-field>
-    <mat-label>Youtube link</mat-label>
-    <input formControlName="iFrame" matInput />
-  </mat-form-field>
-
-  <div class="text-center">
-    <button class="text-center" color="accent" mat-raised-button type="button">
-      <label class="picture-input-label" for="add-pictures"
-        >Fényképek hozzáadása</label
-      >
-      <input
-        formArrayName="pictures"
-        (change)="addPictures($event)"
-        type="file"
-        class="picture-input"
-        multiple
-        id="add-pictures"
-      />
-      <mat-icon matSuffix>photo</mat-icon>
+      <mat-icon> keyboard_backspace </mat-icon>
+      Vissza
     </button>
-    <h2 *ngIf="chosenFiles?.length" class="fw-bold mt-3 mb-0 pb-0">
-      Bejegyzéshez hozzácsatolt képek
-    </h2>
-    <hr class="mt-0" *ngIf="chosenFiles?.length" />
-    <h3 class="mt-2 mb-0" *ngFor="let file of chosenFiles">{{ file.name }}</h3>
-  </div>
-  <mat-form-field class="select-container mt-2">
-    <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
-    <mat-label>Láthatóság</mat-label>
-    <mat-select formControlName="isShared" id="isShared">
-      <mat-option (click)="notShared = false" ngClass="green" value="yes"
-        >Ismerősök</mat-option
-      >
-      <mat-option (click)="notShared = true" ngClass="yellow" value="no"
-        >Csak nekem</mat-option
-      >
-    </mat-select>
-  </mat-form-field>
-  <button class="shareButton" color="accent" mat-raised-button type="submit">
-    Új bejegyzés megosztása
-  </button>
-</form>
-
-<div *ngIf="isLoading" class="loadingSpinnerContainer">
-  <h2>Adatok töltése folyamatban...</h2>
-  <div class="loadingSpinner">*</div>
+  }
+  @if (!isNewPost) {
+    <button
+      (click)="isNewPost = !isNewPost"
+      color="primary"
+      mat-raised-button
+      type="button"
+      class="my-1"
+    >
+      Új bejegyzés
+    </button>
+  }
 </div>
-
-<div *ngFor="let myPost of myPostsArr; let i = index" class="row mt-3">
-  <div class="col text-center px-0">
-    <mat-card>
-      <mat-card-header class="d-flex justify-content-center">
-        <ng-container *ngFor="let sWithMe of postSharedWithMe"
-          ><div
-            class="mb-4 space-div"
-            *ngIf="myPost.id === sWithMe.fromPostId && sWithMe?.sharedWithMeBy"
-          >
-            <span class="shared-with-me-by section-visible section-1"
-              ><mat-icon class="align-middle">share</mat-icon> Megosztotta:
-              {{ sWithMe.sharedWithMeBy }}</span
-            >
-            <span class="shared-with-me-time section-visible section-2"
-              ><mat-icon class="align-middle">timer</mat-icon> Megosztva:
-              {{ sWithMe.timeStamp }}</span
-            >
-          </div></ng-container
-        >
-        <mat-card-title>{{ myPost.displayName }}</mat-card-title>
-      </mat-card-header>
-
-      <mat-card-content class="post-text">{{
-        myPost.message
-      }}</mat-card-content>
-      <mat-card-content
-        *ngIf="myPost.iFrame"
-        style="height: 50vh; width: 100%"
-        class="mb-2"
-      >
-        <iframe
-          class="mb-2 rounded iFrames-for-my-posts"
-          [attr.data-postId]="myPost.id"
-          data-src
-          width="100%"
-          height="100%"
-          title=""
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen
-        ></iframe>
-      </mat-card-content>
-
-      <mat-card-content>
-        <div
-          *ngFor="let pic of myPost.pictures"
-          class="col-12 d-flex justify-content-center mb-2 my-posts-pics-container"
-        >
-          <img
-            class="rounded lazy-img posted-img"
-            src="../../../../assets/cute-cat-placeholder.png"
-            [attr.data-src]="pic.url"
-            [alt]="pic.name"
-            width="80%"
-          />
-        </div>
-      </mat-card-content>
-
-      <mat-card-footer>
-        <small>{{ myPost.timeStamp }}</small>
-        <ng-container *ngFor="let person of peopleLikedPost">
-          <div
-            *ngIf="person[0]?.displayName && myPost?.id === person[0]?.postId"
-            class="d-flex align-items-center justify-content-center w-100"
-          >
-            <p
-              (click)="showWhoLikedPost(person)"
-              class="d-flex align-items-center"
-            >
-              <mat-icon class="text-primary mx-2">thumb_up</mat-icon>
-              <span class="text-start"
-                >{{
-                  (myPost?.liked)!.length > 1
-                    ? person[0].displayName +
-                      ' és további ' +
-                      ((myPost?.liked)!.length - 1) +
-                      ' ember kedveli'
-                    : person[0]?.displayName + ' kedveli'
-                }}
-              </span>
-            </p>
-          </div>
-        </ng-container>
-      </mat-card-footer>
-      <mat-card-actions class="w-100 justify-content-center pt-0">
-        <div class="d-flex flex-wrap justify-content-center">
-          <button
-            (click)="like(myPost, i)"
-            class="me-2 mb-1"
-            color="accent"
-            mat-raised-button
-            type="button"
-          >
-            Tetszik
-            <mat-icon
-              matPrefix
-              class="align-middle"
-              [ngClass]="
-                myPost.liked?.includes(userProfile.uid)
-                  ? 'text-primary'
-                  : 'text-secondary'
-              "
-              >thumb_up</mat-icon
-            >
-          </button>
-          <button
-            (click)="prepareComment(myPost.id)"
-            color="primary"
-            mat-raised-button
-            type="button"
-          >
-            Hozzászólás
-            <mat-icon matPrefix class="text-warning align-middle"
-              >edit_note</mat-icon
-            >
-          </button>
-        </div>
-      </mat-card-actions>
-      <mat-card-content>
-        <div *ngFor="let uP of userProfiles">
-          <div
-            class="d-flex align-items-center"
-            *ngFor="let comment of myPost.comments"
-          >
-            <ng-container *ngIf="uP.uid === comment.uid">
-              <img
-                width="25px"
-                height="25px"
-                class="rounded-circle mt-1"
-                [src]="uP.profilePicture"
-                alt="Profilkép"
-              />
-              <p class="m-0 mt-1 ms-2 d-flex align-items-center">
-                <b>{{ uP.displayName }}</b>
-              </p>
-              <p class="m-0 mt-1 ms-2 d-flex align-items-center">
-                {{ comment.text }}
-              </p>
-            </ng-container>
-          </div>
-        </div>
-      </mat-card-content>
-      <mat-form-field *ngIf="myPost.id === comment.postId">
-        <mat-label>Hozzászólás szövege</mat-label>
-        <input matInput [(ngModel)]="comment.text" type="text" />
-      </mat-form-field>
+@if (isNewPost) {
+  <form
+    class="mt-3 d-grid my-posts"
+    (ngSubmit)="onSubmit()"
+    [formGroup]="publishForm"
+  >
+    <mat-form-field>
+      <mat-label>Név</mat-label>
+      <mat-icon matSuffix>person</mat-icon>
+      <input class="text-center" formControlName="name" matInput type="text" />
+      @if (publishForm.get('name')?.touched) {
+        <span>Nem változtathatja meg a nevet!</span>
+      }
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Bejegyzés szövege</mat-label>
+      <textarea formControlName="message" matInput rows="5"></textarea>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Youtube link</mat-label>
+      <input formControlName="iFrame" matInput />
+    </mat-form-field>
+    <div class="text-center">
       <button
-        *ngIf="myPost.id === comment.postId"
-        (click)="commentPost(myPost)"
-        class="bg-primary"
+        class="text-center"
+        color="accent"
         mat-raised-button
         type="button"
       >
-        Hozzászólás küldése
-        <mat-icon matPrefix class="text-warning align-middle">send</mat-icon>
+        <label class="picture-input-label" for="add-pictures"
+          >Fényképek hozzáadása</label
+        >
+        <input
+          formArrayName="pictures"
+          (change)="addPictures($event)"
+          type="file"
+          class="picture-input"
+          multiple
+          id="add-pictures"
+        />
+        <mat-icon matSuffix>photo</mat-icon>
       </button>
-    </mat-card>
+      @if (chosenFiles?.length) {
+        <h2 class="fw-bold mt-3 mb-0 pb-0">Bejegyzéshez hozzácsatolt képek</h2>
+      }
+      @if (chosenFiles?.length) {
+        <hr class="mt-0" />
+      }
+      @for (file of chosenFiles; track file) {
+        <h3 class="mt-2 mb-0">{{ file.name }}</h3>
+      }
+    </div>
+    <mat-form-field class="select-container mt-2">
+      <mat-icon matSuffix>sentiment_very_satisfied</mat-icon>
+      <mat-label>Láthatóság</mat-label>
+      <mat-select formControlName="isShared" id="isShared">
+        <mat-option (click)="notShared = false" ngClass="green" value="yes"
+          >Ismerősök</mat-option
+        >
+        <mat-option (click)="notShared = true" ngClass="yellow" value="no"
+          >Csak nekem</mat-option
+        >
+      </mat-select>
+    </mat-form-field>
+    <button class="shareButton" color="accent" mat-raised-button type="submit">
+      Új bejegyzés megosztása
+    </button>
+  </form>
+}
+
+@if (isLoading) {
+  <div class="loadingSpinnerContainer">
+    <h2>Adatok töltése folyamatban...</h2>
+    <div class="loadingSpinner">*</div>
   </div>
-</div>
+}
+
+@for (myPost of myPostsArr; track myPost; let i = $index) {
+  <div class="row mt-3">
+    <div class="col text-center px-0">
+      <mat-card>
+        <mat-card-header class="d-flex justify-content-center">
+          @for (sWithMe of postSharedWithMe; track sWithMe) {
+            @if (myPost.id === sWithMe.fromPostId && sWithMe?.sharedWithMeBy) {
+              <div class="mb-4 space-div">
+                <span class="shared-with-me-by section-visible section-1"
+                  ><mat-icon class="align-middle">share</mat-icon> Megosztotta:
+                  {{ sWithMe.sharedWithMeBy }}</span
+                >
+                <span class="shared-with-me-time section-visible section-2"
+                  ><mat-icon class="align-middle">timer</mat-icon> Megosztva:
+                  {{ sWithMe.timeStamp }}</span
+                >
+              </div>
+            }
+          }
+          <mat-card-title>{{ myPost.displayName }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content class="post-text">{{
+          myPost.message
+        }}</mat-card-content>
+        @if (myPost.iFrame) {
+          <mat-card-content style="height: 50vh; width: 100%" class="mb-2">
+            <iframe
+              class="mb-2 rounded iFrames-for-my-posts"
+              [attr.data-postId]="myPost.id"
+              data-src
+              width="100%"
+              height="100%"
+              title=""
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
+          </mat-card-content>
+        }
+        <mat-card-content>
+          @for (pic of myPost.pictures; track pic) {
+            <div
+              class="col-12 d-flex justify-content-center mb-2 my-posts-pics-container"
+            >
+              <img
+                class="rounded lazy-img posted-img"
+                src="../../../../assets/cute-cat-placeholder.png"
+                [attr.data-src]="pic.url"
+                [alt]="pic.name"
+                width="80%"
+              />
+            </div>
+          }
+        </mat-card-content>
+        <mat-card-footer>
+          <small>{{ myPost.timeStamp }}</small>
+          @for (person of peopleLikedPost; track person) {
+            @if (person[0]?.displayName && myPost?.id === person[0]?.postId) {
+              <div
+                class="d-flex align-items-center justify-content-center w-100"
+              >
+                <p
+                  (click)="showWhoLikedPost(person)"
+                  class="d-flex align-items-center"
+                >
+                  <mat-icon class="text-primary mx-2">thumb_up</mat-icon>
+                  <span class="text-start"
+                    >{{
+                      (myPost?.liked)!.length > 1
+                        ? person[0].displayName +
+                          ' és további ' +
+                          ((myPost?.liked)!.length - 1) +
+                          ' ember kedveli'
+                        : person[0]?.displayName + ' kedveli'
+                    }}
+                  </span>
+                </p>
+              </div>
+            }
+          }
+        </mat-card-footer>
+        <mat-card-actions class="w-100 justify-content-center pt-0">
+          <div class="d-flex flex-wrap justify-content-center">
+            <button
+              (click)="like(myPost, i)"
+              class="me-2 mb-1"
+              color="accent"
+              mat-raised-button
+              type="button"
+            >
+              Tetszik
+              <mat-icon
+                matPrefix
+                class="align-middle"
+                [ngClass]="
+                  myPost.liked?.includes(userProfile.uid)
+                    ? 'text-primary'
+                    : 'text-secondary'
+                "
+                >thumb_up</mat-icon
+              >
+            </button>
+            <button
+              (click)="prepareComment(myPost.id)"
+              color="primary"
+              mat-raised-button
+              type="button"
+            >
+              Hozzászólás
+              <mat-icon matPrefix class="text-warning align-middle"
+                >edit_note</mat-icon
+              >
+            </button>
+          </div>
+        </mat-card-actions>
+        <mat-card-content>
+          @for (uP of userProfiles; track uP) {
+            <div>
+              @for (comment of myPost.comments; track comment) {
+                <div class="d-flex align-items-center">
+                  @if (uP.uid === comment.uid) {
+                    <img
+                      width="25px"
+                      height="25px"
+                      class="rounded-circle mt-1"
+                      [src]="uP.profilePicture"
+                      alt="Profilkép"
+                    />
+                    <p class="m-0 mt-1 ms-2 d-flex align-items-center">
+                      <b>{{ uP.displayName }}</b>
+                    </p>
+                    <p class="m-0 mt-1 ms-2 d-flex align-items-center">
+                      {{ comment.text }}
+                    </p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+        @if (myPost.id === comment.postId) {
+          <mat-form-field>
+            <mat-label>Hozzászólás szövege</mat-label>
+            <input matInput [(ngModel)]="comment.text" type="text" />
+          </mat-form-field>
+        }
+        @if (myPost.id === comment.postId) {
+          <button
+            (click)="commentPost(myPost)"
+            class="bg-primary"
+            mat-raised-button
+            type="button"
+          >
+            Hozzászólás küldése
+            <mat-icon matPrefix class="text-warning align-middle"
+              >send</mat-icon
+            >
+          </button>
+        }
+      </mat-card>
+    </div>
+  </div>
+}

@@ -13,6 +13,7 @@ import { Chat, ReplyMessage } from 'src/app/models/chat.model';
   selector: 'app-mat-modal',
   templateUrl: './mat-modal.component.html',
   styleUrl: './mat-modal.component.scss',
+  standalone: false,
 })
 export class MatModalComponent {
   constructor(

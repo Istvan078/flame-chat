@@ -1,5 +1,5 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, take } from 'rxjs';
 import { Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { FirestoreService } from 'src/app/services/firestore.service';
@@ -55,13 +55,12 @@ export class AdminComponent implements OnInit {
 
   async ngOnInit() {
     const AllUserDtlsRes = await this.utilService.getUserProfiles();
-    this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
+    this.userProfilesSub = AllUserDtlsRes.pipe(take(1)).subscribe(AllUserDtls => {
       this.userProfiles = AllUserDtls.userProfiles;
       this.userProfile = AllUserDtls.userProfile;
       this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
       this.init();
-      this.userProfilesSub.unsubscribe();
     });
   }
 
@@ -200,7 +199,7 @@ export class AdminComponent implements OnInit {
   renderIFrames() {
     // data-src-t csinálni
     // const innerHeight = (window.innerHeight / 10).toString() + 'px';
-    new Observable(observer => {
+    new Observable<void>(observer => {
       const interval = setInterval(() => {
         this.iFrames = document.getElementsByClassName(
           'iFrames-for-my-posts'

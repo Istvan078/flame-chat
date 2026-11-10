@@ -7,7 +7,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, take } from 'rxjs';
 import { MyPost, Post } from 'src/app/models/post.model';
 import { Friends, UserClass } from 'src/app/models/user.model';
 import { BaseService } from 'src/app/services/base.service';
@@ -135,12 +135,11 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
     const AllUserDtlsRes = await this.utilityService.getUserProfiles();
-    this.userProfilesSub = AllUserDtlsRes.subscribe(AllUserDtls => {
+    this.userProfilesSub = AllUserDtlsRes.pipe(take(1)).subscribe(AllUserDtls => {
       this.userProfiles = AllUserDtls.userProfiles;
       this.userProfile = AllUserDtls.userProfile;
       this.userProfilesUidsArr = AllUserDtls.userProfilesUidsArr;
       console.log('ÖSSZES FELHASZNÁLÓ ADAT MEGÉRKEZETT A UTIL SERVICE-TŐL');
-      this.userProfilesSub.unsubscribe();
     });
 
     this.picturesSubscription = this.firestoreService.picturesSubject.subscribe(
@@ -263,7 +262,7 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy {
   renderIFrames() {
     // data-src-t csinálni
     // const innerHeight = (window.innerHeight / 10).toString() + 'px';
-    new Observable(observer => {
+    new Observable<void>(observer => {
       const interval = setInterval(() => {
         this.iFrames = document.getElementsByClassName(
           'iFrames-for-shared-post'

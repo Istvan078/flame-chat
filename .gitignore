@@ -1,6 +1,7 @@
 functions/service-account.json
 functions/emails
 functions/config
+.firebase
 
 
 # Compiled output
